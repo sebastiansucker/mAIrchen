@@ -10,6 +10,17 @@ const themaInput = document.getElementById('thema');
 const personenInput = document.getElementById('personen');
 const ortInput = document.getElementById('ort');
 const stimmungInput = document.getElementById('stimmung');
+const lengthButtons = document.querySelectorAll('.length-btn');
+let selectedLength = 10; // Standard: 10 Minuten
+
+// Length Button Event Listeners
+lengthButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        lengthButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedLength = parseInt(btn.dataset.length);
+    });
+});
 
 const randomBtn = document.getElementById('random-btn');
 const generateBtn = document.getElementById('generate-btn');
@@ -59,6 +70,7 @@ async function generateStory() {
     const personen = personenInput.value.trim();
     const ort = ortInput.value.trim();
     const stimmung = stimmungInput.value.trim();
+    const laenge = selectedLength;
     
     // Validierung
     if (!thema || !personen || !ort || !stimmung) {
@@ -80,7 +92,8 @@ async function generateStory() {
                 thema: thema,
                 personen_tiere: personen,
                 ort: ort,
-                stimmung: stimmung
+                stimmung: stimmung,
+                laenge: laenge
             })
         });
         

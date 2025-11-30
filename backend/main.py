@@ -40,6 +40,7 @@ class StoryRequest(BaseModel):
     personen_tiere: str
     ort: str
     stimmung: str
+    laenge: int = 10  # Länge in Minuten, Standard: 10
 
 class RandomSuggestions(BaseModel):
     themen: list[str] = [
@@ -80,11 +81,16 @@ async def get_random_suggestions():
 async def generate_story(request: StoryRequest):
     """Generiert eine Geschichte basierend auf den Eingaben"""
     
+    # Berechne Wortanzahl basierend auf Lesezeit
+    # Durchschnittliche Lesegeschwindigkeit Kinder: ~80-100 Wörter/Min
+    min_words = request.laenge * 80
+    max_words = request.laenge * 100
+    
     # Prompt erstellen
     prompt = f"""Du bist ein Geschichtenerzähler für Kinder der Klassen 1-4. 
     
 Schreibe eine Geschichte mit folgenden Eigenschaften:
-- Lesezeit: etwa 10 Minuten (ca. 800-1200 Wörter)
+- Lesezeit: etwa {request.laenge} Minuten (ca. {min_words}-{max_words} Wörter)
 - Thema: {request.thema}
 - Personen/Tiere: {request.personen_tiere}
 - Ort: {request.ort}
@@ -102,9 +108,15 @@ TITEL: [Ein kurzer, ansprechender Titel für die Geschichte]
 
 [Die Geschichte in Absätzen]
 
-Beginne direkt mit "TITEL:" gefolgt vom Titel."""
+Beginne direkt mit "TITEL:" gefolgt vom Titel.
+
+WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wörtern. Mache die Geschichte nicht kürzer!"""
 
     try:
+        # Berechne max_tokens basierend auf gewünschter Länge
+        # ~1.3 Tokens pro Wort für Deutsch, plus Buffer für Titel/Formatierung
+        estimated_tokens = int(max_words * 1.3) + 200
+        
         # API-Aufruf an Mistral
         response = client.chat.completions.create(
             model=os.getenv("MISTRAL_MODEL", "mistral-small-latest"),
@@ -113,7 +125,7 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
                 {"role": "user", "content": prompt}
             ],
             temperature=0.8,
-            max_tokens=2500
+            max_tokens=estimated_tokens
         )
         
         content = response.choices[0].message.content
@@ -147,7 +159,8 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
                 "thema": request.thema,
                 "personen_tiere": request.personen_tiere,
                 "ort": request.ort,
-                "stimmung": request.stimmung
+                "stimmung": request.stimmung,
+                "laenge": request.laenge
             }
         }
     

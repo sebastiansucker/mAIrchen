@@ -91,11 +91,43 @@ header h1 {
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s;
+    font-family: inherit;
 }
 
 .form-group input:focus {
     outline: none;
     border-color: var(--primary-color);
+}
+
+.length-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.length-btn {
+    flex: 1;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.length-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.length-btn.active {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .button-group {
