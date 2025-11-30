@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mairchen-app
+    ports:
+      - "80:80"
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MISTRAL_BASE_URL=${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}
+      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mAIrchen - Geschichten für Kinder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="logo.png" alt="mAIrchen Logo" class="logo">
+            <h1>mAIrchen</h1>
+            <p class="subtitle">Deine persönliche Geschichtenerzähler-App</p>
+        </header>
+
+        <main>
+            <!-- Eingabeformular -->
+            <div id="input-form" class="card">
+                <h2>Erstelle deine Geschichte</h2>
+                
+                <div class="form-group">
+                    <label for="thema">Thema:</label>
+                    <input type="text" id="thema" placeholder="z.B. Freundschaft, Abenteuer, Zauber">
+                </div>
+
+                <div class="form-group">
+                    <label for="personen">Personen/Tiere:</label>
+                    <input type="text" id="personen" placeholder="z.B. Ein kleiner Hase, Eine mutige Prinzessin">
+                </div>
+
+                <div class="form-group">
+                    <label for="ort">Ort:</label>
+                    <input type="text" id="ort" placeholder="z.B. im Wald, am See, in einem Schloss">
+                </div>
+
+                <div class="form-group">
+                    <label for="stimmung">Stimmung:</label>
+                    <input type="text" id="stimmung" placeholder="z.B. fröhlich, spannend, lustig">
+                </div>
+
+                <div class="button-group">
+                    <button id="random-btn" class="btn btn-secondary">🎲 Zufällig</button>
+                    <button id="generate-btn" class="btn btn-primary">✨ Geschichte erstellen</button>
+                </div>
+
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Deine Geschichte wird geschrieben...</p>
+                </div>
+            </div>
+
+            <!-- Geschichtenanzeige -->
+            <div id="story-display" class="book-layout book-closed" style="display: none;">
+                <div class="book-header">
+                    <button id="back-btn" class="btn btn-small">← Zurück</button>
+                    <h2 id="story-title">Deine Geschichte</h2>
+                </div>
+                
+                <div class="book-page">
+                    <div id="story-content" class="story-text"></div>
+                </div>
+
+                <div class="story-info">
+                    <p><strong>Thema:</strong> <span id="info-thema"></span></p>
+                    <p><strong>Personen/Tiere:</strong> <span id="info-personen"></span></p>
+                    <p><strong>Ort:</strong> <span id="info-ort"></span></p>
+                    <p><strong>Stimmung:</strong> <span id="info-stimmung"></span></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
