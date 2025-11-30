@@ -168,7 +168,36 @@ Das Frontend nutzt automatisch die richtige URL für API-Requests.
 
 ## 🐳 Deployment
 
-### Manuelles Deployment
+### Mit GitHub Container Registry
+Der Container wird automatisch bei jedem Push auf `main` gebaut und in die GitHub Container Registry gepusht.
+
+**Container direkt von GitHub pullen:**
+```bash
+docker pull ghcr.io/sebastiansucker/mairchen:latest
+docker run -d -p 80:80 \
+  -e MISTRAL_API_KEY=your-key \
+  -e MISTRAL_BASE_URL=https://api.mistral.ai/v1 \
+  -e MISTRAL_MODEL=mistral-small-latest \
+  --name mairchen-app \
+  ghcr.io/sebastiansucker/mairchen:latest
+```
+
+**Mit Docker Compose und GitHub Registry:**
+```yaml
+services:
+  app:
+    image: ghcr.io/sebastiansucker/mairchen:latest
+    container_name: mairchen-app
+    ports:
+      - "80:80"
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MISTRAL_BASE_URL=${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}
+      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}
+    restart: unless-stopped
+```
+
+### Manuelles Deployment (Lokaler Build)
 ```bash
 # Auf dem Server
 git clone git@github.com:sebastiansucker/mAIrchen.git
@@ -176,11 +205,4 @@ cd mAIrchen
 cp .env.example .env
 # .env bearbeiten und API-Key eintragen
 docker-compose --env-file .env -f docker/docker-compose.yml up -d
-```
-
-### Mit Umgebungsvariablen
-```bash
-export MISTRAL_API_KEY=your-key
-export MISTRAL_MODEL=mistral-small-latest
-docker-compose -f docker/docker-compose.yml up -d
 ```
