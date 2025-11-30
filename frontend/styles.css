@@ -256,6 +256,31 @@ header h1 {
     background: white;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Responsive Loading-Content Padding */
+@media (max-width: 480px) {
+    .loading-content {
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 375px) {
+    .loading-content {
+        padding: 25px 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .loading-content {
+        padding: 20px 12px;
+    }
 }
 
 .loading-text {
@@ -277,6 +302,32 @@ header h1 {
     width: 450px;
     height: 320px;
     margin: 0 auto;
+    transform-origin: center center;
+}
+
+/* Responsive Skalierung für kleinere Bildschirme */
+@media (max-width: 480px) {
+    .magic-book-animation {
+        width: 90vw;
+        max-width: 360px;
+        height: auto;
+        aspect-ratio: 450 / 320;
+    }
+}
+
+@media (max-width: 375px) {
+    .magic-book-animation {
+        width: 88vw;
+        max-width: 320px;
+    }
+}
+
+/* iPhone Mini und sehr kleine Bildschirme */
+@media (max-width: 360px) {
+    .magic-book-animation {
+        width: 85vw;
+        max-width: 280px;
+    }
 }
 
 .magic-book {
@@ -285,6 +336,28 @@ header h1 {
     height: 260px;
     perspective: 1500px;
     transform-style: preserve-3d;
+}
+
+/* Responsive Buch-Höhe */
+@media (max-width: 480px) {
+    .magic-book {
+        height: 210px;
+        perspective: 1200px;
+    }
+}
+
+@media (max-width: 375px) {
+    .magic-book {
+        height: 180px;
+        perspective: 1000px;
+    }
+}
+
+@media (max-width: 360px) {
+    .magic-book {
+        height: 160px;
+        perspective: 900px;
+    }
 }
 
 .book-left-page,
@@ -301,6 +374,31 @@ header h1 {
     justify-content: center;
     gap: 20px;
     padding: 40px 30px;
+}
+
+/* Responsive Padding für kleinere Bildschirme */
+@media (max-width: 480px) {
+    .book-left-page,
+    .book-right-page {
+        padding: 30px 20px;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 375px) {
+    .book-left-page,
+    .book-right-page {
+        padding: 25px 15px;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 360px) {
+    .book-left-page,
+    .book-right-page {
+        padding: 20px 12px;
+        gap: 10px;
+    }
 }
 
 .book-left-page {
@@ -352,6 +450,25 @@ header h1 {
     animation: floatLetter 2.5s ease-in-out infinite;
     filter: drop-shadow(0 2px 4px rgba(139, 92, 246, 0.3));
     display: inline-block;
+}
+
+/* Responsive Schriftgröße für kleinere Bildschirme */
+@media (max-width: 480px) {
+    .floating-letter {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 375px) {
+    .floating-letter {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .floating-letter {
+        font-size: 1.3rem;
+    }
 }
 
 @keyframes floatLetter {
