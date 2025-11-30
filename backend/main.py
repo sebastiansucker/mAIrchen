@@ -96,7 +96,13 @@ Die Geschichte sollte kindgerecht, spannend und lehrreich sein.
 Hier ist der Grundwortschatz zur Orientierung:
 {GRUNDWORTSCHATZ[:3000]}
 
-Schreibe die Geschichte in Absätzen, damit sie gut lesbar ist. Beginne direkt mit der Geschichte ohne Titel oder Einleitung."""
+Format:
+Gib die Antwort im folgenden Format zurück:
+TITEL: [Ein kurzer, ansprechender Titel für die Geschichte]
+
+[Die Geschichte in Absätzen]
+
+Beginne direkt mit "TITEL:" gefolgt vom Titel."""
 
     try:
         # API-Aufruf an Mistral
@@ -110,10 +116,32 @@ Schreibe die Geschichte in Absätzen, damit sie gut lesbar ist. Beginne direkt m
             max_tokens=2500
         )
         
-        story = response.choices[0].message.content
+        content = response.choices[0].message.content
+        
+        # Parse Titel und Geschichte
+        title = "Eine Geschichte"
+        story = content
+        
+        # Suche nach TITEL: im Text (auch wenn es nicht am Anfang steht)
+        if "TITEL:" in content:
+            parts = content.split("TITEL:", 1)
+            if len(parts) > 1:
+                # Extrahiere Titel (erste Zeile nach TITEL:)
+                rest = parts[1].strip()
+                title_end = rest.find("\n")
+                if title_end > 0:
+                    title = rest[:title_end].strip()
+                    story = rest[title_end+1:].strip()
+                else:
+                    title = rest.strip()
+                    story = ""
+        
+        # Fallback: Wenn der Titel noch "**TITEL:" enthält, entferne die Markdown-Sterne
+        title = title.replace("**", "").strip()
         
         return {
             "success": True,
+            "title": title,
             "story": story,
             "parameters": {
                 "thema": request.thema,

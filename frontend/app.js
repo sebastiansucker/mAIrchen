@@ -91,7 +91,7 @@ async function generateStory() {
         const data = await response.json();
         
         if (data.success) {
-            displayStory(data.story, data.parameters);
+            displayStory(data.story, data.title, data.parameters);
         } else {
             throw new Error('Keine Geschichte erhalten');
         }
@@ -105,9 +105,13 @@ async function generateStory() {
 }
 
 // Geschichte anzeigen
-function displayStory(story, parameters) {
+function displayStory(story, title, parameters) {
     // Formatiere die Geschichte mit Absätzen
     const formattedStory = formatStoryText(story);
+    
+    // Setze Titel
+    const storyTitle = document.getElementById('story-title');
+    storyTitle.textContent = title || 'Eine Geschichte';
     
     storyContent.innerHTML = formattedStory;
     infoThema.textContent = parameters.thema;
