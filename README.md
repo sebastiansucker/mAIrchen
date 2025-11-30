@@ -7,8 +7,10 @@ Eine Märchen-Schreib-App für Grundschulkinder (Klasse 1-4), die personalisiert
 - **Personalisierte Geschichten**: Der Nutzer gibt Thema, Personen/Tiere, Ort und Stimmung ein
 - **Zufalls-Generator**: Automatische Vorschläge für alle Parameter
 - **Grundwortschatz-Integration**: Geschichten enthalten Wörter aus dem Grundwortschatz der Klassen 1-4
-- **Buchlayout**: Ansprechende Darstellung im Buchformat für optimales Leseerlebnis
+- **Buchlayout**: Ansprechende Darstellung im Buchformat mit vergilbtem Papier-Look
+- **Seitenblätter-Animation**: Geschichten erscheinen mit einer 3D-Blätter-Animation
 - **KI-gestützt**: Nutzt Mistral AI über OpenAI-kompatible API
+- **Single-Container**: Frontend und Backend in einem Container für einfaches Deployment
 
 ## 🚀 Installation
 
@@ -34,21 +36,29 @@ cp .env.example .env
 MISTRAL_API_KEY=your-actual-api-key
 ```
 
-4. Container starten:
+4. Container bauen & starten:
 ```bash
-docker-compose -f docker/docker-compose.yml build && docker-compose --env-file .env -f docker/docker-compose.yml up -d
+docker-compose --env-file .env -f docker/docker-compose.yml build
+docker-compose --env-file .env -f docker/docker-compose.yml up -d
 ```
 
 Die App ist nun verfügbar unter:
 - **Frontend**: http://localhost
-- **Backend API**: http://localhost:8000
-- **API Dokumentation**: http://localhost:8000/docs
+- **API**: http://localhost/api/
+- **Health Check**: http://localhost/health
 
 ## 🏗️ Architektur
+
+### Single Container Setup
+Frontend und Backend laufen in einem Docker-Container:
+- **Nginx** serviert das Frontend (Port 80)
+- **FastAPI** Backend läuft auf Port 8000 (intern)
+- Nginx fungiert als Reverse Proxy für `/api/*` Requests
 
 ### Backend (FastAPI)
 - Python-basierte REST API
 - OpenAI-kompatibler Client für Mistral
+- Grundwortschatz-Integration aus `backend/gws.md`
 - Endpunkte:
   - `GET /api/random` - Zufällige Vorschläge
   - `POST /api/generate-story` - Geschichte generieren
@@ -57,25 +67,30 @@ Die App ist nun verfügbar unter:
 ### Frontend
 - Vanilla HTML/CSS/JavaScript
 - Responsive Design
-- Buchlayout für optimale Leseerfahrung
-- Nginx als Webserver
+- 3D-Seitenblätter-Animation
+- Buchlayout mit vergilbtem Papier-Effekt
+- Automatische API-URL-Erkennung (funktioniert im Netzwerk)
 
-### Dateien
+### Projektstruktur
 ```
 mAIrchen/
+├── .env.example          # Umgebungsvariablen Template
+├── .gitignore           # Git Ignore Datei
+├── README.md            # Diese Datei
 ├── backend/
-│   ├── main.py           # FastAPI Backend
-│   └── requirements.txt  # Python Dependencies
+│   ├── main.py          # FastAPI Backend
+│   ├── requirements.txt # Python Dependencies
+│   └── gws.md          # Grundwortschatz Klassen 1-4
 ├── frontend/
-│   ├── index.html       # Haupt-HTML
-│   ├── styles.css       # Styling
-│   └── app.js           # JavaScript Logik
-├── gws.md               # Grundwortschatz
-├── docker-compose.yml   # Container Orchestrierung
-├── Dockerfile.backend   # Backend Container
-├── Dockerfile.frontend  # Frontend Container
-├── nginx.conf          # Nginx Konfiguration
-└── .env.example        # Umgebungsvariablen Template
+│   ├── index.html      # Haupt-HTML
+│   ├── styles.css      # Styling & Animationen
+│   ├── app.js          # JavaScript Logik
+│   ├── logo.png        # App Logo (transparent)
+│   └── app_icon.png    # App Icon
+└── docker/
+    ├── Dockerfile              # Multi-Stage Build
+    ├── docker-compose.yml      # Container Orchestrierung
+    └── nginx-combined.conf     # Nginx Konfiguration
 ```
 
 ## 🎯 Verwendung
@@ -96,14 +111,22 @@ mAIrchen/
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload
+export MISTRAL_API_KEY=your-key
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend lokal testen
-Einfach `frontend/index.html` in einem Browser öffnen oder mit einem lokalen Webserver:
+Das Frontend benötigt das Backend auf Port 8000:
 ```bash
 cd frontend
 python -m http.server 8080
+```
+Dann im Browser: http://localhost:8080
+
+### Container neu bauen nach Änderungen
+```bash
+docker-compose --env-file .env -f docker/docker-compose.yml build
+docker-compose --env-file .env -f docker/docker-compose.yml up -d
 ```
 
 ## 📝 API Endpunkte
@@ -129,10 +152,35 @@ Content-Type: application/json
 ## 🔧 Konfiguration
 
 Umgebungsvariablen in `.env`:
-- `MISTRAL_API_KEY`: Ihr Mistral API Schlüssel
+- `MISTRAL_API_KEY`: Ihr Mistral API Schlüssel (erforderlich)
 - `MISTRAL_BASE_URL`: API Basis-URL (Standard: https://api.mistral.ai/v1)
 - `MISTRAL_MODEL`: Zu verwendendes Modell (Standard: mistral-small-latest)
 
-## 📄 Lizenz
+**Wichtig**: Die `.env` Datei ist in `.gitignore` und wird nicht ins Repository committed!
 
-Privates Projekt für Bildungszwecke.
+## 🌐 Netzwerk-Zugriff
+
+Die App ist von anderen Geräten im Netzwerk erreichbar:
+1. Finde die IP-Adresse deines Computers: `ifconfig` (Mac/Linux) oder `ipconfig` (Windows)
+2. Öffne auf einem anderen Gerät: `http://<deine-ip>`
+
+Das Frontend nutzt automatisch die richtige URL für API-Requests.
+
+## 🐳 Deployment
+
+### Manuelles Deployment
+```bash
+# Auf dem Server
+git clone git@github.com:sebastiansucker/mAIrchen.git
+cd mAIrchen
+cp .env.example .env
+# .env bearbeiten und API-Key eintragen
+docker-compose --env-file .env -f docker/docker-compose.yml up -d
+```
+
+### Mit Umgebungsvariablen
+```bash
+export MISTRAL_API_KEY=your-key
+export MISTRAL_MODEL=mistral-small-latest
+docker-compose -f docker/docker-compose.yml up -d
+```
