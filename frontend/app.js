@@ -11,7 +11,9 @@ const personenInput = document.getElementById('personen');
 const ortInput = document.getElementById('ort');
 const stimmungInput = document.getElementById('stimmung');
 const lengthButtons = document.querySelectorAll('.length-btn');
+const gradeButtons = document.querySelectorAll('.grade-btn');
 let selectedLength = 10; // Standard: 10 Minuten
+let selectedGrade = '34'; // Standard: 3/4 Klasse
 
 // Length Button Event Listeners
 lengthButtons.forEach(btn => {
@@ -19,6 +21,15 @@ lengthButtons.forEach(btn => {
         lengthButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedLength = parseInt(btn.dataset.length);
+    });
+});
+
+// Grade Button Event Listeners
+gradeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        gradeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedGrade = btn.dataset.grade;
     });
 });
 
@@ -93,7 +104,8 @@ async function generateStory() {
                 personen_tiere: personen,
                 ort: ort,
                 stimmung: stimmung,
-                laenge: laenge
+                laenge: laenge,
+                klassenstufe: selectedGrade
             })
         });
         

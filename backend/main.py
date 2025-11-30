@@ -33,7 +33,22 @@ def load_grundwortschatz():
     except FileNotFoundError:
         return "Grundwortschatz nicht gefunden"
 
-GRUNDWORTSCHATZ = load_grundwortschatz()
+# Grundwortschatz für alle Klassen laden
+GRUNDWORTSCHATZ_FULL = load_grundwortschatz()
+
+# Grundwortschatz für Klasse 1/2 extrahieren (bis zur Zeile mit "Jahrgangsstufen 3 und 4")
+def load_grundwortschatz_12():
+    gws_path = Path(__file__).parent / "gws.md"
+    try:
+        with open(gws_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            # Schneide bei "Jahrgangsstufen 3 und 4" ab
+            parts = content.split("### **Grundwortschatz für Jahrgangsstufen 3 und 4**")
+            return parts[0] if len(parts) > 0 else content
+    except FileNotFoundError:
+        return "Grundwortschatz nicht gefunden."
+
+GRUNDWORTSCHATZ_12 = load_grundwortschatz_12()
 
 class StoryRequest(BaseModel):
     thema: str
@@ -41,6 +56,7 @@ class StoryRequest(BaseModel):
     ort: str
     stimmung: str
     laenge: int = 10  # Länge in Minuten, Standard: 10
+    klassenstufe: str = "34"  # "12" oder "34", Standard: 3/4 Klasse
 
 class RandomSuggestions(BaseModel):
     themen: list[str] = [
@@ -86,8 +102,18 @@ async def generate_story(request: StoryRequest):
     min_words = request.laenge * 80
     max_words = request.laenge * 100
     
+    # Wähle passenden Grundwortschatz und Schwierigkeitsgrad
+    if request.klassenstufe == "12":
+        grundwortschatz = GRUNDWORTSCHATZ_12[:3000]
+        zielgruppe = "Kinder der Klassen 1-2"
+        schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
+    else:
+        grundwortschatz = GRUNDWORTSCHATZ_FULL[:3000]
+        zielgruppe = "Kinder der Klassen 3-4"
+        schwierigkeit = "kindgerecht mit etwas längeren Sätzen und anspruchsvolleren Wörtern"
+    
     # Prompt erstellen
-    prompt = f"""Du bist ein Geschichtenerzähler für Kinder der Klassen 1-4. 
+    prompt = f"""Du bist ein Geschichtenerzähler für {zielgruppe}. 
     
 Schreibe eine Geschichte mit folgenden Eigenschaften:
 - Lesezeit: etwa {request.laenge} Minuten (ca. {min_words}-{max_words} Wörter)
@@ -95,12 +121,13 @@ Schreibe eine Geschichte mit folgenden Eigenschaften:
 - Personen/Tiere: {request.personen_tiere}
 - Ort: {request.ort}
 - Stimmung: {request.stimmung}
+- Schwierigkeitsgrad: {schwierigkeit}
 
-WICHTIG: Verwende beim Schreiben häufig Wörter aus dem Grundwortschatz der Klassen 1-4 als Leseübung. 
+WICHTIG: Verwende beim Schreiben häufig Wörter aus dem Grundwortschatz als Leseübung. 
 Die Geschichte sollte kindgerecht, spannend und lehrreich sein.
 
 Hier ist der Grundwortschatz zur Orientierung:
-{GRUNDWORTSCHATZ[:3000]}
+{grundwortschatz}
 
 Format:
 Gib die Antwort im folgenden Format zurück:
@@ -160,7 +187,8 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
                 "personen_tiere": request.personen_tiere,
                 "ort": request.ort,
                 "stimmung": request.stimmung,
-                "laenge": request.laenge
+                "laenge": request.laenge,
+                "klassenstufe": request.klassenstufe
             }
         }
     
