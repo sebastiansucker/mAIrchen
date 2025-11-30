@@ -25,19 +25,13 @@ client = OpenAI(
 
 # Grundwortschatz laden
 def load_grundwortschatz():
-    # Im Docker Container ist gws.md im gleichen Verzeichnis wie main.py
+    # gws.md liegt im gleichen Verzeichnis wie main.py
     gws_path = Path(__file__).parent / "gws.md"
     try:
         with open(gws_path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        # Fallback für lokale Entwicklung
-        gws_path_dev = Path(__file__).parent.parent / "gws.md"
-        try:
-            with open(gws_path_dev, "r", encoding="utf-8") as f:
-                return f.read()
-        except FileNotFoundError:
-            return "Grundwortschatz nicht gefunden"
+        return "Grundwortschatz nicht gefunden"
 
 GRUNDWORTSCHATZ = load_grundwortschatz()
 

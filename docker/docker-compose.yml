@@ -1,11 +1,13 @@
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: mairchen-app
     ports:
       - "80:80"
+    env_file:
+      - ../.env
     environment:
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - MISTRAL_BASE_URL=${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}

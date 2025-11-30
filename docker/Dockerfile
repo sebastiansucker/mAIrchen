@@ -15,18 +15,17 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Python Dependencies installieren
-COPY backend/requirements.txt .
+COPY ../backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Backend-Code und Grundwortschatz kopieren
-COPY backend/ .
-COPY gws.md /app/gws.md
+COPY ../backend/ .
 
 # Frontend-Dateien kopieren
-COPY frontend/ /var/www/html/
+COPY ../frontend/ /var/www/html/
 
 # Nginx-Konfiguration
-COPY nginx-combined.conf /etc/nginx/sites-available/default
+COPY docker/nginx-combined.conf /etc/nginx/sites-available/default
 
 # Startup-Script erstellen
 RUN echo '#!/bin/bash\n\

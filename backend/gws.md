@@ -1,4 +1,4 @@
-### **Grundwortschatz für Jahrgangsstufen 1 und 2** [2]
+### **Grundwortschatz für Jahrgangsstufen 1 und 2**
 
 #### **A**
 - ab
@@ -349,7 +349,7 @@
 
 ---
 
-### **Grundwortschatz für Jahrgangsstufen 3 und 4** [1]
+### **Grundwortschatz für Jahrgangsstufen 3 und 4**
 
 #### **A**
 - der Abend (Abende)

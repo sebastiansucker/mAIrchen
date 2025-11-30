@@ -21,7 +21,7 @@ Eine Märchen-Schreib-App für Grundschulkinder (Klasse 1-4), die personalisiert
 
 1. Repository klonen und in das Verzeichnis wechseln:
 ```bash
-cd /Users/sebastian/Code/mAIrchen
+cd mAIrchen
 ```
 
 2. Umgebungsvariablen konfigurieren:
@@ -36,7 +36,7 @@ MISTRAL_API_KEY=your-actual-api-key
 
 4. Container starten:
 ```bash
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml build && docker-compose --env-file .env -f docker/docker-compose.yml up -d
 ```
 
 Die App ist nun verfügbar unter:
