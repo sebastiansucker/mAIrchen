@@ -27,7 +27,7 @@
 
         <main>
             <!-- Eingabeformular -->
-            <div id="input-form" class="card">
+            <div id="input-form" class="card" style="position: relative;">
                 <h2>Erstelle deine Geschichte</h2>
                 
                 <div class="form-group">
@@ -71,11 +71,45 @@
                     <button id="random-btn" class="btn btn-secondary">🎲 Zufällig</button>
                     <button id="generate-btn" class="btn btn-primary">✨ Geschichte erstellen</button>
                 </div>
-
-                <div id="loading" class="loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Deine Geschichte wird geschrieben...</p>
+                
+                <!-- Lade-Animation Overlay -->
+                <div id="loading" class="loading-overlay" style="display: none;">
+                <div class="loading-content">
+                    <div class="magic-book-animation">
+                        <div class="magic-book">
+                            <div class="book-left-page">
+                                <div class="page-text">
+                                    <span class="floating-letter" style="animation-delay: 0s;">E</span><span class="floating-letter" style="animation-delay: 0.1s;">s</span>
+                                </div>
+                                <div class="page-text">
+                                    <span class="floating-letter" style="animation-delay: 0.3s;">w</span><span class="floating-letter" style="animation-delay: 0.4s;">a</span><span class="floating-letter" style="animation-delay: 0.5s;">r</span>
+                                </div>
+                            </div>
+                            <div class="book-spine"></div>
+                            <div class="book-right-page">
+                                <div class="page-text">
+                                    <span class="floating-letter" style="animation-delay: 0.7s;">e</span><span class="floating-letter" style="animation-delay: 0.8s;">i</span><span class="floating-letter" style="animation-delay: 0.9s;">n</span><span class="floating-letter" style="animation-delay: 1s;">m</span><span class="floating-letter" style="animation-delay: 1.1s;">a</span><span class="floating-letter" style="animation-delay: 1.2s;">l</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="magic-sparkles">
+                            <span class="magic-particle"></span>
+                            <span class="magic-particle"></span>
+                            <span class="magic-particle"></span>
+                            <span class="magic-particle"></span>
+                            <span class="magic-particle"></span>
+                            <span class="magic-particle"></span>
+                        </div>
+                        <div class="magic-stars">
+                            <span class="star">✨</span>
+                            <span class="star">⭐</span>
+                            <span class="star">✨</span>
+                            <span class="star">⭐</span>
+                        </div>
+                    </div>
+                    <p class="loading-text">Deine Geschichte wird geschrieben...</p>
                 </div>
+            </div>
             </div>
 
             <!-- Geschichtenanzeige -->
