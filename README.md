@@ -9,7 +9,8 @@ Eine Märchen-Schreib-App für Grundschulkinder (Klasse 1-4), die personalisiert
 - **Grundwortschatz-Integration**: Geschichten enthalten Wörter aus dem Grundwortschatz der Klassen 1-4
 - **Buchlayout**: Ansprechende Darstellung im Buchformat mit vergilbtem Papier-Look
 - **Seitenblätter-Animation**: Geschichten erscheinen mit einer 3D-Blätter-Animation
-- **KI-gestützt**: Nutzt Mistral AI über OpenAI-kompatible API
+- **Flexible AI-Provider**: Unterstützt Mistral, Ollama Cloud und lokale Ollama-Instanzen
+- **Missbrauchsschutz**: Rate Limiting, Cost Control und Request-Validierung ohne Login
 - **Single-Container**: Frontend und Backend in einem Container für einfaches Deployment
 
 ## 🚀 Installation
@@ -17,7 +18,7 @@ Eine Märchen-Schreib-App für Grundschulkinder (Klasse 1-4), die personalisiert
 ### Voraussetzungen
 
 - Docker und Docker Compose
-- Mistral API Key
+- AI Provider API Key (Mistral oder Ollama Cloud) ODER lokale Ollama Installation
 
 ### Setup
 
@@ -31,10 +32,35 @@ cd mAIrchen
 cp .env.example .env
 ```
 
-3. `.env`-Datei bearbeiten und Mistral API Key eintragen:
+3. `.env`-Datei bearbeiten und AI Provider konfigurieren:
+
+**Option A: Mistral (Standard)**
+```env
+AI_PROVIDER=mistral
+MISTRAL_API_KEY=your-mistral-api-key
 ```
-MISTRAL_API_KEY=your-actual-api-key
+
+**Option B: Ollama Cloud**
+```env
+AI_PROVIDER=ollama-cloud
+OLLAMA_API_KEY=your-ollama-api-key
+OLLAMA_MODEL=llama3.2:3b
 ```
+
+**Option C: Ollama Lokal (kostenlos)** ⭐ Empfohlen für Entwicklung
+```env
+AI_PROVIDER=ollama-local
+OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+OLLAMA_MODEL=gemma3:latest  # Beste Balance: Schnell & gute Qualität
+```
+
+**Empfohlene Ollama-Modelle für Kindergeschichten:**
+- `gemma3:latest` - 🏆 Beste Wahl (7.5s, sehr gute Qualität)
+- `gemma3n:latest` - Etwas langsamer, exzellente Qualität (14.9s)
+- `llama3.2:3b` - Klein und schnell, gute Basisqualität
+- `gemma3:27b` - Beste Qualität, aber langsam (38s)
+
+Siehe [OLLAMA.md](OLLAMA.md) für detaillierte Ollama-Konfiguration und vollständigen Modell-Vergleich.
 
 4. Container bauen & starten:
 ```bash
@@ -44,8 +70,84 @@ docker-compose --env-file .env -f docker/docker-compose.yml up -d
 
 Die App ist nun verfügbar unter:
 - **Frontend**: http://localhost
-- **API**: http://localhost/api/
+- **API Info**: http://localhost/api (zeigt aktiven Provider & Modell)
+- **API Stats**: http://localhost/api/stats (Monitoring)
 - **Health Check**: http://localhost/health
+
+## 📊 API Endpoints
+
+Alle API-Endpoints sind über Port 80 (HTTP) erreichbar:
+
+### GET /api
+Zeigt aktiven AI-Provider und Modell:
+```bash
+curl http://localhost/api
+```
+```json
+{
+  "message": "mAIrchen API - Märchen für Kinder",
+  "ai_provider": "ollama-local",
+  "model": "gemma3:latest"
+}
+```
+
+### GET /api/stats
+Monitoring und Nutzungsstatistiken:
+```bash
+curl http://localhost/api/stats
+```
+```json
+{
+  "global_requests_today": 42,
+  "global_limit": 1000,
+  "estimated_cost_today": 0.0,
+  "daily_budget": 5.0,
+  "budget_remaining": 5.0,
+  "rate_limit_per_ip": 10,
+  "active_ips": 8
+}
+```
+
+### POST /api/generate-story
+Generiert eine personalisierte Geschichte:
+```bash
+curl -X POST http://localhost/api/generate-story \
+  -H "Content-Type: application/json" \
+  -d '{
+    "thema": "Freundschaft",
+    "personen_tiere": "Ein kleiner Igel",
+    "ort": "im Wald",
+    "stimmung": "herzlich",
+    "laenge": 3,
+    "klassenstufe": "34"
+  }'
+```
+
+### GET /api/random
+Zufällige Vorschläge für alle Parameter:
+```bash
+curl http://localhost/api/random
+```
+
+## 🔒 Sicherheit & Missbrauchsschutz
+
+Die API ist über Port 80 erreichbar, aber durch mehrere Schutzebenen gesichert:
+
+### Aktive Schutzmaßnahmen:
+- **Rate Limiting**: 10 Anfragen/h pro IP, 1000/Tag global (IP-basiert)
+- **Request-Validierung**: Max 15 Min Story-Länge, 200 Zeichen pro Feld
+- **Cost Control**: Max 5€/Tag Budget mit automatischem Stop
+- **CORS-Schutz**: Nur erlaubte Origins (konfigurierbar)
+- **Nginx Reverse Proxy**: Backend nur intern erreichbar (127.0.0.1:8000)
+- Keine User-Accounts erforderlich - Privacy-Friendly!
+
+### Wie es funktioniert:
+1. Backend läuft nur auf `127.0.0.1:8000` (nicht von außen erreichbar)
+2. Nginx auf Port 80 leitet Anfragen an Backend weiter
+3. Rate Limiting prüft jede Anfrage anhand der IP-Adresse
+4. CORS verhindert Zugriff von fremden Websites
+
+Details: [SECURITY.md](SECURITY.md)
 
 ## 🏗️ Architektur
 
@@ -57,11 +159,15 @@ Frontend und Backend laufen in einem Docker-Container:
 
 ### Backend (FastAPI)
 - Python-basierte REST API
-- OpenAI-kompatibler Client für Mistral
+- OpenAI-kompatibler Client (unterstützt Mistral, Ollama Cloud, Ollama Local)
+- Flexible AI-Provider-Konfiguration über Umgebungsvariablen
 - Grundwortschatz-Integration aus `backend/gws.md`
+- Rate Limiting & Cost Tracking
 - Endpunkte:
+  - `GET /` - API Info (Provider & Modell)
   - `GET /api/random` - Zufällige Vorschläge
   - `POST /api/generate-story` - Geschichte generieren
+  - `GET /api/stats` - Monitoring & Statistiken
   - `GET /health` - Health Check
 
 ### Frontend
@@ -152,10 +258,29 @@ Content-Type: application/json
 ## 🔧 Konfiguration
 
 Umgebungsvariablen in `.env`:
-- `MISTRAL_API_KEY`: Ihr Mistral API Schlüssel (erforderlich)
+
+### AI Provider
+- `AI_PROVIDER`: `mistral`, `ollama-cloud` oder `ollama-local` (Standard: mistral)
+
+### Mistral
+- `MISTRAL_API_KEY`: Ihr Mistral API Schlüssel
 - `MISTRAL_BASE_URL`: API Basis-URL (Standard: https://api.mistral.ai/v1)
-- `MISTRAL_MODEL`: Zu verwendendes Modell (Standard: mistral-small-latest)
+- `MISTRAL_MODEL`: Modell (Standard: mistral-small-latest)
+
+### Ollama Cloud
+- `OLLAMA_API_KEY`: Ihr Ollama Cloud API Schlüssel
+- `OLLAMA_MODEL`: Modell (Standard: llama3.2:3b)
+
+### Ollama Local
+- `OLLAMA_BASE_URL`: URL zu lokaler Ollama-Instanz (Standard: http://host.docker.internal:11434/v1)
+- `OLLAMA_MODEL`: Modell (Empfohlen: gemma3:latest)
+
+### Sicherheit
 - `ALLOWED_ORIGINS`: Erlaubte CORS Origins (Standard: http://localhost,http://localhost:80)
+- `RATE_LIMIT_PER_IP`: Anfragen pro Stunde pro IP (Standard: 10)
+- `GLOBAL_DAILY_LIMIT`: Max Anfragen pro Tag (Standard: 1000)
+- `MAX_STORY_LENGTH`: Max Story-Länge in Minuten (Standard: 15)
+- `MAX_DAILY_COST`: Max Kosten pro Tag in Euro (Standard: 5.0)
 
 **Wichtig**: Die `.env` Datei ist in `.gitignore` und wird nicht ins Repository committed!
 

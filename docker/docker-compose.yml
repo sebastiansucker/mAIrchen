@@ -9,9 +9,17 @@ services:
     env_file:
       - ../.env
     environment:
+      # AI Provider (mistral, ollama-cloud, ollama-local)
+      - AI_PROVIDER=${AI_PROVIDER:-mistral}
+      # Mistral
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - MISTRAL_BASE_URL=${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}
       - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}
+      # Ollama Cloud
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:3b}
+      # Ollama Local
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}
       # CORS-Sicherheit: Nur diese Origins dürfen zugreifen
       # In Produktion durch echte Domain ersetzen, z.B. https://mairchen.de
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost,http://localhost:80}

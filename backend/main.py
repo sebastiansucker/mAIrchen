@@ -43,11 +43,31 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-# OpenAI Client für Mistral
-client = OpenAI(
-    api_key=os.getenv("MISTRAL_API_KEY", "dummy-key"),
-    base_url=os.getenv("MISTRAL_BASE_URL", "https://api.mistral.ai/v1")
-)
+# AI Provider Konfiguration
+AI_PROVIDER = os.getenv("AI_PROVIDER", "mistral").lower()  # mistral, ollama-cloud, ollama-local
+
+# Client initialisierung basierend auf Provider
+if AI_PROVIDER == "ollama-cloud":
+    # Ollama Cloud mit API Key
+    client = OpenAI(
+        api_key=os.getenv("OLLAMA_API_KEY", "dummy-key"),
+        base_url="https://ollama.com/v1"
+    )
+    DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+elif AI_PROVIDER == "ollama-local":
+    # Lokale Ollama Instanz (kein API Key nötig)
+    client = OpenAI(
+        api_key="ollama",  # Dummy key für lokale Instanz
+        base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    )
+    DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+else:
+    # Mistral (Standard)
+    client = OpenAI(
+        api_key=os.getenv("MISTRAL_API_KEY", "dummy-key"),
+        base_url=os.getenv("MISTRAL_BASE_URL", "https://api.mistral.ai/v1")
+    )
+    DEFAULT_MODEL = os.getenv("MISTRAL_MODEL", "mistral-small-latest")
 
 # Grundwortschatz laden
 def load_grundwortschatz():
@@ -129,7 +149,11 @@ class RandomSuggestions(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "mAIrchen API - Märchen für Kinder"}
+    return {
+        "message": "mAIrchen API - Märchen für Kinder",
+        "ai_provider": AI_PROVIDER,
+        "model": DEFAULT_MODEL
+    }
 
 def get_client_ip(request: Request) -> str:
     """Extrahiert die Client-IP aus dem Request (berücksichtigt Proxy)"""
@@ -261,9 +285,9 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         # ~1.3 Tokens pro Wort für Deutsch, plus Buffer für Titel/Formatierung
         estimated_tokens = int(max_words * 1.3) + 200
         
-        # API-Aufruf an Mistral
+        # API-Aufruf an AI Provider
         response = client.chat.completions.create(
-            model=os.getenv("MISTRAL_MODEL", "mistral-small-latest"),
+            model=DEFAULT_MODEL,
             messages=[
                 {"role": "system", "content": "Du bist ein kreativer Geschichtenerzähler für Grundschulkinder."},
                 {"role": "user", "content": prompt}
@@ -297,9 +321,18 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         
         # Aktualisiere Cost Tracking basierend auf tatsächlichem Token-Verbrauch
         if hasattr(response, 'usage') and response.usage:
-            # Mistral Pricing: ~0.001€ per 1K tokens (input+output)
             total_tokens = response.usage.total_tokens
-            actual_cost = (total_tokens / 1000) * 0.001
+            # Provider-spezifisches Pricing
+            if AI_PROVIDER == "ollama-cloud":
+                # Ollama Cloud: ~0.0005€ per 1K tokens
+                actual_cost = (total_tokens / 1000) * 0.0005
+            elif AI_PROVIDER == "ollama-local":
+                # Lokale Ollama: kostenlos
+                actual_cost = 0.0
+            else:
+                # Mistral: ~0.001€ per 1K tokens
+                actual_cost = (total_tokens / 1000) * 0.001
+            
             with rate_limit_lock:
                 daily_cost["cost"] += actual_cost
         
