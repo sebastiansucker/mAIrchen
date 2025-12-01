@@ -133,10 +133,10 @@ class RandomSuggestions(BaseModel):
         "Eine Reise", "Ein Geheimnis", "Mut", "Hilfsbereitschaft"
     ]
     personen_tiere: list[str] = [
-        "Ein kleiner Hase", "Eine mutige Prinzessin", "Ein frecher Fuchs",
-        "Eine weise Eule", "Ein tapferere Ritterin", "Ein tapferer Ritter", 
-        "Ein neugieriges Eichhörnchen", "Ein kleines Mädchen", "Ein junger Drache", 
-        "Eine zauberhafte Fee", "Ein fröhlicher Bär", "Ein kluger Junge", "Eine singende Nachtigall"
+        "Ein kleiner Hase namens Erwin", "Eine mutige Prinzessin namens Helena", "Ein frecher Fuchs namens Felix",
+        "Eine weise Eule", "Ein tapferere Ritterin names Hannelore", "Ein tapferer Ritter names Siegfried", 
+        "Ein neugieriges Eichhörnchen", "Ein kleines Mädchen namens Juna", "Ein junger Drache", 
+        "Eine zauberhafte Fee", "Der fröhliche Bär Klaus", "Ein kluger Junge", "Eine singende Nachtigall"
     ]
     orte: list[str] = [
         "im Wald", "am See", "in einem Schloss", "auf einem Bauernhof",
@@ -246,11 +246,11 @@ async def generate_story(story_request: StoryRequest, request: Request):
     # Wähle passenden Grundwortschatz und Schwierigkeitsgrad
     if story_request.klassenstufe == "12":
         grundwortschatz = GRUNDWORTSCHATZ_12[:3000]
-        zielgruppe = "Kinder der Klassen 1-2"
+        zielgruppe = "Kinder der Klassenstufen 1 & 2"
         schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
     else:
         grundwortschatz = GRUNDWORTSCHATZ_FULL[:3000]
-        zielgruppe = "Kinder der Klassen 3-4"
+        zielgruppe = "Kinder der Klassenstufen 3 & 4"
         schwierigkeit = "kindgerecht mit etwas längeren Sätzen und anspruchsvolleren Wörtern"
     
     # Prompt erstellen
@@ -300,10 +300,10 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         
         # Parse Titel und Geschichte
         title = "Eine Geschichte"
-        story = content
+        story = content if content else ""
         
         # Suche nach TITEL: im Text (auch wenn es nicht am Anfang steht)
-        if "TITEL:" in content:
+        if content and "TITEL:" in content:
             parts = content.split("TITEL:", 1)
             if len(parts) > 1:
                 # Extrahiere Titel (erste Zeile nach TITEL:)
