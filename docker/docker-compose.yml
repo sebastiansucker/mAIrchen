@@ -9,12 +9,12 @@ services:
     env_file:
       - ../.env
     environment:
-      # AI Provider (mistral, ollama-cloud, ollama-local)
-      - AI_PROVIDER=${AI_PROVIDER:-mistral}
-      # Mistral
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - MISTRAL_BASE_URL=${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}
-      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}
+      # AI Provider (openai, ollama-cloud, ollama-local)
+      - AI_PROVIDER=${AI_PROVIDER:-openai}
+      # OpenAI-compatible API (OpenAI, Mistral, Together AI, Anyscale, OpenRouter, etc.)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.mistral.ai/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-mistral-small-latest}
       # Ollama Cloud
       - OLLAMA_API_KEY=${OLLAMA_API_KEY}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:3b}

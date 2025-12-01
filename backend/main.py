@@ -44,7 +44,7 @@ app.add_middleware(
 )
 
 # AI Provider Konfiguration
-AI_PROVIDER = os.getenv("AI_PROVIDER", "mistral").lower()  # mistral, ollama-cloud, ollama-local
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").lower()  # openai, ollama-cloud, ollama-local
 
 # Client initialisierung basierend auf Provider
 if AI_PROVIDER == "ollama-cloud":
@@ -62,12 +62,12 @@ elif AI_PROVIDER == "ollama-local":
     )
     DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 else:
-    # Mistral (Standard)
+    # OpenAI-compatible API (default)
     client = OpenAI(
-        api_key=os.getenv("MISTRAL_API_KEY", "dummy-key"),
-        base_url=os.getenv("MISTRAL_BASE_URL", "https://api.mistral.ai/v1")
+        api_key=os.getenv("OPENAI_API_KEY", "dummy-key"),
+        base_url=os.getenv("OPENAI_BASE_URL", "https://api.mistral.ai/v1")
     )
-    DEFAULT_MODEL = os.getenv("MISTRAL_MODEL", "mistral-small-latest")
+    DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "mistral-small-latest")
 
 # Grundwortschatz laden
 def load_grundwortschatz():
@@ -330,7 +330,7 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
                 # Lokale Ollama: kostenlos
                 actual_cost = 0.0
             else:
-                # Mistral: ~0.001€ per 1K tokens
+                # OpenAI-compatible: ~0.001€ per 1K tokens (adjust based on provider)
                 actual_cost = (total_tokens / 1000) * 0.001
             
             with rate_limit_lock:

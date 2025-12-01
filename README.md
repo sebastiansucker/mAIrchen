@@ -9,7 +9,7 @@ Eine Märchen-Schreib-App für Grundschulkinder (Klasse 1-4), die personalisiert
 - **Grundwortschatz-Integration**: Geschichten enthalten Wörter aus dem Grundwortschatz der Klassen 1-4
 - **Buchlayout**: Ansprechende Darstellung im Buchformat mit vergilbtem Papier-Look
 - **Seitenblätter-Animation**: Geschichten erscheinen mit einer 3D-Blätter-Animation
-- **Flexible AI-Provider**: Unterstützt Mistral, Ollama Cloud und lokale Ollama-Instanzen
+- **Flexible AI-Provider**: Unterstützt alle OpenAI-kompatiblen APIs (OpenAI, Mistral, Together AI, etc.) plus Ollama (Cloud & Local)
 - **Missbrauchsschutz**: Rate Limiting, Cost Control und Request-Validierung ohne Login
 - **Single-Container**: Frontend und Backend in einem Container für einfaches Deployment
 
@@ -18,7 +18,7 @@ Eine Märchen-Schreib-App für Grundschulkinder (Klasse 1-4), die personalisiert
 ### Voraussetzungen
 
 - Docker und Docker Compose
-- AI Provider API Key (Mistral oder Ollama Cloud) ODER lokale Ollama Installation
+- AI Provider: OpenAI-compatible API Key (OpenAI, Mistral, Together AI, etc.) ODER Ollama (Cloud/Local)
 
 ### Setup
 
@@ -34,11 +34,22 @@ cp .env.example .env
 
 3. `.env`-Datei bearbeiten und AI Provider konfigurieren:
 
-**Option A: Mistral (Standard)**
+**Option A: OpenAI-compatible API** (Standard - Mistral AI als Default)
 ```env
-AI_PROVIDER=mistral
-MISTRAL_API_KEY=your-mistral-api-key
+AI_PROVIDER=openai
+OPENAI_API_KEY=your-api-key
+OPENAI_BASE_URL=https://api.mistral.ai/v1  # Default: Mistral AI
+OPENAI_MODEL=mistral-small-latest  # Default: mistral-small-latest
 ```
+
+**Unterstützte OpenAI-kompatible Provider:**
+- **Mistral AI** (mistral-small-latest, mistral-large-latest) - **Default**
+- OpenAI (gpt-4o-mini, gpt-4o, etc.)
+- Together AI
+- Anyscale Endpoints
+- OpenRouter
+- Azure OpenAI
+- Jeder andere Provider mit OpenAI-kompatibler API
 
 **Option B: Ollama Cloud**
 ```env
@@ -59,8 +70,6 @@ OLLAMA_MODEL=gemma3:latest  # Beste Balance: Schnell & gute Qualität
 - `gemma3n:latest` - Etwas langsamer, exzellente Qualität (14.9s)
 - `llama3.2:3b` - Klein und schnell, gute Basisqualität
 - `gemma3:27b` - Beste Qualität, aber langsam (38s)
-
-Siehe [OLLAMA.md](OLLAMA.md) für detaillierte Ollama-Konfiguration und vollständigen Modell-Vergleich.
 
 4. Container bauen & starten:
 ```bash
@@ -86,8 +95,8 @@ curl http://localhost/api
 ```json
 {
   "message": "mAIrchen API - Märchen für Kinder",
-  "ai_provider": "ollama-local",
-  "model": "gemma3:latest"
+  "ai_provider": "openai",
+  "model": "mistral-small-latest"
 }
 ```
 
@@ -260,12 +269,31 @@ Content-Type: application/json
 Umgebungsvariablen in `.env`:
 
 ### AI Provider
-- `AI_PROVIDER`: `mistral`, `ollama-cloud` oder `ollama-local` (Standard: mistral)
+- `AI_PROVIDER`: `openai`, `ollama-cloud` oder `ollama-local` (Standard: openai)
 
-### Mistral
-- `MISTRAL_API_KEY`: Ihr Mistral API Schlüssel
-- `MISTRAL_BASE_URL`: API Basis-URL (Standard: https://api.mistral.ai/v1)
-- `MISTRAL_MODEL`: Modell (Standard: mistral-small-latest)
+### OpenAI-compatible API
+- `OPENAI_API_KEY`: Ihr API Schlüssel
+- `OPENAI_BASE_URL`: API Basis-URL (Standard: https://api.openai.com/v1)
+- `OPENAI_MODEL`: Modell (Standard: gpt-4o-mini)
+
+**Beispiele für verschiedene Provider:**
+```env
+# Mistral AI (Default)
+OPENAI_BASE_URL=https://api.mistral.ai/v1
+OPENAI_MODEL=mistral-small-latest
+
+# OpenAI
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini
+
+# Together AI
+OPENAI_BASE_URL=https://api.together.xyz/v1
+OPENAI_MODEL=meta-llama/Llama-3.2-3B-Instruct-Turbo
+
+# OpenRouter
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_MODEL=meta-llama/llama-3.2-3b-instruct
+```
 
 ### Ollama Cloud
 - `OLLAMA_API_KEY`: Ihr Ollama Cloud API Schlüssel
