@@ -12,6 +12,9 @@ services:
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - MISTRAL_BASE_URL=${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}
       - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}
+      # CORS-Sicherheit: Nur diese Origins dürfen zugreifen
+      # In Produktion durch echte Domain ersetzen, z.B. https://mairchen.de
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost,http://localhost:80}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]

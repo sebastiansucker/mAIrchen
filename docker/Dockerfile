@@ -28,11 +28,13 @@ COPY ../frontend/ /var/www/html/
 COPY docker/nginx-combined.conf /etc/nginx/sites-available/default
 
 # Startup-Script erstellen
+# Backend läuft nur auf 127.0.0.1 (localhost) - nicht von außen erreichbar!
 RUN echo '#!/bin/bash\n\
 nginx\n\
-uvicorn main:app --host 0.0.0.0 --port 8000\n\
+uvicorn main:app --host 127.0.0.1 --port 8000\n\
 ' > /start.sh && chmod +x /start.sh
 
-EXPOSE 80 8000
+# Nur Port 80 nach außen (Nginx), Backend-Port 8000 ist intern
+EXPOSE 80
 
 CMD ["/start.sh"]

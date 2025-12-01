@@ -8,13 +8,19 @@ from pathlib import Path
 
 app = FastAPI(title="mAIrchen API")
 
-# CORS Middleware
+# CORS Middleware - nur für gleiche Domain (über Nginx Proxy)
+# In Produktion sollte hier die tatsächliche Domain stehen
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost,http://localhost:80,http://localhost:8080"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["POST", "GET"],
+    allow_headers=["Content-Type"],
 )
 
 # OpenAI Client für Mistral

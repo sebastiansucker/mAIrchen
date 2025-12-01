@@ -155,8 +155,28 @@ Umgebungsvariablen in `.env`:
 - `MISTRAL_API_KEY`: Ihr Mistral API Schlüssel (erforderlich)
 - `MISTRAL_BASE_URL`: API Basis-URL (Standard: https://api.mistral.ai/v1)
 - `MISTRAL_MODEL`: Zu verwendendes Modell (Standard: mistral-small-latest)
+- `ALLOWED_ORIGINS`: Erlaubte CORS Origins (Standard: http://localhost,http://localhost:80)
 
 **Wichtig**: Die `.env` Datei ist in `.gitignore` und wird nicht ins Repository committed!
+
+## 🔒 Sicherheit
+
+Die API ist durch mehrere Sicherheitsebenen geschützt:
+
+1. **Backend nur auf localhost**: Das FastAPI-Backend lauscht nur auf `127.0.0.1:8000` und ist von außen nicht direkt erreichbar
+2. **Nginx als einziger Zugangspunkt**: Nur Nginx kann auf das Backend zugreifen und fungiert als Reverse Proxy
+3. **CORS-Einschränkung**: Nur erlaubte Origins (konfiguriert via `ALLOWED_ORIGINS`) können API-Requests durchführen
+
+### Für Produktion
+
+In der Produktion sollten Sie `ALLOWED_ORIGINS` auf Ihre echte Domain(s) setzen:
+
+```bash
+# In .env
+ALLOWED_ORIGINS=https://mairchen.de,https://www.mairchen.de
+```
+
+Dies verhindert, dass andere Websites Ihre API nutzen können, auch wenn sie die URL kennen. Das Frontend kann weiterhin von Client-Geräten auf die API zugreifen, da die Requests über Ihren Server laufen.
 
 ## 🌐 Netzwerk-Zugriff
 
