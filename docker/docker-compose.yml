@@ -15,6 +15,11 @@ services:
       # CORS-Sicherheit: Nur diese Origins dürfen zugreifen
       # In Produktion durch echte Domain ersetzen, z.B. https://mairchen.de
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost,http://localhost:80}
+      # Rate Limiting & Cost Control
+      - RATE_LIMIT_PER_IP=${RATE_LIMIT_PER_IP:-10}  # Anfragen pro Stunde pro IP
+      - GLOBAL_DAILY_LIMIT=${GLOBAL_DAILY_LIMIT:-1000}  # Max Anfragen pro Tag
+      - MAX_STORY_LENGTH=${MAX_STORY_LENGTH:-15}  # Max Minuten
+      - MAX_DAILY_COST=${MAX_DAILY_COST:-5.0}  # Max Kosten pro Tag in Euro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]

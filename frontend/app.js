@@ -109,11 +109,13 @@ async function generateStory() {
             })
         });
         
-        if (!response.ok) {
-            throw new Error('Fehler beim Generieren der Geschichte');
-        }
-        
         const data = await response.json();
+        
+        if (!response.ok) {
+            // Zeige spezifische Fehlermeldung vom Server
+            const errorMsg = data.detail || 'Fehler beim Generieren der Geschichte';
+            throw new Error(errorMsg);
+        }
         
         if (data.success) {
             displayStory(data.story, data.title, data.parameters);

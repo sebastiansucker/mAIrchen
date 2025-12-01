@@ -1,12 +1,32 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from openai import OpenAI
 import os
 import random
 from pathlib import Path
+from datetime import datetime, timedelta
+from collections import defaultdict
+import threading
+import json
 
 app = FastAPI(title="mAIrchen API")
+
+# Rate Limiting Konfiguration
+RATE_LIMIT_PER_IP = int(os.getenv("RATE_LIMIT_PER_IP", "10"))  # Anfragen pro Stunde
+RATE_LIMIT_WINDOW = 3600  # 1 Stunde in Sekunden
+GLOBAL_DAILY_LIMIT = int(os.getenv("GLOBAL_DAILY_LIMIT", "1000"))  # Max Anfragen pro Tag
+MAX_STORY_LENGTH = int(os.getenv("MAX_STORY_LENGTH", "15"))  # Max Minuten
+
+# Cost Monitoring
+MAX_DAILY_COST = float(os.getenv("MAX_DAILY_COST", "5.0"))  # Max 5€ pro Tag
+COST_PER_REQUEST = 0.0015  # Geschätzte Kosten pro Anfrage (wird dynamisch angepasst)
+
+# Rate Limiting Storage (In-Memory)
+request_history = defaultdict(list)  # IP -> [timestamp, timestamp, ...]
+global_request_count = {"count": 0, "reset_time": datetime.now() + timedelta(days=1)}
+daily_cost = {"cost": 0.0, "reset_time": datetime.now() + timedelta(days=1)}
+rate_limit_lock = threading.Lock()
 
 # CORS Middleware - nur für gleiche Domain (über Nginx Proxy)
 # In Produktion sollte hier die tatsächliche Domain stehen
@@ -63,6 +83,29 @@ class StoryRequest(BaseModel):
     stimmung: str
     laenge: int = 10  # Länge in Minuten, Standard: 10
     klassenstufe: str = "34"  # "12" oder "34", Standard: 3/4 Klasse
+    
+    @field_validator('laenge')
+    @classmethod
+    def validate_laenge(cls, v):
+        if v < 1:
+            raise ValueError('Länge muss mindestens 1 Minute sein')
+        if v > MAX_STORY_LENGTH:
+            raise ValueError(f'Länge darf maximal {MAX_STORY_LENGTH} Minuten sein')
+        return v
+    
+    @field_validator('thema', 'personen_tiere', 'ort', 'stimmung')
+    @classmethod
+    def validate_string_length(cls, v):
+        if len(v) > 200:
+            raise ValueError('Eingabe zu lang (max 200 Zeichen)')
+        return v
+    
+    @field_validator('klassenstufe')
+    @classmethod
+    def validate_klassenstufe(cls, v):
+        if v not in ['12', '34']:
+            raise ValueError('Klassenstufe muss "12" oder "34" sein')
+        return v
 
 class RandomSuggestions(BaseModel):
     themen: list[str] = [
@@ -88,6 +131,54 @@ class RandomSuggestions(BaseModel):
 async def root():
     return {"message": "mAIrchen API - Märchen für Kinder"}
 
+def get_client_ip(request: Request) -> str:
+    """Extrahiert die Client-IP aus dem Request (berücksichtigt Proxy)"""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+def check_rate_limit(ip: str) -> tuple[bool, str]:
+    """Prüft Rate Limit für eine IP. Returns (allowed, error_message)"""
+    with rate_limit_lock:
+        now = datetime.now()
+        
+        # Reset global counter täglich
+        if now > global_request_count["reset_time"]:
+            global_request_count["count"] = 0
+            global_request_count["reset_time"] = now + timedelta(days=1)
+        
+        # Reset daily cost täglich
+        if now > daily_cost["reset_time"]:
+            daily_cost["cost"] = 0.0
+            daily_cost["reset_time"] = now + timedelta(days=1)
+        
+        # Prüfe tägliches Budget
+        if daily_cost["cost"] >= MAX_DAILY_COST:
+            hours_until_reset = (daily_cost["reset_time"] - now).seconds // 3600
+            return False, f"Tägliches Budget erreicht. Service pausiert für ~{hours_until_reset}h."
+        
+        # Prüfe globales Limit
+        if global_request_count["count"] >= GLOBAL_DAILY_LIMIT:
+            hours_until_reset = (global_request_count["reset_time"] - now).seconds // 3600
+            return False, f"Tägliches Anfrage-Limit erreicht. Bitte in ~{hours_until_reset}h erneut versuchen."
+        
+        # Bereinige alte Requests (älter als RATE_LIMIT_WINDOW)
+        cutoff_time = now - timedelta(seconds=RATE_LIMIT_WINDOW)
+        request_history[ip] = [ts for ts in request_history[ip] if ts > cutoff_time]
+        
+        # Prüfe IP-spezifisches Limit
+        if len(request_history[ip]) >= RATE_LIMIT_PER_IP:
+            minutes_until_oldest_expires = int((request_history[ip][0] + timedelta(seconds=RATE_LIMIT_WINDOW) - now).seconds / 60)
+            return False, f"Zu viele Anfragen. Bitte warte ~{minutes_until_oldest_expires} Minuten."
+        
+        # Request erlauben und zählen
+        request_history[ip].append(now)
+        global_request_count["count"] += 1
+        daily_cost["cost"] += COST_PER_REQUEST
+        
+        return True, ""
+
 @app.get("/api/random")
 async def get_random_suggestions():
     """Gibt zufällige Vorschläge für die Geschichte zurück"""
@@ -99,17 +190,37 @@ async def get_random_suggestions():
         "stimmung": random.choice(suggestions.stimmungen)
     }
 
+@app.get("/api/stats")
+async def get_stats():
+    """Gibt aktuelle Nutzungsstatistiken zurück (nur für Monitoring)"""
+    with rate_limit_lock:
+        return {
+            "global_requests_today": global_request_count["count"],
+            "global_limit": GLOBAL_DAILY_LIMIT,
+            "estimated_cost_today": round(daily_cost["cost"], 2),
+            "daily_budget": MAX_DAILY_COST,
+            "budget_remaining": round(MAX_DAILY_COST - daily_cost["cost"], 2),
+            "rate_limit_per_ip": RATE_LIMIT_PER_IP,
+            "active_ips": len(request_history)
+        }
+
 @app.post("/api/generate-story")
-async def generate_story(request: StoryRequest):
+async def generate_story(story_request: StoryRequest, request: Request):
     """Generiert eine Geschichte basierend auf den Eingaben"""
+    
+    # Rate Limiting prüfen
+    client_ip = get_client_ip(request)
+    allowed, error_msg = check_rate_limit(client_ip)
+    if not allowed:
+        raise HTTPException(status_code=429, detail=error_msg)
     
     # Berechne Wortanzahl basierend auf Lesezeit
     # Durchschnittliche Lesegeschwindigkeit Kinder: ~80-100 Wörter/Min
-    min_words = request.laenge * 80
-    max_words = request.laenge * 100
+    min_words = story_request.laenge * 80
+    max_words = story_request.laenge * 100
     
     # Wähle passenden Grundwortschatz und Schwierigkeitsgrad
-    if request.klassenstufe == "12":
+    if story_request.klassenstufe == "12":
         grundwortschatz = GRUNDWORTSCHATZ_12[:3000]
         zielgruppe = "Kinder der Klassen 1-2"
         schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
@@ -122,11 +233,11 @@ async def generate_story(request: StoryRequest):
     prompt = f"""Du bist ein Geschichtenerzähler für {zielgruppe}. 
     
 Schreibe eine Geschichte mit folgenden Eigenschaften:
-- Lesezeit: etwa {request.laenge} Minuten (ca. {min_words}-{max_words} Wörter)
-- Thema: {request.thema}
-- Personen/Tiere: {request.personen_tiere}
-- Ort: {request.ort}
-- Stimmung: {request.stimmung}
+- Lesezeit: etwa {story_request.laenge} Minuten (ca. {min_words}-{max_words} Wörter)
+- Thema: {story_request.thema}
+- Personen/Tiere: {story_request.personen_tiere}
+- Ort: {story_request.ort}
+- Stimmung: {story_request.stimmung}
 - Schwierigkeitsgrad: {schwierigkeit}
 
 WICHTIG: Verwende beim Schreiben häufig Wörter aus dem Grundwortschatz als Leseübung. 
@@ -184,17 +295,25 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         # Fallback: Wenn der Titel noch "**TITEL:" enthält, entferne die Markdown-Sterne
         title = title.replace("**", "").strip()
         
+        # Aktualisiere Cost Tracking basierend auf tatsächlichem Token-Verbrauch
+        if hasattr(response, 'usage') and response.usage:
+            # Mistral Pricing: ~0.001€ per 1K tokens (input+output)
+            total_tokens = response.usage.total_tokens
+            actual_cost = (total_tokens / 1000) * 0.001
+            with rate_limit_lock:
+                daily_cost["cost"] += actual_cost
+        
         return {
             "success": True,
             "title": title,
             "story": story,
             "parameters": {
-                "thema": request.thema,
-                "personen_tiere": request.personen_tiere,
-                "ort": request.ort,
-                "stimmung": request.stimmung,
-                "laenge": request.laenge,
-                "klassenstufe": request.klassenstufe
+                "thema": story_request.thema,
+                "personen_tiere": story_request.personen_tiere,
+                "ort": story_request.ort,
+                "stimmung": story_request.stimmung,
+                "laenge": story_request.laenge,
+                "klassenstufe": story_request.klassenstufe
             }
         }
     
