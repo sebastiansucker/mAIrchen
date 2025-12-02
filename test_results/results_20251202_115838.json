@@ -1,0 +1,3112 @@
+[
+  {
+    "model": "gemma3:latest",
+    "timestamp": "2025-12-02T11:51:02.103612",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 2.23,
+        "title": "Harry der Hase",
+        "word_count": 106,
+        "paragraph_count": 5,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 16,
+          "total_occurrences": 31,
+          "total_gws_words": 362,
+          "percentage": 4.4,
+          "top_words": [
+            [
+              "ei",
+              9
+            ],
+            [
+              "blume",
+              3
+            ],
+            [
+              "wiese",
+              3
+            ],
+            [
+              "hase",
+              2
+            ],
+            [
+              "klein",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 2,
+          "direkte_rede": 0,
+          "total_score": 2,
+          "examples": [
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 2,
+              "samples": [
+                "glücklich",
+                "fröhlich"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 4.4,
+          "long_sentences": 0,
+          "total_sentences": 24,
+          "total_words": 106,
+          "complex_words": [],
+          "paragraph_count": 5,
+          "type_token_ratio": 0.53,
+          "grundwortschatz_ratio": 0.34,
+          "issues": [
+            "Zu wenig Grundwortschatz (34.0%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 423,
+        "story_preview": "Harry ist ein kleiner Hase. Er wohnt auf einer Wiese. Die Wiese ist sehr grün. Harry mag die Wiese.\n\nEr spielt mit einer Blume. Die Blume ist gelb. Harry hüpft und hüpft. Er findet einen kleinen Stein..."
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 3.23,
+        "title": "Tim und Nussi",
+        "word_count": 154,
+        "paragraph_count": 9,
+        "dialogue_count": 1,
+        "grundwortschatz": {
+          "unique_words": 20,
+          "total_occurrences": 36,
+          "total_gws_words": 362,
+          "percentage": 5.5,
+          "top_words": [
+            [
+              "ei",
+              7
+            ],
+            [
+              "freund",
+              4
+            ],
+            [
+              "freunde",
+              4
+            ],
+            [
+              "vogel",
+              3
+            ],
+            [
+              "klein",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 1,
+          "total_score": 4,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 1,
+              "samples": [
+                "\"hurra!\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 3.9,
+          "long_sentences": 0,
+          "total_sentences": 41,
+          "total_words": 154,
+          "complex_words": [],
+          "paragraph_count": 9,
+          "type_token_ratio": 0.6,
+          "grundwortschatz_ratio": 0.23,
+          "issues": [
+            "Zu wenig Grundwortschatz (23.4%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 533,
+        "story_preview": "Im Wald war es schön. Es gab viele Bäume. Ein Igel namens Tim saß da. Tim war klein und braun. Er mochte Beeren sehr gern.\n\nEin Eichhörnchen namens Nussi kam dann auch. Nussi war flink und rot. Er hat..."
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 5.5,
+        "title": "Pip und der verzauberte Pilz",
+        "word_count": 310,
+        "paragraph_count": 6,
+        "dialogue_count": 1,
+        "grundwortschatz": {
+          "unique_words": 17,
+          "total_occurrences": 31,
+          "total_gws_words": 421,
+          "percentage": 4.0,
+          "top_words": [
+            [
+              "pilz",
+              7
+            ],
+            [
+              "bisschen",
+              3
+            ],
+            [
+              "leuchten",
+              3
+            ],
+            [
+              "wald",
+              3
+            ],
+            [
+              "ehrlich",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 3,
+          "emotionale_ausdrücke": 2,
+          "direkte_rede": 1,
+          "total_score": 9,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 3,
+              "samples": [
+                "duft",
+                "fühl"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 2,
+              "samples": [
+                "mutig",
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 1,
+              "samples": [
+                "\"hallo!\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 11.2,
+          "long_sentences": 0,
+          "total_sentences": 28,
+          "total_words": 310,
+          "complex_words": [],
+          "paragraph_count": 6,
+          "type_token_ratio": 0.59,
+          "grundwortschatz_ratio": 0.11,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 679,
+        "story_preview": "Pip war ein kleiner Igel. Er wohnte in einem gemütlichen Bau tief im Wald, umgeben von hohen Bäumen und duftenden Blumen. Pip liebte es, die Sonne zu spüren und mit seinen Freunden zu spielen, aber ma..."
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 8.14,
+        "title": "Milli und das Geheimnis der Mühle",
+        "word_count": 442,
+        "paragraph_count": 9,
+        "dialogue_count": 1,
+        "grundwortschatz": {
+          "unique_words": 23,
+          "total_occurrences": 29,
+          "total_gws_words": 421,
+          "percentage": 5.5,
+          "top_words": [
+            [
+              "drehen",
+              2
+            ],
+            [
+              "geheim",
+              2
+            ],
+            [
+              "geheimnis",
+              2
+            ],
+            [
+              "müll",
+              2
+            ],
+            [
+              "ob",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 1,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 3,
+          "emotionale_ausdrücke": 5,
+          "direkte_rede": 1,
+          "total_score": 15,
+          "examples": [
+            {
+              "category": "metaphern",
+              "count": 1,
+              "samples": [
+                "als ob"
+              ]
+            },
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 3,
+              "samples": [
+                "rau",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 5,
+              "samples": [
+                "mutig",
+                "ängstlich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 1,
+              "samples": [
+                "\"ich habe sie gefunden,\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 11.1,
+          "long_sentences": 0,
+          "total_sentences": 40,
+          "total_words": 442,
+          "complex_words": [],
+          "paragraph_count": 9,
+          "type_token_ratio": 0.49,
+          "grundwortschatz_ratio": 0.07,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 927,
+        "story_preview": "Milli war eine ganz kleine Maus. Sie wohnte in einer alten, verlassenen Mühle. Die Mühle war alt und knarrend, und viele Leute sagten, sie sei verflucht. Milli fand das gar nicht schlimm. Sie liebte d..."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 5.01,
+        "title": "Der Geheimgarten von Luna",
+        "word_count": 271,
+        "paragraph_count": 4,
+        "dialogue_count": 7,
+        "grundwortschatz": {
+          "unique_words": 13,
+          "total_occurrences": 14,
+          "total_gws_words": 421,
+          "percentage": 3.1,
+          "top_words": [
+            [
+              "voll",
+              2
+            ],
+            [
+              "bisschen",
+              1
+            ],
+            [
+              "geheim",
+              1
+            ],
+            [
+              "geheimnis",
+              1
+            ],
+            [
+              "lang",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 7,
+          "total_score": 9,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 7,
+              "samples": [
+                "\"wir müssen aufmerksam sein, nacht\"",
+                "\"denn der garten ist voller kleiner geheimnisse und manchmal auch ein bisschen magisch.\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 12.6,
+          "long_sentences": 2,
+          "total_sentences": 22,
+          "total_words": 270,
+          "complex_words": [],
+          "paragraph_count": 4,
+          "type_token_ratio": 0.65,
+          "grundwortschatz_ratio": 0.05,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 646,
+        "story_preview": "Luna war eine kleine Hexe, aber keine gruselige. Sie liebte Blumen und Musik und hatte einen sehr weisen schwarzen Kater namens Nacht. Luna und Nacht lebten in einem alten, moosbewachsenen Haus, und i..."
+      }
+    ]
+  },
+  {
+    "model": "gemma3n:latest",
+    "timestamp": "2025-12-02T11:51:31.264789",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 7.55,
+        "title": "Hasi auf der grünen Wiese",
+        "word_count": 152,
+        "paragraph_count": 5,
+        "dialogue_count": 1,
+        "grundwortschatz": {
+          "unique_words": 15,
+          "total_occurrences": 41,
+          "total_gws_words": 362,
+          "percentage": 4.1,
+          "top_words": [
+            [
+              "blume",
+              7
+            ],
+            [
+              "wiese",
+              7
+            ],
+            [
+              "ei",
+              6
+            ],
+            [
+              "hase",
+              6
+            ],
+            [
+              "schön",
+              3
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 1,
+          "total_score": 4,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "schmeckt"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 1,
+              "samples": [
+                "\"hasi, komm! es ist zeit zum spielen.\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 4.6,
+          "long_sentences": 0,
+          "total_sentences": 33,
+          "total_words": 152,
+          "complex_words": [],
+          "paragraph_count": 5,
+          "type_token_ratio": 0.45,
+          "grundwortschatz_ratio": 0.3,
+          "issues": [
+            "Zu wenig Grundwortschatz (29.6%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 557,
+        "story_preview": "Hasi ist ein kleiner Hase. Hasi wohnt auf einer grünen Wiese. Die Wiese ist schön. Viele Blumen sind dort. Hasi spielt gern auf der Wiese.\n\nDie Sonne scheint. Es ist ein schöner Tag. Hasi hoppelt auf ..."
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 7.95,
+        "title": "Der Igel und das Eichhörnchen",
+        "word_count": 208,
+        "paragraph_count": 9,
+        "dialogue_count": 8,
+        "grundwortschatz": {
+          "unique_words": 28,
+          "total_occurrences": 72,
+          "total_gws_words": 362,
+          "percentage": 7.7,
+          "top_words": [
+            [
+              "igel",
+              18
+            ],
+            [
+              "ei",
+              10
+            ],
+            [
+              "freund",
+              6
+            ],
+            [
+              "freunde",
+              6
+            ],
+            [
+              "baum",
+              4
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 2,
+          "direkte_rede": 8,
+          "total_score": 12,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 2,
+              "samples": [
+                "traurig",
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 8,
+              "samples": [
+                "\"hallo!\"",
+                "\"ich bin der igel.\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 75,
+          "klassenstufe": "12",
+          "avg_sentence_length": 4.6,
+          "long_sentences": 0,
+          "total_sentences": 47,
+          "total_words": 208,
+          "complex_words": [],
+          "paragraph_count": 9,
+          "type_token_ratio": 0.46,
+          "grundwortschatz_ratio": 0.34,
+          "issues": [
+            "Geschichte zu lang (208 Wörter, Ziel: <200)",
+            "Zu wenig Grundwortschatz (33.7%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 678,
+        "story_preview": "Im Wald wohnt ein Igel. Der Igel ist klein und stachelig. Er liebt es, im Wald zu laufen. Der Igel sucht nach leckeren Sachen.\n\nEines Tages sieht der Igel ein Eichhörnchen. Das Eichhörnchen sitzt auf ..."
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 10.52,
+        "title": "Die verrückte Reise des Igelchens",
+        "word_count": 326,
+        "paragraph_count": 6,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 18,
+          "total_occurrences": 23,
+          "total_gws_words": 421,
+          "percentage": 4.3,
+          "top_words": [
+            [
+              "familie",
+              3
+            ],
+            [
+              "vorsicht",
+              2
+            ],
+            [
+              "vorsichtig",
+              2
+            ],
+            [
+              "wald",
+              2
+            ],
+            [
+              "bisschen",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 3,
+          "direkte_rede": 0,
+          "total_score": 7,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "rau",
+                "fühl"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 3,
+              "samples": [
+                "traurig",
+                "mutig"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 10.0,
+          "long_sentences": 0,
+          "total_sentences": 33,
+          "total_words": 326,
+          "complex_words": [],
+          "paragraph_count": 6,
+          "type_token_ratio": 0.55,
+          "grundwortschatz_ratio": 0.07,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 753,
+        "story_preview": "Im tiefen, grünen Wald lebte ein kleiner Igel namens Pips. Pips war ein sehr freundlicher Igel, aber er war auch ein bisschen schüchtern. Er liebte es, unter den großen Bäumen zu spielen und nach leck..."
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 13.79,
+        "title": "Die Maus und das Geheimnis der alten Mühle",
+        "word_count": 418,
+        "paragraph_count": 8,
+        "dialogue_count": 8,
+        "grundwortschatz": {
+          "unique_words": 20,
+          "total_occurrences": 31,
+          "total_gws_words": 421,
+          "percentage": 4.8,
+          "top_words": [
+            [
+              "geheim",
+              3
+            ],
+            [
+              "geheimnis",
+              3
+            ],
+            [
+              "voll",
+              3
+            ],
+            [
+              "ecke",
+              2
+            ],
+            [
+              "lang",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 3,
+          "emotionale_ausdrücke": 5,
+          "direkte_rede": 8,
+          "total_score": 19,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 3,
+              "samples": [
+                "geruch",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 5,
+              "samples": [
+                "mutig",
+                "mutig"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 8,
+              "samples": [
+                "\"was ist denn hier los?\"",
+                "\"ich habe meinen lieblingsnuss versteckt\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 9.4,
+          "long_sentences": 0,
+          "total_sentences": 45,
+          "total_words": 418,
+          "complex_words": [],
+          "paragraph_count": 8,
+          "type_token_ratio": 0.55,
+          "grundwortschatz_ratio": 0.08,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 921,
+        "story_preview": "Es war einmal, in einem kleinen Dorf, eine mutige Maus namens Mia. Mia war keine gewöhnliche Maus. Während ihre Geschwister lieber Käse versteckten, liebte Mia Abenteuer. Sie träumte davon, die Welt z..."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 11.7,
+        "title": "Die Geheimnisse des Glitzerblüten-Gartens",
+        "word_count": 344,
+        "paragraph_count": 8,
+        "dialogue_count": 3,
+        "grundwortschatz": {
+          "unique_words": 20,
+          "total_occurrences": 29,
+          "total_gws_words": 421,
+          "percentage": 4.8,
+          "top_words": [
+            [
+              "schatten",
+              6
+            ],
+            [
+              "voll",
+              2
+            ],
+            [
+              "vorsicht",
+              2
+            ],
+            [
+              "vorsichtig",
+              2
+            ],
+            [
+              "wachsen",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 3,
+          "total_score": 6,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 3,
+              "samples": [
+                "\"was könnte wohl drin sein?\"",
+                "\"auf, tor, öffne dich für mich!\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 8.9,
+          "long_sentences": 0,
+          "total_sentences": 39,
+          "total_words": 347,
+          "complex_words": [],
+          "paragraph_count": 8,
+          "type_token_ratio": 0.57,
+          "grundwortschatz_ratio": 0.1,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 820,
+        "story_preview": "Lila war eine kleine Hexe. Sie hatte langes, braunes Haar und Sommersprossen auf der Nase. Ihr bester Freund war ein großer, schwarzer Kater namens Schatten. Zusammen lebten sie in einem kleinen Häusc..."
+      }
+    ]
+  },
+  {
+    "model": "llama3.2:3b",
+    "timestamp": "2025-12-02T11:52:27.837471",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 3.68,
+        "title": "Ohne Titel",
+        "word_count": 66,
+        "paragraph_count": 6,
+        "dialogue_count": 2,
+        "grundwortschatz": {
+          "unique_words": 16,
+          "total_occurrences": 21,
+          "total_gws_words": 362,
+          "percentage": 4.4,
+          "top_words": [
+            [
+              "ei",
+              5
+            ],
+            [
+              "wiese",
+              2
+            ],
+            [
+              "blätter",
+              1
+            ],
+            [
+              "freund",
+              1
+            ],
+            [
+              "freunde",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 2,
+          "total_score": 3,
+          "examples": [
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 2,
+              "samples": [
+                "\"ti-ri-ri!\"",
+                "\"danke, viki!\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 75,
+          "klassenstufe": "12",
+          "avg_sentence_length": 6.8,
+          "long_sentences": 1,
+          "total_sentences": 10,
+          "total_words": 68,
+          "complex_words": [],
+          "paragraph_count": 6,
+          "type_token_ratio": 0.78,
+          "grundwortschatz_ratio": 0.34,
+          "issues": [
+            "Zu wenig Grundwortschatz (33.8%, Ziel: >70%)",
+            "Zu viel Wortvielfalt (TTR: 0.78, mehr Wiederholungen wären besser)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 441,
+        "story_preview": "**Zwei Freunde auf der Wiese**\n\nEs war ein sonniger Tag auf der Wiese.\n\nEin kleiner Hase namens **Hansi** spielte da. Er lief schnell über die grünen Blätter.\n\nPlötzlich hörte Hansi ein besonderes Ger..."
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 3.49,
+        "title": "Ohne Titel",
+        "word_count": 149,
+        "paragraph_count": 9,
+        "dialogue_count": 4,
+        "grundwortschatz": {
+          "unique_words": 22,
+          "total_occurrences": 36,
+          "total_gws_words": 362,
+          "percentage": 6.1,
+          "top_words": [
+            [
+              "ei",
+              7
+            ],
+            [
+              "schnell",
+              3
+            ],
+            [
+              "äpfel",
+              2
+            ],
+            [
+              "freund",
+              2
+            ],
+            [
+              "freunde",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 4,
+          "total_score": 6,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 4,
+              "samples": [
+                "\"hey, warten sie\"",
+                "\"ich brauche hilfe\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 5.6,
+          "long_sentences": 1,
+          "total_sentences": 27,
+          "total_words": 149,
+          "complex_words": [],
+          "paragraph_count": 9,
+          "type_token_ratio": 0.61,
+          "grundwortschatz_ratio": 0.28,
+          "issues": [
+            "Zu wenig Grundwortschatz (28.2%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 588,
+        "story_preview": "**Freunde im Wald**\n\nIn dem großen Wald lebten ein Igel namens Iggy und ein Eichhörnchen namens Ecky. Sie waren die besten Freunde.\n\nIggy war sehr schnell. Er konnte über viele Bäume springen. Ecky wa..."
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 4.3,
+        "title": "Ohne Titel",
+        "word_count": 206,
+        "paragraph_count": 7,
+        "dialogue_count": 2,
+        "grundwortschatz": {
+          "unique_words": 6,
+          "total_occurrences": 11,
+          "total_gws_words": 421,
+          "percentage": 1.4,
+          "top_words": [
+            [
+              "wald",
+              6
+            ],
+            [
+              "bewegen",
+              1
+            ],
+            [
+              "frei",
+              1
+            ],
+            [
+              "nah",
+              1
+            ],
+            [
+              "voll",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 2,
+          "total_score": 5,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "neugierig"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 2,
+              "samples": [
+                "\"willst du mitholen, wie ich blumen für mein freundin sammle?\"",
+                "\"ja!\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 12.2,
+          "long_sentences": 0,
+          "total_sentences": 17,
+          "total_words": 206,
+          "complex_words": [],
+          "paragraph_count": 7,
+          "type_token_ratio": 0.65,
+          "grundwortschatz_ratio": 0.05,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 577,
+        "story_preview": "**Freundschaft im Wald**\n\nIn einem kleinen Wald lebte ein kleiner Igel namens Iggy. Er war sehr neugierig und liebte es, neue Freunde zu finden. Eines Tages, als er durch den dichten Wald schlüpfte, b..."
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 9.67,
+        "title": "Ohne Titel",
+        "word_count": 437,
+        "paragraph_count": 11,
+        "dialogue_count": 9,
+        "grundwortschatz": {
+          "unique_words": 24,
+          "total_occurrences": 33,
+          "total_gws_words": 421,
+          "percentage": 5.7,
+          "top_words": [
+            [
+              "schlüssel",
+              3
+            ],
+            [
+              "geheim",
+              2
+            ],
+            [
+              "geheimnis",
+              2
+            ],
+            [
+              "müll",
+              2
+            ],
+            [
+              "schloss",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 4,
+          "emotionale_ausdrücke": 3,
+          "direkte_rede": 9,
+          "total_score": 20,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 4,
+              "samples": [
+                "rau",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 3,
+              "samples": [
+                "mutig",
+                "mutig"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 9,
+              "samples": [
+                "\"die mäuse-abenteuer in der alten mühle\"",
+                "\"was wäre wenn ich mich in diesem alten mühle verstecke?\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 12.3,
+          "long_sentences": 2,
+          "total_sentences": 36,
+          "total_words": 439,
+          "complex_words": [],
+          "paragraph_count": 11,
+          "type_token_ratio": 0.52,
+          "grundwortschatz_ratio": 0.07,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 1026,
+        "story_preview": "**\"Die Mäuse-Abenteuer in der alten Mühle\"**\n\nEine kleine, mutige Maus namens Maja lebte in einem kleinen Dorf zwischen großem Wald und leckeren Feldern. Sie liebte es, früh aufzustehen und den Sonnen..."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 7.2,
+        "title": "Ohne Titel",
+        "word_count": 336,
+        "paragraph_count": 9,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 16,
+          "total_occurrences": 20,
+          "total_gws_words": 421,
+          "percentage": 3.8,
+          "top_words": [
+            [
+              "brücke",
+              2
+            ],
+            [
+              "jede",
+              2
+            ],
+            [
+              "lang",
+              2
+            ],
+            [
+              "wald",
+              2
+            ],
+            [
+              "erleben",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 3,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 11,
+          "examples": [
+            {
+              "category": "metaphern",
+              "count": 3,
+              "samples": [
+                "wie ein leises",
+                "wie eine zauberin"
+              ]
+            },
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "fühl"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 12.0,
+          "long_sentences": 0,
+          "total_sentences": 28,
+          "total_words": 336,
+          "complex_words": [],
+          "paragraph_count": 9,
+          "type_token_ratio": 0.56,
+          "grundwortschatz_ratio": 0.07,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 825,
+        "story_preview": "**Das Geheimnis des Verzauberten Gartens**\n\nIn einem kleinen Dorf am Rande eines großen Waldes lebte eine junge Hexe namens Luna. Sie war sehr curios und liebte es, ihre Freizeit damit zu verbringen, ..."
+      }
+    ]
+  },
+  {
+    "model": "mistral-small3.2:latest",
+    "timestamp": "2025-12-02T11:53:01.238520",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 13.6,
+        "title": "Der kleine Hase auf der Wiese",
+        "word_count": 137,
+        "paragraph_count": 8,
+        "dialogue_count": 4,
+        "grundwortschatz": {
+          "unique_words": 18,
+          "total_occurrences": 40,
+          "total_gws_words": 362,
+          "percentage": 5.0,
+          "top_words": [
+            [
+              "hase",
+              8
+            ],
+            [
+              "ei",
+              5
+            ],
+            [
+              "biene",
+              3
+            ],
+            [
+              "klein",
+              3
+            ],
+            [
+              "regen",
+              3
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 2,
+          "direkte_rede": 4,
+          "total_score": 10,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "duft",
+                "weich"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 2,
+              "samples": [
+                "glücklich",
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 4,
+              "samples": [
+                "\"hallo biene\"",
+                "\"komm, tanze mit mir\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 4.2,
+          "long_sentences": 0,
+          "total_sentences": 33,
+          "total_words": 137,
+          "complex_words": [],
+          "paragraph_count": 8,
+          "type_token_ratio": 0.61,
+          "grundwortschatz_ratio": 0.34,
+          "issues": [
+            "Zu wenig Grundwortschatz (34.3%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 512,
+        "story_preview": "Der kleine Hase hoppelt auf der Wiese. Er ist glücklich. Die Sonne scheint. Die Blumen duften gut.\n\nEr sieht viele Freunde. Eine Biene summt. Sie fliegt um den Hasen. \"Hallo Biene\", sagt der Hase. Die..."
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 11.86,
+        "title": "Igels Spaziergang",
+        "word_count": 152,
+        "paragraph_count": 7,
+        "dialogue_count": 10,
+        "grundwortschatz": {
+          "unique_words": 21,
+          "total_occurrences": 65,
+          "total_gws_words": 362,
+          "percentage": 5.8,
+          "top_words": [
+            [
+              "ei",
+              25
+            ],
+            [
+              "igel",
+              13
+            ],
+            [
+              "freund",
+              3
+            ],
+            [
+              "spielen",
+              3
+            ],
+            [
+              "baum",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 10,
+          "total_score": 11,
+          "examples": [
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "fröhlich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 10,
+              "samples": [
+                "\"hallo eichhörnchen!\"",
+                "\"wer bist du?\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 4.9,
+          "long_sentences": 0,
+          "total_sentences": 33,
+          "total_words": 152,
+          "complex_words": [],
+          "paragraph_count": 7,
+          "type_token_ratio": 0.53,
+          "grundwortschatz_ratio": 0.44,
+          "issues": [
+            "Zu wenig Grundwortschatz (44.1%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 577,
+        "story_preview": "Eines Tages geht Igel durch den Wald.\nEr ist einsam.\nEr möchte einen Freund finden.\n\nPlötzlich sieht Igel Eichhörnchen.\nEichhörnchen sitzt auf einem Baum.\nEichhörnchen hat viele Nüsse.\nEichhörnchen sa..."
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 14.94,
+        "title": "Igels glückliche Begegnung",
+        "word_count": 239,
+        "paragraph_count": 7,
+        "dialogue_count": 6,
+        "grundwortschatz": {
+          "unique_words": 16,
+          "total_occurrences": 28,
+          "total_gws_words": 421,
+          "percentage": 3.8,
+          "top_words": [
+            [
+              "nuss",
+              9
+            ],
+            [
+              "wald",
+              3
+            ],
+            [
+              "plötzlich",
+              2
+            ],
+            [
+              "zusammen",
+              2
+            ],
+            [
+              "erleben",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 5,
+          "direkte_rede": 6,
+          "total_score": 15,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "fühl",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 5,
+              "samples": [
+                "neugierig",
+                "neugierig"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 6,
+              "samples": [
+                "\"was ist los, nussi?\"",
+                "\"ich habe meine vorräte für den winter verloren\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 7.9,
+          "long_sentences": 0,
+          "total_sentences": 31,
+          "total_words": 241,
+          "complex_words": [],
+          "paragraph_count": 7,
+          "type_token_ratio": 0.66,
+          "grundwortschatz_ratio": 0.12,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 606,
+        "story_preview": "Im Herzen des großen Waldes lebte ein kleiner Igel namens Igel. Igel war sehr neugierig und liebte es, jeden Tag neue Abenteuer zu erleben. Doch manchmal fühlte er sich quite einsam, weil er keine Fre..."
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 29.67,
+        "title": "Die mutige Maus und das Geheimnis der alten Mühle",
+        "word_count": 556,
+        "paragraph_count": 12,
+        "dialogue_count": 1,
+        "grundwortschatz": {
+          "unique_words": 26,
+          "total_occurrences": 40,
+          "total_gws_words": 421,
+          "percentage": 6.2,
+          "top_words": [
+            [
+              "schlüssel",
+              6
+            ],
+            [
+              "geheim",
+              5
+            ],
+            [
+              "jede",
+              2
+            ],
+            [
+              "lang",
+              2
+            ],
+            [
+              "plötzlich",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 10,
+          "emotionale_ausdrücke": 7,
+          "direkte_rede": 1,
+          "total_score": 28,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 10,
+              "samples": [
+                "rau",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 7,
+              "samples": [
+                "mutig",
+                "neugierig"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 1,
+              "samples": [
+                "\"wer ist da?\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 90,
+          "klassenstufe": "34",
+          "avg_sentence_length": 10.5,
+          "long_sentences": 0,
+          "total_sentences": 53,
+          "total_words": 557,
+          "complex_words": [],
+          "paragraph_count": 12,
+          "type_token_ratio": 0.46,
+          "grundwortschatz_ratio": 0.08,
+          "issues": [
+            "Geschichte zu lang (557 Wörter, Ziel: <500)"
+          ],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 1039,
+        "story_preview": "In einem kleinen Dorf, umgeben von sanften Hügeln und grünen Wiesen, stand eine alte Mühle. Die Mühle hatte schon viele Jahre nicht mehr gemahlen, und so war sie still und verlassen. Doch in den dunkl..."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 18.47,
+        "title": "Lina und der geheimnisvolle Garten",
+        "word_count": 329,
+        "paragraph_count": 7,
+        "dialogue_count": 5,
+        "grundwortschatz": {
+          "unique_words": 16,
+          "total_occurrences": 21,
+          "total_gws_words": 421,
+          "percentage": 3.8,
+          "top_words": [
+            [
+              "bisschen",
+              2
+            ],
+            [
+              "glück",
+              2
+            ],
+            [
+              "glücklich",
+              2
+            ],
+            [
+              "voll",
+              2
+            ],
+            [
+              "wald",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 4,
+          "direkte_rede": 5,
+          "total_score": 11,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 4,
+              "samples": [
+                "neugierig",
+                "ängstlich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 5,
+              "samples": [
+                "\"komm, kiko, lass uns den garten erkunden!\"",
+                "\"hallo, lina\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 10.1,
+          "long_sentences": 0,
+          "total_sentences": 33,
+          "total_words": 329,
+          "complex_words": [],
+          "paragraph_count": 7,
+          "type_token_ratio": 0.56,
+          "grundwortschatz_ratio": 0.07,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 723,
+        "story_preview": "Lina war eine junge Hexe, die in einem kleinen Haus am Rande eines großen Waldes wohnte. Sie hatte blaue Augen und rote Haare, die immer ein bisschen wild aussahen. Ihr bester Freund war ein schwarzer..."
+      }
+    ]
+  },
+  {
+    "model": "gpt-oss:20b",
+    "timestamp": "2025-12-02T11:54:34.833462",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 9.27,
+        "title": "Ohne Titel",
+        "word_count": 0,
+        "paragraph_count": 0,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 0,
+          "total_occurrences": 0,
+          "total_gws_words": 362,
+          "percentage": 0.0,
+          "top_words": []
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 75,
+          "klassenstufe": "12",
+          "avg_sentence_length": 0,
+          "long_sentences": 0,
+          "total_sentences": 0,
+          "total_words": 0,
+          "complex_words": [],
+          "paragraph_count": 0,
+          "type_token_ratio": 0,
+          "grundwortschatz_ratio": 0,
+          "issues": [
+            "Zu wenig Absätze (0, Ziel: >=2)",
+            "Zu wenig Grundwortschatz (0.0%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 765,
+        "story_preview": ""
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 7.75,
+        "title": "Ohne Titel",
+        "word_count": 0,
+        "paragraph_count": 0,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 0,
+          "total_occurrences": 0,
+          "total_gws_words": 362,
+          "percentage": 0.0,
+          "top_words": []
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 75,
+          "klassenstufe": "12",
+          "avg_sentence_length": 0,
+          "long_sentences": 0,
+          "total_sentences": 0,
+          "total_words": 0,
+          "complex_words": [],
+          "paragraph_count": 0,
+          "type_token_ratio": 0,
+          "grundwortschatz_ratio": 0,
+          "issues": [
+            "Zu wenig Absätze (0, Ziel: >=2)",
+            "Zu wenig Grundwortschatz (0.0%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 895,
+        "story_preview": ""
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 6.63,
+        "title": "Der Igel und der kleine Freund",
+        "word_count": 238,
+        "paragraph_count": 6,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 14,
+          "total_occurrences": 19,
+          "total_gws_words": 421,
+          "percentage": 3.3,
+          "top_words": [
+            [
+              "wald",
+              4
+            ],
+            [
+              "bereit",
+              2
+            ],
+            [
+              "voll",
+              2
+            ],
+            [
+              "abend",
+              1
+            ],
+            [
+              "angst",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 3,
+          "direkte_rede": 0,
+          "total_score": 5,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 3,
+              "samples": [
+                "neugierig",
+                "traurig"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 13.3,
+          "long_sentences": 0,
+          "total_sentences": 18,
+          "total_words": 238,
+          "complex_words": [],
+          "paragraph_count": 6,
+          "type_token_ratio": 0.62,
+          "grundwortschatz_ratio": 0.09,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 749,
+        "story_preview": "In einem großen, grünen Wald lebte ein kleiner Igel namens Iggy. Iggy war neugierig und immer bereit, Neues zu entdecken. Eines schönen Morgens, als die Sonne goldene Strahlen durch das Blätterdach sc..."
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 10.94,
+        "title": "Die mutige Maus und das Geheimnis der alten Mühle",
+        "word_count": 383,
+        "paragraph_count": 5,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 21,
+          "total_occurrences": 27,
+          "total_gws_words": 421,
+          "percentage": 5.0,
+          "top_words": [
+            [
+              "zurück",
+              4
+            ],
+            [
+              "moos",
+              2
+            ],
+            [
+              "plötzlich",
+              2
+            ],
+            [
+              "zusammen",
+              2
+            ],
+            [
+              "angst",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 3,
+          "direkte_rede": 0,
+          "total_score": 7,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "rau",
+                "fühl"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 3,
+              "samples": [
+                "mutig",
+                "neugierig"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 12.0,
+          "long_sentences": 1,
+          "total_sentences": 32,
+          "total_words": 383,
+          "complex_words": [],
+          "paragraph_count": 5,
+          "type_token_ratio": 0.53,
+          "grundwortschatz_ratio": 0.07,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 1094,
+        "story_preview": "In einer kleinen Stadt, die von Feldern und Bäumen umgeben war, stand eine alte Mühle. Die Mühle war staubig und ihre Holzbalken knarrten, wenn der Wind wehte. Dort lebte eine kleine Maus namens Maja...."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 7.67,
+        "title": "Ohne Titel",
+        "word_count": 0,
+        "paragraph_count": 0,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 0,
+          "total_occurrences": 0,
+          "total_gws_words": 421,
+          "percentage": 0.0,
+          "top_words": []
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "34",
+          "avg_sentence_length": 0,
+          "long_sentences": 0,
+          "total_sentences": 0,
+          "total_words": 0,
+          "complex_words": [],
+          "paragraph_count": 0,
+          "type_token_ratio": 0,
+          "grundwortschatz_ratio": 0,
+          "issues": [
+            "Zu wenig Absätze (0, Ziel: >=3)",
+            "Geringe Wortvielfalt (TTR: 0.00)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 846,
+        "story_preview": ""
+      }
+    ]
+  },
+  {
+    "model": "qwen3:latest",
+    "timestamp": "2025-12-02T11:55:22.135018",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 8.76,
+        "title": "Der fröhliche Hase**",
+        "word_count": 15,
+        "paragraph_count": 1,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 5,
+          "total_occurrences": 5,
+          "total_gws_words": 362,
+          "percentage": 1.4,
+          "top_words": [
+            [
+              "ei",
+              1
+            ],
+            [
+              "gras",
+              1
+            ],
+            [
+              "hase",
+              1
+            ],
+            [
+              "klein",
+              1
+            ],
+            [
+              "wiese",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 65,
+          "klassenstufe": "12",
+          "avg_sentence_length": 3.8,
+          "long_sentences": 0,
+          "total_sentences": 4,
+          "total_words": 15,
+          "complex_words": [],
+          "paragraph_count": 1,
+          "type_token_ratio": 0.87,
+          "grundwortschatz_ratio": 0.33,
+          "issues": [
+            "Zu wenig Absätze (1, Ziel: >=2)",
+            "Zu wenig Grundwortschatz (33.3%, Ziel: >70%)",
+            "Zu viel Wortvielfalt (TTR: 0.87, mehr Wiederholungen wären besser)"
+          ],
+          "recommendation": "Verbesserungswürdig"
+        },
+        "tokens_used": 757,
+        "story_preview": "Der kleine Hase hüpft auf der Wiese.  \nEr isst Gras. Er spielt.  \nEin Schmetterling fl"
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 9.12,
+        "title": "Der Igel und das Eichhörnchen**",
+        "word_count": 32,
+        "paragraph_count": 2,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 3,
+          "total_occurrences": 9,
+          "total_gws_words": 362,
+          "percentage": 0.8,
+          "top_words": [
+            [
+              "ei",
+              4
+            ],
+            [
+              "igel",
+              3
+            ],
+            [
+              "lachen",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 75,
+          "klassenstufe": "12",
+          "avg_sentence_length": 4.0,
+          "long_sentences": 0,
+          "total_sentences": 8,
+          "total_words": 32,
+          "complex_words": [],
+          "paragraph_count": 2,
+          "type_token_ratio": 0.81,
+          "grundwortschatz_ratio": 0.31,
+          "issues": [
+            "Zu wenig Grundwortschatz (31.2%, Ziel: >70%)",
+            "Zu viel Wortvielfalt (TTR: 0.81, mehr Wiederholungen wären besser)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 889,
+        "story_preview": "Im Wald lebte ein Igel. Er mochte Kirschen sammeln. Ein Eichhörnchen hörte ihn lachen. Es rannte zum Igel. Sie grüßten. Sie lachen.  \n\nDer Igel suchte eine Kirsche. Er tastete mit den Nüssen."
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 9.02,
+        "title": "Ohne Titel",
+        "word_count": 0,
+        "paragraph_count": 0,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 0,
+          "total_occurrences": 0,
+          "total_gws_words": 421,
+          "percentage": 0.0,
+          "top_words": []
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "34",
+          "avg_sentence_length": 0,
+          "long_sentences": 0,
+          "total_sentences": 0,
+          "total_words": 0,
+          "complex_words": [],
+          "paragraph_count": 0,
+          "type_token_ratio": 0,
+          "grundwortschatz_ratio": 0,
+          "issues": [
+            "Zu wenig Absätze (0, Ziel: >=3)",
+            "Geringe Wortvielfalt (TTR: 0.00)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 808,
+        "story_preview": ""
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 12.88,
+        "title": "Die mutige Maus im alten Mühlenhaus**",
+        "word_count": 78,
+        "paragraph_count": 2,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 4,
+          "total_occurrences": 4,
+          "total_gws_words": 421,
+          "percentage": 1.0,
+          "top_words": [
+            [
+              "seit",
+              1
+            ],
+            [
+              "voll",
+              1
+            ],
+            [
+              "während",
+              1
+            ],
+            [
+              "wald",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 1,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 5,
+          "examples": [
+            {
+              "category": "metaphern",
+              "count": 1,
+              "samples": [
+                "als wäre"
+              ]
+            },
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "fühl"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 90,
+          "klassenstufe": "34",
+          "avg_sentence_length": 13.0,
+          "long_sentences": 0,
+          "total_sentences": 6,
+          "total_words": 78,
+          "complex_words": [],
+          "paragraph_count": 2,
+          "type_token_ratio": 0.76,
+          "grundwortschatz_ratio": 0.05,
+          "issues": [
+            "Zu wenig Absätze (2, Ziel: >=3)"
+          ],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 1073,
+        "story_preview": "Mia war eine kleine Maus mit riesigen Augen und einem Herzen, das voller Mut war. Eines Tages sah sie ihren Bruder, Tim, verschwinden, während er die alten Mühlen auf der anderen Seite des Waldes erku..."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 8.96,
+        "title": "Der magische Blütenzauber**",
+        "word_count": 100,
+        "paragraph_count": 2,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 7,
+          "total_occurrences": 8,
+          "total_gws_words": 421,
+          "percentage": 1.7,
+          "top_words": [
+            [
+              "moos",
+              2
+            ],
+            [
+              "geheim",
+              1
+            ],
+            [
+              "geheimnis",
+              1
+            ],
+            [
+              "jung",
+              1
+            ],
+            [
+              "leuchten",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 1,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 3,
+          "examples": [
+            {
+              "category": "metaphern",
+              "count": 1,
+              "samples": [
+                "wie ein tisch"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 90,
+          "klassenstufe": "34",
+          "avg_sentence_length": 11.3,
+          "long_sentences": 0,
+          "total_sentences": 9,
+          "total_words": 100,
+          "complex_words": [],
+          "paragraph_count": 2,
+          "type_token_ratio": 0.75,
+          "grundwortschatz_ratio": 0.08,
+          "issues": [
+            "Zu wenig Absätze (2, Ziel: >=3)"
+          ],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 818,
+        "story_preview": "Lina, eine junge Hexe mit einem zarten Lachen, und ihr Kater Mischka wanderten durch einen Garten, der noch niemand gesehen hatte. Die Blumen glühten sanft in der Dämmerung, und die Bäume flüsterten G..."
+      }
+    ]
+  },
+  {
+    "model": "deepseek-r1:latest",
+    "timestamp": "2025-12-02T11:56:15.904365",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 8.73,
+        "title": "Ohne Titel",
+        "word_count": 0,
+        "paragraph_count": 0,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 0,
+          "total_occurrences": 0,
+          "total_gws_words": 362,
+          "percentage": 0.0,
+          "top_words": []
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 75,
+          "klassenstufe": "12",
+          "avg_sentence_length": 0,
+          "long_sentences": 0,
+          "total_sentences": 0,
+          "total_words": 0,
+          "complex_words": [],
+          "paragraph_count": 0,
+          "type_token_ratio": 0,
+          "grundwortschatz_ratio": 0,
+          "issues": [
+            "Zu wenig Absätze (0, Ziel: >=2)",
+            "Zu wenig Grundwortschatz (0.0%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 744,
+        "story_preview": ""
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 9.06,
+        "title": "Freunde für immer",
+        "word_count": 50,
+        "paragraph_count": 2,
+        "dialogue_count": 1,
+        "grundwortschatz": {
+          "unique_words": 11,
+          "total_occurrences": 14,
+          "total_gws_words": 362,
+          "percentage": 3.0,
+          "top_words": [
+            [
+              "ei",
+              3
+            ],
+            [
+              "tier",
+              2
+            ],
+            [
+              "gehen",
+              1
+            ],
+            [
+              "himmel",
+              1
+            ],
+            [
+              "igel",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 1,
+          "total_score": 6,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "rau",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "traurig"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 1,
+              "samples": [
+                "\"hallo\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 3.6,
+          "long_sentences": 0,
+          "total_sentences": 14,
+          "total_words": 50,
+          "complex_words": [],
+          "paragraph_count": 2,
+          "type_token_ratio": 0.7,
+          "grundwortschatz_ratio": 0.32,
+          "issues": [
+            "Zu wenig Grundwortschatz (32.0%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 876,
+        "story_preview": "Der Regen fällt. Die Tiere laufen. Sie gehen ins Waldhaus. Der Igel sitzt da. Er ist klein. Er hat Stacheln. Das Eichhörnchen sitzt daneben. Es ist rot. Es ist schlau. Es hat eine Nase. Die Sonne sche..."
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 9.01,
+        "title": "Max und Willy",
+        "word_count": 89,
+        "paragraph_count": 2,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 6,
+          "total_occurrences": 6,
+          "total_gws_words": 421,
+          "percentage": 1.4,
+          "top_words": [
+            [
+              "feucht",
+              1
+            ],
+            [
+              "land",
+              1
+            ],
+            [
+              "plötzlich",
+              1
+            ],
+            [
+              "vorsicht",
+              1
+            ],
+            [
+              "vorsichtig",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 1,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 2,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 1,
+              "samples": [
+                "rau"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 90,
+          "klassenstufe": "34",
+          "avg_sentence_length": 8.9,
+          "long_sentences": 0,
+          "total_sentences": 10,
+          "total_words": 89,
+          "complex_words": [],
+          "paragraph_count": 2,
+          "type_token_ratio": 0.76,
+          "grundwortschatz_ratio": 0.07,
+          "issues": [
+            "Zu wenig Absätze (2, Ziel: >=3)"
+          ],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 795,
+        "story_preview": "Wilhelm war ein kleiner Igel mit einem grauen Pelz. Er lebte in einer großen Erdekugel inmitten des feuchten, morschen Laubes des Waldes. Morgens rollte er sich auf, reckte sich und spähte vorsichtig ..."
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 12.92,
+        "title": "Die Abenteuerliche Maus im alten Turm",
+        "word_count": 310,
+        "paragraph_count": 6,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 22,
+          "total_occurrences": 28,
+          "total_gws_words": 421,
+          "percentage": 5.2,
+          "top_words": [
+            [
+              "ecke",
+              4
+            ],
+            [
+              "angst",
+              2
+            ],
+            [
+              "vielleicht",
+              2
+            ],
+            [
+              "vorsicht",
+              2
+            ],
+            [
+              "draußen",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 1,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 4,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 0,
+          "total_score": 12,
+          "examples": [
+            {
+              "category": "metaphern",
+              "count": 1,
+              "samples": [
+                "wie eine große"
+              ]
+            },
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 4,
+              "samples": [
+                "rau",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "mutig"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 8.0,
+          "long_sentences": 0,
+          "total_sentences": 39,
+          "total_words": 309,
+          "complex_words": [],
+          "paragraph_count": 6,
+          "type_token_ratio": 0.56,
+          "grundwortschatz_ratio": 0.09,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 1060,
+        "story_preview": "Einmal, in einem großen alten Turm, wo es viele Ecken und Geheimnisse gab, lebte eine kleine Maus. Ihr Name war Mima. Mima war sehr mutig für so eine kleine Maus. Sie hatte große braune Augen und ein ..."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 8.93,
+        "title": "Ohne Titel",
+        "word_count": 0,
+        "paragraph_count": 0,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 0,
+          "total_occurrences": 0,
+          "total_gws_words": 421,
+          "percentage": 0.0,
+          "top_words": []
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 0,
+          "emotionale_ausdrücke": 0,
+          "direkte_rede": 0,
+          "total_score": 0,
+          "examples": []
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "34",
+          "avg_sentence_length": 0,
+          "long_sentences": 0,
+          "total_sentences": 0,
+          "total_words": 0,
+          "complex_words": [],
+          "paragraph_count": 0,
+          "type_token_ratio": 0,
+          "grundwortschatz_ratio": 0,
+          "issues": [
+            "Zu wenig Absätze (0, Ziel: >=3)",
+            "Geringe Wortvielfalt (TTR: 0.00)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 805,
+        "story_preview": ""
+      }
+    ]
+  },
+  {
+    "model": "phi4:latest",
+    "timestamp": "2025-12-02T11:57:09.599321",
+    "tests": [
+      {
+        "test_case": "Klasse 1-2: Einfach - Tiere",
+        "success": true,
+        "generation_time": 14.19,
+        "title": "Der fröhliche Hase",
+        "word_count": 170,
+        "paragraph_count": 9,
+        "dialogue_count": 4,
+        "grundwortschatz": {
+          "unique_words": 30,
+          "total_occurrences": 63,
+          "total_gws_words": 362,
+          "percentage": 8.3,
+          "top_words": [
+            [
+              "hase",
+              9
+            ],
+            [
+              "ei",
+              8
+            ],
+            [
+              "klein",
+              6
+            ],
+            [
+              "leise",
+              3
+            ],
+            [
+              "schnell",
+              3
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 3,
+          "direkte_rede": 4,
+          "total_score": 11,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "rau",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 3,
+              "samples": [
+                "fröhlich",
+                "fröhlich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 4,
+              "samples": [
+                "\"hallo!\"",
+                "\"wir spielen verstecken!\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 85,
+          "klassenstufe": "12",
+          "avg_sentence_length": 5.1,
+          "long_sentences": 0,
+          "total_sentences": 34,
+          "total_words": 170,
+          "complex_words": [],
+          "paragraph_count": 9,
+          "type_token_ratio": 0.62,
+          "grundwortschatz_ratio": 0.4,
+          "issues": [
+            "Zu wenig Grundwortschatz (40.0%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 616,
+        "story_preview": "Es war ein schöner Tag auf der Wiese. Ein kleiner Hase hoppelte herum. Er hatte weiße Ohren und braune Augen.\n\nDer Hase sah Blumen. Sie waren bunt und schön. \"Hallo!\" sagt er leise. Die Vögel zwitsche..."
+      },
+      {
+        "test_case": "Klasse 1-2: Mittel - Freundschaft",
+        "success": true,
+        "generation_time": 14.62,
+        "title": "Das Igel-Eichhörnchen-Abenteuer",
+        "word_count": 257,
+        "paragraph_count": 10,
+        "dialogue_count": 10,
+        "grundwortschatz": {
+          "unique_words": 30,
+          "total_occurrences": 63,
+          "total_gws_words": 362,
+          "percentage": 8.3,
+          "top_words": [
+            [
+              "ei",
+              13
+            ],
+            [
+              "freund",
+              6
+            ],
+            [
+              "immer",
+              5
+            ],
+            [
+              "igel",
+              3
+            ],
+            [
+              "klein",
+              3
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 3,
+          "direkte_rede": 10,
+          "total_score": 17,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "duft",
+                "fühl"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 3,
+              "samples": [
+                "fröhlich",
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 10,
+              "samples": [
+                "\"hallo! möchtest du spielen?\"",
+                "\"willst du sehen, wie ich springe?\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 75,
+          "klassenstufe": "12",
+          "avg_sentence_length": 5.5,
+          "long_sentences": 1,
+          "total_sentences": 48,
+          "total_words": 258,
+          "complex_words": [],
+          "paragraph_count": 10,
+          "type_token_ratio": 0.6,
+          "grundwortschatz_ratio": 0.31,
+          "issues": [
+            "Geschichte zu lang (258 Wörter, Ziel: <200)",
+            "Zu wenig Grundwortschatz (31.4%, Ziel: >70%)"
+          ],
+          "recommendation": "Gut"
+        },
+        "tokens_used": 812,
+        "story_preview": "Im grünen Wald lebte ein kleiner Igel namens Iggy. Iggy mochte es, alleine zu sein. Eines Tages traf er einen kleinen Freund. Ein schnelles Eichhörnchen hieß ihn Willi.\n\nWilli sprang höher als der Bau..."
+      },
+      {
+        "test_case": "Klasse 3-4: Einfach - Freundschaft",
+        "success": true,
+        "generation_time": 16.4,
+        "title": "Igel Ignaz und die Sonnenblume",
+        "word_count": 311,
+        "paragraph_count": 11,
+        "dialogue_count": 7,
+        "grundwortschatz": {
+          "unique_words": 18,
+          "total_occurrences": 22,
+          "total_gws_words": 421,
+          "percentage": 4.3,
+          "top_words": [
+            [
+              "wald",
+              3
+            ],
+            [
+              "klettern",
+              2
+            ],
+            [
+              "ob",
+              2
+            ],
+            [
+              "abend",
+              1
+            ],
+            [
+              "bald",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 1,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 7,
+          "total_score": 15,
+          "examples": [
+            {
+              "category": "metaphern",
+              "count": 1,
+              "samples": [
+                "wie ein kleiner"
+              ]
+            },
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "rau",
+                "fühl"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "stolz"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 7,
+              "samples": [
+                "\"hallo! wer bist du?\"",
+                "\"ich bin solange\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 9.6,
+          "long_sentences": 1,
+          "total_sentences": 33,
+          "total_words": 309,
+          "complex_words": [],
+          "paragraph_count": 11,
+          "type_token_ratio": 0.63,
+          "grundwortschatz_ratio": 0.11,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 806,
+        "story_preview": "Eines sonnigen Morgens wachte der kleine Igel Ignaz im Wald auf. Er war ein freundlicher Igel, dessen Stacheln glänzten wie kleine Sterne in der Morgenluft. Heute hatte er einen großen Plan: Er wollte..."
+      },
+      {
+        "test_case": "Klasse 3-4: Mittel - Abenteuer",
+        "success": true,
+        "generation_time": 22.04,
+        "title": "** Die mutige Maus am Mühlenabenteuer",
+        "word_count": 430,
+        "paragraph_count": 13,
+        "dialogue_count": 0,
+        "grundwortschatz": {
+          "unique_words": 25,
+          "total_occurrences": 31,
+          "total_gws_words": 421,
+          "percentage": 5.9,
+          "top_words": [
+            [
+              "voll",
+              3
+            ],
+            [
+              "geheim",
+              2
+            ],
+            [
+              "niemand",
+              2
+            ],
+            [
+              "schatten",
+              2
+            ],
+            [
+              "vielleicht",
+              2
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 0,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 2,
+          "emotionale_ausdrücke": 4,
+          "direkte_rede": 0,
+          "total_score": 8,
+          "examples": [
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 2,
+              "samples": [
+                "rau",
+                "rau"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 4,
+              "samples": [
+                "mutig",
+                "mutig"
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 11.6,
+          "long_sentences": 1,
+          "total_sentences": 38,
+          "total_words": 430,
+          "complex_words": [],
+          "paragraph_count": 13,
+          "type_token_ratio": 0.6,
+          "grundwortschatz_ratio": 0.08,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 1023,
+        "story_preview": "Es war einmal eine kleine, tapfere Maus namens Minka. Sie lebte in einem kleinen Dorf, umgeben von Wäldern und Feldern. Im Herzen des Waldes stand eine alte Mühle mit wehenden Flügeln, die im Wind fla..."
+      },
+      {
+        "test_case": "Klasse 3-4: Komplex - Zauber",
+        "success": true,
+        "generation_time": 16.67,
+        "title": "Der Geheimnisvolle Garten**",
+        "word_count": 319,
+        "paragraph_count": 9,
+        "dialogue_count": 5,
+        "grundwortschatz": {
+          "unique_words": 23,
+          "total_occurrences": 26,
+          "total_gws_words": 421,
+          "percentage": 5.5,
+          "top_words": [
+            [
+              "plötzlich",
+              3
+            ],
+            [
+              "vielleicht",
+              2
+            ],
+            [
+              "abend",
+              1
+            ],
+            [
+              "bereit",
+              1
+            ],
+            [
+              "bisschen",
+              1
+            ]
+          ]
+        },
+        "creativity": {
+          "metaphern": 1,
+          "personifikation": 0,
+          "sinneswahrnehmungen": 4,
+          "emotionale_ausdrücke": 1,
+          "direkte_rede": 5,
+          "total_score": 17,
+          "examples": [
+            {
+              "category": "metaphern",
+              "count": 1,
+              "samples": [
+                "wie ein baum"
+              ]
+            },
+            {
+              "category": "sinneswahrnehmungen",
+              "count": 4,
+              "samples": [
+                "fühl",
+                "fühl"
+              ]
+            },
+            {
+              "category": "emotionale_ausdrücke",
+              "count": 1,
+              "samples": [
+                "glücklich"
+              ]
+            },
+            {
+              "category": "direkte_rede",
+              "count": 5,
+              "samples": [
+                "\"mäxchen,\"",
+                "\"was für ein zauber!\""
+              ]
+            }
+          ]
+        },
+        "age_appropriateness": {
+          "score": 100,
+          "klassenstufe": "34",
+          "avg_sentence_length": 12.9,
+          "long_sentences": 1,
+          "total_sentences": 25,
+          "total_words": 318,
+          "complex_words": [],
+          "paragraph_count": 9,
+          "type_token_ratio": 0.62,
+          "grundwortschatz_ratio": 0.08,
+          "issues": [],
+          "recommendation": "Sehr gut"
+        },
+        "tokens_used": 816,
+        "story_preview": "Eines Morgens, als die Sonne das Land küsste und den Himmel in warmes Gold tauchte, machten sich Luna, eine junge Hexe mit strahlend blauen Augen, und ihr schlauer Kater Mäxchen auf den Weg zu einem v..."
+      }
+    ]
+  }
+]

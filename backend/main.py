@@ -239,9 +239,15 @@ async def generate_story(story_request: StoryRequest, request: Request):
         raise HTTPException(status_code=429, detail=error_msg)
     
     # Berechne Wortanzahl basierend auf Lesezeit
-    # Durchschnittliche Lesegeschwindigkeit Kinder: ~80-100 Wörter/Min
-    min_words = story_request.laenge * 80
-    max_words = story_request.laenge * 100
+    # Durchschnittliche Lesegeschwindigkeit abhängig von Klassenstufe
+    if story_request.klassenstufe == "12":
+        # Klasse 1 & 2: ~70 Wörter/Min
+        min_words = story_request.laenge * 60
+        max_words = story_request.laenge * 70
+    else:
+        # Klasse 3 & 4: ~80-100 Wörter/Min
+        min_words = story_request.laenge * 80
+        max_words = story_request.laenge * 100
     
     # Wähle passenden Grundwortschatz und Schwierigkeitsgrad
     if story_request.klassenstufe == "12":
