@@ -251,11 +251,11 @@ async def generate_story(story_request: StoryRequest, request: Request):
     
     # Wähle passenden Grundwortschatz und Schwierigkeitsgrad
     if story_request.klassenstufe == "12":
-        grundwortschatz = GRUNDWORTSCHATZ_12[:3000]
+        grundwortschatz = GRUNDWORTSCHATZ_12  # Kompletter Grundwortschatz für Klasse 1&2
         zielgruppe = "Kinder der Klassenstufen 1 & 2"
         schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
     else:
-        grundwortschatz = GRUNDWORTSCHATZ_FULL[:3000]
+        grundwortschatz = GRUNDWORTSCHATZ_FULL  # Kompletter Grundwortschatz für alle Klassen
         zielgruppe = "Kinder der Klassenstufen 3 & 4"
         schwierigkeit = "kindgerecht mit etwas längeren Sätzen und anspruchsvolleren Wörtern"
     
