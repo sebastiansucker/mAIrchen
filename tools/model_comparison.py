@@ -20,6 +20,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 import re
+import requests
 
 # API Client
 try:
@@ -27,6 +28,31 @@ try:
 except ImportError:
     print("❌ OpenAI library nicht installiert. Bitte ausführen: pip install openai")
     sys.exit(1)
+
+# Grundwortschatz laden
+def load_grundwortschatz():
+    """Lädt den kompletten Grundwortschatz aus gws.md"""
+    gws_path = Path(__file__).parent.parent / "backend" / "gws.md"
+    try:
+        with open(gws_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        print("⚠️  Warnung: gws.md nicht gefunden, verwende Grundwortschatz-Liste")
+        return ""
+
+def load_grundwortschatz_12():
+    """Lädt Grundwortschatz für Klasse 1/2"""
+    gws_path = Path(__file__).parent.parent / "backend" / "gws.md"
+    try:
+        with open(gws_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            parts = content.split("### **Grundwortschatz für Jahrgangsstufen 3 und 4**")
+            return parts[0] if len(parts) > 0 else content
+    except FileNotFoundError:
+        return ""
+
+GRUNDWORTSCHATZ_FULL = load_grundwortschatz()
+GRUNDWORTSCHATZ_12_TEXT = load_grundwortschatz_12()
 
 # Konfiguration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
@@ -92,102 +118,19 @@ TEST_PROMPTS = [
     }
 ]
 
-# Grundwortschatz nach Klassenstufen (aus gws.md)
-GRUNDWORTSCHATZ_12 = [
-    "ab", "acht", "also", "alt", "ampel", "antwort", "antworten", "apfel", "äpfel", "april",
-    "arbeiten", "arm", "ast", "äste", "aufgabe", "aufwachen", "auge", "august", "auto",
-    "baby", "baden", "ball", "bälle", "bank", "bänke", "bauch", "bäuche", "bauen", "gebäude",
-    "baum", "bäume", "bein", "berg", "berge", "biene", "bild", "bilder", "bin", "birne",
-    "blatt", "blätter", "blau", "bleiben", "blühen", "blume", "blüte", "boden", "böden",
-    "braun", "brief", "bringen", "brot", "bruder", "brüder", "buch", "bücher", "bunt",
-    "burg", "burgen", "busch", "büsche", "cent", "danken", "dein", "dezember", "dich",
-    "dienstag", "donnerstag", "dose", "drei", "ei", "eier", "eimer", "einmal", "eins",
-    "elf", "eltern", "ende", "eng", "ente", "erde", "euch", "eule", "euro", "fallen",
-    "fangen", "februar", "feld", "felder", "fenster", "feuer", "finden", "finger", "flasche",
-    "fliegen", "flügel", "fragen", "frau", "freitag", "freuen", "freude", "freund", "freunde",
-    "freundin", "frucht", "früchte", "frühling", "fünf", "fuß", "füße", "gabel", "garten",
-    "gärten", "geben", "gehen", "gelb", "geld", "gemüse", "gesicht", "gesund", "gras",
-    "gräser", "groß", "grün", "gut", "haar", "haare", "haben", "hals", "hälse", "halten",
-    "hand", "hände", "hart", "hase", "haus", "häuser", "haut", "häute", "heiß", "heißen",
-    "helfen", "hell", "herbst", "heute", "hexe", "hilfe", "himmel", "hören", "hose", "hund",
-    "hunde", "hundert", "igel", "immer", "ja", "jahr", "januar", "juli", "junge", "juni",
-    "käfer", "kalender", "kalt", "kälte", "katze", "kaufen", "kind", "kinder", "klasse",
-    "kleid", "kleider", "klein", "kommen", "können", "kopf", "köpfe", "körper", "krank",
-    "küche", "kuh", "kühe", "lachen", "laub", "laufen", "laut", "leben", "legen", "leicht",
-    "leise", "lernen", "lesen", "licht", "lieb", "lieben", "liegen", "machen", "mädchen",
-    "mai", "malen", "mann", "männer", "märz", "maus", "mäuse", "milch", "minute", "mittwoch",
-    "mögen", "monat", "montag", "morgen", "mund", "münder", "müssen", "mutter", "mütter",
-    "nacht", "nächte", "name", "nase", "nebel", "nein", "neu", "neun", "nie", "november",
-    "obst", "oft", "ohr", "oktober", "onkel", "pferd", "pferde", "pflanzen", "pflegen",
-    "pizza", "puppe", "quaken", "raum", "räume", "aufräumen", "raupe", "rechnen", "reden",
-    "regen", "reich", "reisen", "rock", "röcke", "rollen", "rot", "rücken", "rufen",
-    "saft", "säfte", "sagen", "salz", "samstag", "sand", "sandig", "satz", "sätze",
-    "schauen", "scheinen", "schere", "schiff", "schlafen", "schlagen", "schnee", "schneiden",
-    "schnell", "schön", "schreiben", "schuh", "schuhe", "schule", "schwarz", "schwester",
-    "sechs", "sehen", "seife", "seite", "sekunde", "september", "sieben", "singen", "sitzen",
-    "sohn", "söhne", "sollen", "sommer", "sonne", "sonntag", "spielen", "sport", "stehen",
-    "stellen", "stift", "still", "stunde", "suchen", "tag", "tage", "tante", "tasche",
-    "tasse", "taxi", "tee", "tier", "tochter", "töchter", "toll", "tragen", "trinken",
-    "turnen", "üben", "uhr", "vater", "väter", "versuchen", "vier", "vogel", "vögel",
-    "wann", "warm", "wärme", "warten", "warum", "waschen", "wasser", "weg", "wege", "weil",
-    "weiß", "weit", "wenig", "wer", "werden", "wetter", "wiese", "wind", "winde", "winter",
-    "woche", "wolke", "wollen", "wort", "worte", "wörter", "wunsch", "wünsche", "wünschen",
-    "zahn", "zähne", "zeh", "zehen", "zehn", "zeigen", "zimmer", "zwei", "zwölf"
-]
+# Extrahiere Wörter aus Grundwortschatz-Text für Analyse
+def extract_words_from_gws(gws_text: str) -> list:
+    """Extrahiert einzelne Wörter aus dem Grundwortschatz-Text"""
+    if not gws_text:
+        return []
+    # Finde alle Wörter (ohne Markdown-Syntax)
+    words = re.findall(r'(?:^|\s+)-\s+([\wäöüß]+)', gws_text, re.IGNORECASE | re.MULTILINE)
+    # Normalisiere zu Kleinbuchstaben und entferne Duplikate
+    return list(set([w.lower() for w in words if w]))
 
-GRUNDWORTSCHATZ_34 = [
-    "abend", "ähnlich", "ändern", "anders", "angst", "ängste", "ängstlich", "ärgern",
-    "arzt", "ärztin", "backen", "bäcker", "bahn", "bald", "beginnen", "beispiel", "beißen",
-    "belohnen", "beobachten", "bequem", "bereits", "bereit", "beruf", "besser", "bett",
-    "bevor", "bewegen", "bezahlen", "biegen", "bisschen", "bitten", "blicken", "blick",
-    "blind", "blitz", "blitzen", "bloß", "bohren", "boot", "böse", "boxen", "brand",
-    "brände", "brennen", "brille", "brücke", "computer", "decke", "denken", "deutsch",
-    "deutschland", "dick", "donner", "donnern", "draußen", "drehen", "druck", "drücken",
-    "dumm", "dummheit", "dunkel", "dünn", "dürfen", "durst", "durstig", "ecke", "eckig",
-    "ehrlich", "eigentlich", "entdecken", "entfernen", "entfernung", "entwickeln",
-    "entwicklung", "erklären", "erklärung", "erlauben", "erlaubnis", "erleben", "erlebnis",
-    "ernähren", "erschrecken", "erwarten", "erwartung", "erzählen", "erzählung", "essen",
-    "europa", "fahren", "fahrrad", "fahrräder", "familie", "fehler", "ferien", "fernseher",
-    "fernsehen", "fertig", "fett", "feucht", "feuchtigkeit", "feuerwehr", "fleiß", "fleißig",
-    "fließen", "flugzeug", "flugzeuge", "fluss", "flüsse", "flüssig", "flüssigkeit", "frei",
-    "freiheit", "fremd", "fremde", "fressen", "frieden", "friedlich", "frieren", "frisch",
-    "fröhlich", "frühstücken", "frühstück", "fuchs", "füchse", "fühlen", "gefühl", "füllen",
-    "geburt", "geburtstag", "gefahr", "gefährlich", "gefallen", "geheim", "geheimnis",
-    "gemeinde", "geschäft", "gesetz", "gestern", "gewinnen", "gewitter", "gießen", "glatt",
-    "glück", "glücklich", "glühen", "gott", "götter", "gruß", "grüße", "grüßen", "handy",
-    "hängen", "häufig", "haufen", "hecke", "heizen", "heizung", "hemd", "hemden", "herr",
-    "hitze", "hoffen", "hoffentlich", "höhe", "hohl", "höhle", "hunger", "hungrig", "impfen",
-    "impfung", "informieren", "information", "interesse", "interessant", "jede", "jeder",
-    "jemand", "jemanden", "jetzt", "jung", "jünger", "käfig", "kamm", "kämmen", "kaputt",
-    "kennen", "klar", "klettern", "kraft", "kräfte", "kräftig", "kratzen", "kreuzung",
-    "kriechen", "krieg", "kriege", "kühl", "kühlen", "kuss", "küsse", "land", "länder",
-    "lang", "länger", "langsam", "lärm", "lassen", "lehrer", "lehrerin", "letzte", "letzter",
-    "leuchten", "lexikon", "lexika", "lied", "lieder", "links", "löffel", "magnet", "maschine",
-    "meer", "messen", "messer", "miete", "mittag", "mitte", "mixen", "mixer", "moos", "müll",
-    "nachmittag", "nächste", "nächster", "nah", "nähe", "nähen", "naht", "nahrung", "nass",
-    "nässe", "natur", "natürlich", "nehmen", "niemand", "niemanden", "nummer", "nummerieren",
-    "nuss", "nüsse", "nützlich", "ob", "offen", "öffnen", "ostern", "packen", "päckchen",
-    "paket", "papier", "passen", "pilz", "platz", "plätze", "plötzlich", "programm", "quadrat",
-    "quälen", "qual", "quelle", "radio", "raten", "rätsel", "rechts", "reh", "rehe", "reißen",
-    "rennen", "richtig", "riechen", "geruch", "ruhe", "ruhig", "rühren", "sammeln", "sammlung",
-    "schalten", "schalter", "scharf", "schärfe", "schatten", "schieben", "schief", "schließen",
-    "schließlich", "schloss", "schlösser", "schlüssel", "schmecken", "schmutz", "schmutzig",
-    "schreck", "schrecklich", "schreien", "schutz", "schützen", "schweigen", "schwierig",
-    "schwierigkeit", "schwimmen", "schwitzen", "see", "seit", "spaß", "spaziergang", "spät",
-    "verspätung", "spiegel", "spitz", "spitze", "stadt", "städte", "stamm", "stämme", "stange",
-    "stark", "stärker", "stiel", "stimmen", "stoff", "strand", "strände", "straße", "strauch",
-    "sträucher", "strauß", "sträuße", "streiten", "streit", "stück", "stuhl", "stühle",
-    "sturm", "stürme", "stürmisch", "süß", "süßigkeit", "tabelle", "tanne", "tausend",
-    "tausende", "technik", "telefon", "telefonieren", "teller", "temperatur", "text", "theater",
-    "thermometer", "tief", "tiefe", "träne", "traum", "träume", "träumen", "treffen", "trocken",
-    "überqueren", "ungefähr", "unterricht", "urlaub", "urlaube", "vase", "verbieten", "verbot",
-    "verbrauchen", "verbrennen", "verbrennung", "vergessen", "verkehr", "verletzen", "verletzung",
-    "verlieren", "verpacken", "verpackung", "verschmutzen", "verschmutzung", "vielleicht",
-    "voll", "vollständig", "vorfahrt", "vorsicht", "vorsichtig", "wachsen", "gewächs", "wählen",
-    "wahl", "während", "wald", "wälder", "wechseln", "wecker", "wecken", "weihnachten", "wichtig",
-    "wiegen", "wild", "wissen", "wohnen", "wurzel", "zahl", "zählen", "zeichnen", "zeitung",
-    "zeugnis", "ziehen", "ziel", "zielen", "zucker", "zukunft", "zurück", "zusammen", "zwiebel"
-]
+# Erstelle Wörterlisten aus geladenen Texten
+GRUNDWORTSCHATZ_12_WORDS = extract_words_from_gws(GRUNDWORTSCHATZ_12_TEXT)
+GRUNDWORTSCHATZ_34_WORDS = extract_words_from_gws(GRUNDWORTSCHATZ_FULL)
 
 # Komplexe Wörter (für Altersgruppe 3-4 zu schwierig)
 COMPLEX_WORDS = [
@@ -231,21 +174,25 @@ class ModelTester:
     
     def create_prompt(self, test_case: dict) -> str:
         """Erstellt den Prompt für die Story-Generierung"""
-        min_words = test_case["laenge"] * 80
-        max_words = test_case["laenge"] * 100
-        
         klassenstufe = test_case["klassenstufe"]
         
+        # Berechne Wortanzahl basierend auf Lesegeschwindigkeit nach Klassenstufe
         if klassenstufe == "12":
-            stufe_text = "Klassen 1-2 (Leseanfänger)"
-            schwierigkeit = "sehr einfach mit kurzen Sätzen (max 8-10 Wörter pro Satz)"
-            extra_hinweis = "\n- Verwende NUR sehr einfache Wörter aus dem Grundwortschatz\n- Jeder Satz sollte kurz und klar sein\n- Viele Wiederholungen sind gut für Leseanfänger\n- Nutze bekannte Alltagssituationen"
+            # Klasse 1 & 2: ~70 Wörter/Min
+            min_words = test_case["laenge"] * 60
+            max_words = test_case["laenge"] * 70
+            zielgruppe = "Kinder der Klassenstufen 1 & 2"
+            schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
+            grundwortschatz = GRUNDWORTSCHATZ_12_TEXT if GRUNDWORTSCHATZ_12_TEXT else ""
         else:
-            stufe_text = "Klassen 3-4"
-            schwierigkeit = "kindgerecht mit etwas längeren Sätzen"
-            extra_hinweis = ""
+            # Klasse 3 & 4: ~80-100 Wörter/Min
+            min_words = test_case["laenge"] * 80
+            max_words = test_case["laenge"] * 100
+            zielgruppe = "Kinder der Klassenstufen 3 & 4"
+            schwierigkeit = "kindgerecht mit etwas längeren Sätzen und anspruchsvolleren Wörtern"
+            grundwortschatz = GRUNDWORTSCHATZ_FULL if GRUNDWORTSCHATZ_FULL else ""
         
-        prompt = f"""Du bist ein Geschichtenerzähler für Kinder der {stufe_text}.
+        prompt = f"""Du bist ein Geschichtenerzähler für {zielgruppe}.
 
 Schreibe eine Geschichte mit folgenden Eigenschaften:
 - Lesezeit: etwa {test_case['laenge']} Minuten (ca. {min_words}-{max_words} Wörter)
@@ -253,17 +200,23 @@ Schreibe eine Geschichte mit folgenden Eigenschaften:
 - Personen/Tiere: {test_case['personen_tiere']}
 - Ort: {test_case['ort']}
 - Stimmung: {test_case['stimmung']}
-- Schwierigkeitsgrad: {schwierigkeit}{extra_hinweis}
+- Schwierigkeitsgrad: {schwierigkeit}
 
-WICHTIG: Verwende beim Schreiben häufig einfache Wörter aus dem Grundwortschatz.
+WICHTIG: Verwende beim Schreiben häufig Wörter aus dem Grundwortschatz als Leseübung.
 Die Geschichte sollte kindgerecht, spannend und lehrreich sein.
 
+Hier ist der Grundwortschatz zur Orientierung:
+{grundwortschatz}
+
 Format:
-TITEL: [Ein kurzer Titel]
+Gib die Antwort im folgenden Format zurück:
+TITEL: [Ein kurzer, ansprechender Titel für die Geschichte]
 
 [Die Geschichte in Absätzen]
 
-Beginne direkt mit "TITEL:" gefolgt vom Titel."""
+Beginne direkt mit "TITEL:" gefolgt vom Titel.
+
+WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wörtern. Mache die Geschichte nicht kürzer!"""
         
         return prompt
     
@@ -285,7 +238,7 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
         found_words = []
         
         # Wähle passenden Grundwortschatz
-        gws_list = GRUNDWORTSCHATZ_12 if klassenstufe == "12" else GRUNDWORTSCHATZ_34
+        gws_list = GRUNDWORTSCHATZ_12_WORDS if klassenstufe == "12" else GRUNDWORTSCHATZ_34_WORDS
         
         for word in gws_list:
             if word in text_lower:
@@ -374,7 +327,7 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
         total_words = len(words)
         
         # Grundwortschatz-Anteil (verwende passenden Wortschatz)
-        gws_list = GRUNDWORTSCHATZ_12 if klassenstufe == "12" else GRUNDWORTSCHATZ_34
+        gws_list = GRUNDWORTSCHATZ_12_WORDS if klassenstufe == "12" else GRUNDWORTSCHATZ_34_WORDS
         gws_count = sum(1 for word in words if any(gws in word for gws in gws_list))
         gws_ratio = gws_count / total_words if total_words else 0
         
@@ -442,6 +395,9 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
         # Generierung mit Zeiterfassung
         start_time = time.time()
         try:
+            # Berechne max_tokens basierend auf gewünschter Länge
+            estimated_tokens = int(test_case["laenge"] * 100 * 1.3) + 200
+            
             response = self.client.chat.completions.create(
                 model=model,
                 messages=[
@@ -449,7 +405,7 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.8,
-                max_tokens=int(test_case["laenge"] * 100 * 1.3) + 200
+                max_tokens=estimated_tokens
             )
             generation_time = time.time() - start_time
             
@@ -507,6 +463,25 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
         
         return result
     
+    def unload_model(self, model: str):
+        """Entlädt ein Modell aus dem Ollama-Speicher"""
+        try:
+            # Ollama API Endpoint zum Entladen von Modellen
+            base_url = OLLAMA_BASE_URL.replace("/v1", "")  # Entferne /v1 vom Pfad
+            response = requests.post(
+                f"{base_url}/api/generate",
+                json={
+                    "model": model,
+                    "keep_alive": 0  # 0 = sofort entladen
+                }
+            )
+            if response.status_code == 200:
+                print(f"  📤 Modell {model} entladen")
+            else:
+                print(f"  ⚠️  Konnte Modell {model} nicht entladen: {response.status_code}")
+        except Exception as e:
+            print(f"  ⚠️  Fehler beim Entladen von {model}: {str(e)}")
+    
     def test_all_models(self):
         """Testet alle Modelle mit allen Test-Cases"""
         print("🧪 Starte Modell-Vergleichstest\n")
@@ -530,6 +505,10 @@ Beginne direkt mit "TITEL:" gefolgt vom Titel."""
                 time.sleep(1)  # Kurze Pause zwischen Tests
             
             self.results.append(model_results)
+            
+            # Entlade Modell aus dem Speicher
+            self.unload_model(model)
+            print()
         
         print(f"\n{'='*60}")
         print("✅ Alle Tests abgeschlossen!")
