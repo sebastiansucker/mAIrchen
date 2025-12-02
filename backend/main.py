@@ -9,6 +9,16 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import threading
 import json
+import logging
+import traceback
+
+# Logging konfigurieren
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="mAIrchen API")
 
@@ -232,10 +242,14 @@ async def get_stats():
 async def generate_story(story_request: StoryRequest, request: Request):
     """Generiert eine Geschichte basierend auf den Eingaben"""
     
+    logger.info(f"Story-Generierung gestartet - IP: {get_client_ip(request)}")
+    logger.debug(f"Request-Parameter: {story_request.model_dump()}")
+    
     # Rate Limiting prüfen
     client_ip = get_client_ip(request)
     allowed, error_msg = check_rate_limit(client_ip)
     if not allowed:
+        logger.warning(f"Rate Limit erreicht für IP {client_ip}: {error_msg}")
         raise HTTPException(status_code=429, detail=error_msg)
     
     # Berechne Wortanzahl basierend auf Lesezeit
@@ -291,7 +305,11 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         # ~1.3 Tokens pro Wort für Deutsch, plus Buffer für Titel/Formatierung
         estimated_tokens = int(max_words * 1.3) + 200
         
+        logger.debug(f"AI Provider: {AI_PROVIDER}, Model: {DEFAULT_MODEL}")
+        logger.debug(f"Estimated tokens: {estimated_tokens}")
+        
         # API-Aufruf an AI Provider
+        logger.info("Starte API-Aufruf...")
         response = client.chat.completions.create(
             model=DEFAULT_MODEL,
             messages=[
@@ -302,7 +320,9 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             max_tokens=estimated_tokens
         )
         
+        logger.info("API-Aufruf erfolgreich")
         content = response.choices[0].message.content
+        logger.debug(f"Response Länge: {len(content) if content else 0} Zeichen")
         
         # Parse Titel und Geschichte
         title = "Eine Geschichte"
@@ -357,6 +377,10 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         }
     
     except Exception as e:
+        logger.error(f"Fehler beim Generieren der Geschichte: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"AI Provider: {AI_PROVIDER}, Model: {DEFAULT_MODEL}")
+        logger.error(f"API Key gesetzt: {bool(os.getenv('OPENAI_API_KEY') or os.getenv('OLLAMA_API_KEY'))}")
         raise HTTPException(status_code=500, detail=f"Fehler beim Generieren der Geschichte: {str(e)}")
 
 @app.get("/health")

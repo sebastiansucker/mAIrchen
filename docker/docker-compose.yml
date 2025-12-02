@@ -28,6 +28,8 @@ services:
       - GLOBAL_DAILY_LIMIT=${GLOBAL_DAILY_LIMIT:-1000}  # Max Anfragen pro Tag
       - MAX_STORY_LENGTH=${MAX_STORY_LENGTH:-15}  # Max Minuten
       - MAX_DAILY_COST=${MAX_DAILY_COST:-5.0}  # Max Kosten pro Tag in Euro
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}  # DEBUG, INFO, WARNING, ERROR, CRITICAL
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
