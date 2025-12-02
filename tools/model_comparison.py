@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-Test-Script zum Vergleich verschiedener Ollama-Modelle für Kindergeschichten.
+Test-Script zum vollständigen Vergleich aller Modelle (Ollama lokal + Mistral API).
 
 Usage:
-    python test_models.py
+    python full_comparison.py
 
-Testet verschiedene Modelle mit den gleichen Prompts und bewertet:
+Testet alle verfügbaren Modelle aus beiden Quellen:
+- Ollama lokale Modelle
+- Mistral API Modelle
+
+Bewertet:
 - Geschwindigkeit (Generierungszeit)
 - Story-Länge (Wortanzahl)
 - Grundwortschatz-Nutzung
@@ -21,6 +25,11 @@ from datetime import datetime
 from pathlib import Path
 import re
 import requests
+from dotenv import load_dotenv
+
+# Lade Umgebungsvariablen aus .env im tools-Ordner
+env_path = Path(__file__).parent / ".env"
+load_dotenv(env_path)
 
 # API Client
 try:
@@ -54,18 +63,38 @@ def load_grundwortschatz_12():
 GRUNDWORTSCHATZ_FULL = load_grundwortschatz()
 GRUNDWORTSCHATZ_12_TEXT = load_grundwortschatz_12()
 
-# Konfiguration
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-OLLAMA_MODELS = [
-    "gemma3:latest",
-    "gemma3n:latest", 
-    "llama3.2:3b",
-    "mistral-small3.2:latest",
-    "gpt-oss:20b",
-    "qwen3:latest",
-    "deepseek-r1:latest",
-    "phi4:latest",
-]
+# Konfiguration aus .env
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL")
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
+OLLAMA_MODELS = os.getenv("OLLAMA_MODELS")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
+MISTRAL_MODELS = os.getenv("MISTRAL_MODELS")
+
+# Modell-Konfigurationen aus .env aufbauen
+MODEL_CONFIGS = []
+
+# Ollama lokale Modelle hinzufügen (nur wenn konfiguriert)
+if OLLAMA_BASE_URL and OLLAMA_API_KEY and OLLAMA_MODELS:
+    ollama_model_list = [m.strip() for m in OLLAMA_MODELS.split(",") if m.strip()]
+    for model_name in ollama_model_list:
+        MODEL_CONFIGS.append({
+            "name": model_name,
+            "source": "ollama",
+            "base_url": OLLAMA_BASE_URL,
+            "api_key": OLLAMA_API_KEY
+        })
+
+# Mistral API Modelle hinzufügen (nur wenn konfiguriert)
+if OPENAI_API_KEY and OPENAI_BASE_URL and MISTRAL_MODELS:
+    mistral_model_list = [m.strip() for m in MISTRAL_MODELS.split(",") if m.strip()]
+    for model_name in mistral_model_list:
+        MODEL_CONFIGS.append({
+            "name": model_name,
+            "source": "mistral-api",
+            "base_url": OPENAI_BASE_URL,
+            "api_key": OPENAI_API_KEY
+        })
 
 # Test-Prompts (verschiedene Schwierigkeitsgrade)
 TEST_PROMPTS = [
@@ -123,16 +152,13 @@ def extract_words_from_gws(gws_text: str) -> list:
     """Extrahiert einzelne Wörter aus dem Grundwortschatz-Text"""
     if not gws_text:
         return []
-    # Finde alle Wörter (ohne Markdown-Syntax)
     words = re.findall(r'(?:^|\s+)-\s+([\wäöüß]+)', gws_text, re.IGNORECASE | re.MULTILINE)
-    # Normalisiere zu Kleinbuchstaben und entferne Duplikate
     return list(set([w.lower() for w in words if w]))
 
-# Erstelle Wörterlisten aus geladenen Texten
 GRUNDWORTSCHATZ_12_WORDS = extract_words_from_gws(GRUNDWORTSCHATZ_12_TEXT)
 GRUNDWORTSCHATZ_34_WORDS = extract_words_from_gws(GRUNDWORTSCHATZ_FULL)
 
-# Komplexe Wörter (für Altersgruppe 3-4 zu schwierig)
+# Komplexe Wörter
 COMPLEX_WORDS = [
     "konsequenz", "ambivalent", "rekapitulieren", "essenziell", "kontrovers",
     "paradigma", "metaphorisch", "intrinsisch", "hypothese", "analogie",
@@ -148,44 +174,48 @@ CREATIVE_ELEMENTS = {
     "direkte_rede": [r'[„"].*?["""]'],
 }
 
-# Altersgerechtheitskriterien nach Klassenstufe
+# Altersgerechtheitskriterien
 AGE_APPROPRIATE_PATTERNS = {
-    "12": {  # Klasse 1-2
-        "kurze_sätze": 8,  # Sehr kurze Sätze
-        "max_satzlaenge": 12,  # Max 12 Wörter pro Satz
-        "min_absaetze": 2,  # Mindestens 2 Absätze
-        "max_words_total": 200,  # Kürzere Geschichten
-        "simple_words_ratio": 0.7,  # 70% sollten einfache Wörter sein
+    "12": {
+        "kurze_sätze": 8,
+        "max_satzlaenge": 12,
+        "min_absaetze": 2,
+        "max_words_total": 200,
+        "simple_words_ratio": 0.7,
     },
-    "34": {  # Klasse 3-4
-        "kurze_sätze": 15,  # Durchschnittliche Wörter pro Satz
-        "max_satzlaenge": 25,  # Einzelne Sätze nicht länger als 25 Wörter
-        "min_absaetze": 3,  # Mindestens 3 Absätze für Struktur
-        "max_words_total": 500,  # Längere Geschichten erlaubt
-        "simple_words_ratio": 0.5,  # 50% sollten einfache Wörter sein
+    "34": {
+        "kurze_sätze": 15,
+        "max_satzlaenge": 25,
+        "min_absaetze": 3,
+        "max_words_total": 500,
+        "simple_words_ratio": 0.5,
     }
 }
 
 
-class ModelTester:
-    def __init__(self, base_url: str):
-        self.client = OpenAI(api_key="ollama", base_url=base_url)
+class FullModelTester:
+    def __init__(self):
         self.results = []
+        self.clients = {}  # Cache für API-Clients
+    
+    def get_client(self, base_url: str, api_key: str) -> OpenAI:
+        """Holt oder erstellt einen OpenAI-Client für die gegebene URL"""
+        cache_key = f"{base_url}_{api_key}"
+        if cache_key not in self.clients:
+            self.clients[cache_key] = OpenAI(api_key=api_key, base_url=base_url)
+        return self.clients[cache_key]
     
     def create_prompt(self, test_case: dict) -> str:
         """Erstellt den Prompt für die Story-Generierung"""
         klassenstufe = test_case["klassenstufe"]
         
-        # Berechne Wortanzahl basierend auf Lesegeschwindigkeit nach Klassenstufe
         if klassenstufe == "12":
-            # Klasse 1 & 2: ~70 Wörter/Min
             min_words = test_case["laenge"] * 60
             max_words = test_case["laenge"] * 70
             zielgruppe = "Kinder der Klassenstufen 1 & 2"
             schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
             grundwortschatz = GRUNDWORTSCHATZ_12_TEXT if GRUNDWORTSCHATZ_12_TEXT else ""
         else:
-            # Klasse 3 & 4: ~80-100 Wörter/Min
             min_words = test_case["laenge"] * 80
             max_words = test_case["laenge"] * 100
             zielgruppe = "Kinder der Klassenstufen 3 & 4"
@@ -221,28 +251,21 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         return prompt
     
     def count_words(self, text: str) -> int:
-        """Zählt Wörter im Text"""
         return len(text.split())
     
     def count_paragraphs(self, text: str) -> int:
-        """Zählt Absätze"""
         return len([p for p in text.split('\n\n') if p.strip()])
     
     def count_dialogues(self, text: str) -> int:
-        """Zählt Dialog-Zeilen (mit Anführungszeichen)"""
         return len(re.findall(r'[„"].*?["""]', text))
     
     def analyze_grundwortschatz(self, text: str, klassenstufe: str = "34") -> dict:
-        """Analysiert Grundwortschatz-Nutzung nach Klassenstufe"""
         text_lower = text.lower()
         found_words = []
-        
-        # Wähle passenden Grundwortschatz
         gws_list = GRUNDWORTSCHATZ_12_WORDS if klassenstufe == "12" else GRUNDWORTSCHATZ_34_WORDS
         
         for word in gws_list:
             if word in text_lower:
-                # Zähle Vorkommen
                 count = len(re.findall(r'\b' + word + r'\w*\b', text_lower))
                 if count > 0:
                     found_words.append((word, count))
@@ -259,9 +282,7 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         }
     
     def analyze_creativity(self, text: str) -> dict:
-        """Analysiert kreative Elemente in der Geschichte"""
         text_lower = text.lower()
-        
         creativity_score = {
             "metaphern": 0,
             "personifikation": 0,
@@ -280,7 +301,6 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             
             creativity_score[category] = len(matches)
             if matches:
-                # Speichere Beispiele (max 2 pro Kategorie)
                 examples = matches[:2] if isinstance(matches[0], str) else [m[0] for m in matches[:2]]
                 creativity_score["examples"].append({
                     "category": category,
@@ -289,7 +309,7 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
                 })
         
         creativity_score["total_score"] = sum([
-            creativity_score["metaphern"] * 3,  # Metaphern sind wertvoll
+            creativity_score["metaphern"] * 3,
             creativity_score["personifikation"] * 2,
             creativity_score["sinneswahrnehmungen"] * 2,
             creativity_score["emotionale_ausdrücke"],
@@ -299,10 +319,8 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         return creativity_score
     
     def analyze_age_appropriateness(self, text: str, klassenstufe: str = "34") -> dict:
-        """Analysiert Altersangemessenheit für die jeweilige Klassenstufe"""
         patterns = AGE_APPROPRIATE_PATTERNS.get(klassenstufe, AGE_APPROPRIATE_PATTERNS["34"])
         
-        # Satzlängen-Analyse
         sentences = re.split(r'[.!?]+', text)
         sentences = [s.strip() for s in sentences if s.strip()]
         
@@ -310,28 +328,20 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         avg_sentence_length = sum(sentence_lengths) / len(sentence_lengths) if sentence_lengths else 0
         long_sentences = len([l for l in sentence_lengths if l > patterns["max_satzlaenge"]])
         
-        # Komplexe Wörter finden
         text_lower = text.lower()
-        complex_words_found = []
-        for word in COMPLEX_WORDS:
-            if word in text_lower:
-                complex_words_found.append(word)
+        complex_words_found = [word for word in COMPLEX_WORDS if word in text_lower]
         
-        # Struktur-Analyse
         paragraph_count = self.count_paragraphs(text)
         
-        # Wortvielfalt (Type-Token-Ratio)
         words = re.findall(r'\b\w+\b', text_lower)
         unique_words = set(words)
         ttr = len(unique_words) / len(words) if words else 0
         total_words = len(words)
         
-        # Grundwortschatz-Anteil (verwende passenden Wortschatz)
         gws_list = GRUNDWORTSCHATZ_12_WORDS if klassenstufe == "12" else GRUNDWORTSCHATZ_34_WORDS
         gws_count = sum(1 for word in words if any(gws in word for gws in gws_list))
         gws_ratio = gws_count / total_words if total_words else 0
         
-        # Bewertung
         score = 100
         issues = []
         
@@ -340,7 +350,7 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             score -= penalty
             issues.append(f"Sätze zu lang (Ø {avg_sentence_length:.1f} Wörter, Ziel: <{patterns['kurze_sätze']})")
         
-        if long_sentences > len(sentences) * 0.3:  # Mehr als 30% zu lange Sätze
+        if long_sentences > len(sentences) * 0.3:
             penalty = 20 if klassenstufe == "12" else 15
             score -= penalty
             issues.append(f"{long_sentences} Sätze über {patterns['max_satzlaenge']} Wörter")
@@ -358,21 +368,20 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             score -= 10
             issues.append(f"Geschichte zu lang ({total_words} Wörter, Ziel: <{patterns['max_words_total']})")
         
-        # Für Klasse 1-2: Grundwortschatz-Anteil wichtiger
         if klassenstufe == "12":
             if gws_ratio < patterns["simple_words_ratio"]:
                 score -= 15
                 issues.append(f"Zu wenig Grundwortschatz ({gws_ratio:.1%}, Ziel: >{patterns['simple_words_ratio']:.0%})")
-            if ttr > 0.7:  # Zu viel Wortvielfalt für Leseanfänger
+            if ttr > 0.7:
                 score -= 10
                 issues.append(f"Zu viel Wortvielfalt (TTR: {ttr:.2f}, mehr Wiederholungen wären besser)")
         else:
-            if ttr < 0.4:  # Wenig Wortvielfalt für Klasse 3-4
+            if ttr < 0.4:
                 score -= 5
                 issues.append(f"Geringe Wortvielfalt (TTR: {ttr:.2f})")
         
         return {
-            "score": max(0, score),  # Minimum 0
+            "score": max(0, score),
             "klassenstufe": klassenstufe,
             "avg_sentence_length": round(avg_sentence_length, 1),
             "long_sentences": long_sentences,
@@ -386,20 +395,21 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             "recommendation": "Sehr gut" if score >= 90 else "Gut" if score >= 75 else "Verbesserungswürdig" if score >= 50 else "Ungeeignet"
         }
     
-    def test_model(self, model: str, test_case: dict) -> dict:
+    def test_model(self, model_config: dict, test_case: dict) -> dict:
         """Testet ein Modell mit einem Test-Case"""
+        model_name = model_config["name"]
+        source = model_config["source"]
         print(f"  📝 Teste: {test_case['name']}")
         
         prompt = self.create_prompt(test_case)
+        client = self.get_client(model_config["base_url"], model_config["api_key"])
         
-        # Generierung mit Zeiterfassung
         start_time = time.time()
         try:
-            # Berechne max_tokens basierend auf gewünschter Länge
             estimated_tokens = int(test_case["laenge"] * 100 * 1.3) + 200
             
-            response = self.client.chat.completions.create(
-                model=model,
+            response = client.chat.completions.create(
+                model=model_name,
                 messages=[
                     {"role": "system", "content": "Du bist ein kreativer Geschichtenerzähler für Grundschulkinder."},
                     {"role": "user", "content": prompt}
@@ -411,7 +421,6 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             
             content = response.choices[0].message.content or ""
             
-            # Parse Titel und Story
             title = "Ohne Titel"
             story = content
             
@@ -424,7 +433,6 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
                         title = rest[:title_end].strip()
                         story = rest[title_end+1:].strip()
             
-            # Analyse
             word_count = self.count_words(story)
             paragraph_count = self.count_paragraphs(story)
             dialogue_count = self.count_dialogues(story)
@@ -432,12 +440,12 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             creativity_analysis = self.analyze_creativity(story)
             age_analysis = self.analyze_age_appropriateness(story, test_case["klassenstufe"])
             
-            # Token-Nutzung
             tokens_used = response.usage.total_tokens if hasattr(response, 'usage') and response.usage else 0
             
             result = {
                 "test_case": test_case["name"],
                 "success": True,
+                "source": source,
                 "generation_time": round(generation_time, 2),
                 "title": title,
                 "word_count": word_count,
@@ -456,6 +464,7 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             result = {
                 "test_case": test_case["name"],
                 "success": False,
+                "source": source,
                 "error": str(e),
                 "generation_time": time.time() - start_time
             }
@@ -463,51 +472,58 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         
         return result
     
-    def unload_model(self, model: str):
-        """Entlädt ein Modell aus dem Ollama-Speicher"""
+    def unload_ollama_model(self, model: str):
+        """Entlädt ein Ollama-Modell aus dem Speicher"""
+        if not OLLAMA_BASE_URL:
+            return
         try:
-            # Ollama API Endpoint zum Entladen von Modellen
-            base_url = OLLAMA_BASE_URL.replace("/v1", "")  # Entferne /v1 vom Pfad
+            base_url = OLLAMA_BASE_URL.replace("/v1", "")
             response = requests.post(
                 f"{base_url}/api/generate",
-                json={
-                    "model": model,
-                    "keep_alive": 0  # 0 = sofort entladen
-                }
+                json={"model": model, "keep_alive": 0}
             )
             if response.status_code == 200:
                 print(f"  📤 Modell {model} entladen")
-            else:
-                print(f"  ⚠️  Konnte Modell {model} nicht entladen: {response.status_code}")
         except Exception as e:
             print(f"  ⚠️  Fehler beim Entladen von {model}: {str(e)}")
     
     def test_all_models(self):
-        """Testet alle Modelle mit allen Test-Cases"""
-        print("🧪 Starte Modell-Vergleichstest\n")
-        print(f"📍 Ollama Base URL: {OLLAMA_BASE_URL}")
-        print(f"📋 {len(OLLAMA_MODELS)} Modelle × {len(TEST_PROMPTS)} Test-Cases = {len(OLLAMA_MODELS) * len(TEST_PROMPTS)} Tests\n")
+        """Testet alle konfigurierten Modelle"""
+        print("🧪 Starte vollständigen Modell-Vergleichstest\n")
+        print(f"📋 {len(MODEL_CONFIGS)} Modelle × {len(TEST_PROMPTS)} Test-Cases = {len(MODEL_CONFIGS) * len(TEST_PROMPTS)} Tests\n")
         
-        for model in OLLAMA_MODELS:
+        ollama_count = sum(1 for m in MODEL_CONFIGS if m["source"] == "ollama")
+        mistral_count = sum(1 for m in MODEL_CONFIGS if m["source"] == "mistral-api")
+        print(f"🔧 Ollama lokal: {ollama_count} Modelle")
+        print(f"🌐 Mistral API: {mistral_count} Modelle\n")
+        
+        for model_config in MODEL_CONFIGS:
+            model_name = model_config["name"]
+            source = model_config["source"]
+            source_label = "Ollama" if source == "ollama" else "Mistral API"
+            
             print(f"\n{'='*60}")
-            print(f"🤖 Modell: {model}")
+            print(f"🤖 Modell: {model_name} ({source_label})")
             print(f"{'='*60}")
             
             model_results = {
-                "model": model,
+                "model": model_name,
+                "source": source,
+                "base_url": model_config["base_url"],
                 "timestamp": datetime.now().isoformat(),
                 "tests": []
             }
             
             for test_case in TEST_PROMPTS:
-                result = self.test_model(model, test_case)
+                result = self.test_model(model_config, test_case)
                 model_results["tests"].append(result)
-                time.sleep(1)  # Kurze Pause zwischen Tests
+                time.sleep(1)
             
             self.results.append(model_results)
             
-            # Entlade Modell aus dem Speicher
-            self.unload_model(model)
+            # Entlade nur Ollama-Modelle
+            if source == "ollama":
+                self.unload_ollama_model(model_name)
             print()
         
         print(f"\n{'='*60}")
@@ -515,19 +531,20 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         print(f"{'='*60}\n")
     
     def generate_report(self) -> str:
-        """Generiert einen Vergleichsbericht"""
-        report = ["# 📊 Modell-Vergleichsbericht - Kindergeschichten\n"]
+        """Generiert einen vollständigen Vergleichsbericht"""
+        report = ["# 📊 Vollständiger Modell-Vergleichsbericht - Kindergeschichten\n"]
         report.append(f"**Datum:** {datetime.now().strftime('%d.%m.%Y %H:%M')}\n")
-        report.append(f"**Getestete Modelle:** {len(OLLAMA_MODELS)}\n")
+        report.append(f"**Getestete Modelle:** {len(MODEL_CONFIGS)}\n")
         report.append(f"**Test-Cases:** {len(TEST_PROMPTS)}\n\n")
         
         # Übersichtstabelle
         report.append("## 📈 Gesamtübersicht\n")
-        report.append("| Modell | Ø Zeit (s) | Ø Wörter | Kreativität | Altersgerecht | Erfolg |\n")
-        report.append("|--------|-----------|----------|-------------|---------------|--------|\n")
+        report.append("| Modell | Quelle | Ø Zeit (s) | Ø Wörter | Kreativität | Altersgerecht | Erfolg |\n")
+        report.append("|--------|--------|-----------|----------|-------------|---------------|--------|\n")
         
         for model_result in self.results:
             model = model_result["model"]
+            source = "🔧 Ollama" if model_result["source"] == "ollama" else "🌐 Mistral API"
             tests = model_result["tests"]
             successful_tests = [t for t in tests if t.get("success")]
             
@@ -538,14 +555,41 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
                 avg_age_score = sum(t["age_appropriateness"]["score"] for t in successful_tests) / len(successful_tests)
                 success_rate = f"{len(successful_tests)}/{len(tests)}"
                 
-                report.append(f"| {model} | {avg_time:.1f} | {avg_words:.0f} | {avg_creativity:.0f} | {avg_age_score:.0f}/100 | {success_rate} |\n")
+                report.append(f"| {model} | {source} | {avg_time:.1f} | {avg_words:.0f} | {avg_creativity:.0f} | {avg_age_score:.0f}/100 | {success_rate} |\n")
         
-        # Detaillierte Ergebnisse pro Modell
+        # Vergleich nach Quelle
+        report.append("\n## 🔍 Vergleich nach Quelle\n")
+        
+        ollama_results = [r for r in self.results if r["source"] == "ollama"]
+        mistral_results = [r for r in self.results if r["source"] == "mistral-api"]
+        
+        if ollama_results:
+            report.append("\n### 🔧 Ollama Modelle\n")
+            for model_result in ollama_results:
+                tests = [t for t in model_result["tests"] if t.get("success")]
+                if tests:
+                    avg_time = sum(t["generation_time"] for t in tests) / len(tests)
+                    avg_creativity = sum(t["creativity"]["total_score"] for t in tests) / len(tests)
+                    avg_age = sum(t["age_appropriateness"]["score"] for t in tests) / len(tests)
+                    report.append(f"- **{model_result['model']}**: Zeit {avg_time:.1f}s | Kreativ {avg_creativity:.0f} | Altersgerecht {avg_age:.0f}/100\n")
+        
+        if mistral_results:
+            report.append("\n### 🌐 Mistral API Modelle\n")
+            for model_result in mistral_results:
+                tests = [t for t in model_result["tests"] if t.get("success")]
+                if tests:
+                    avg_time = sum(t["generation_time"] for t in tests) / len(tests)
+                    avg_creativity = sum(t["creativity"]["total_score"] for t in tests) / len(tests)
+                    avg_age = sum(t["age_appropriateness"]["score"] for t in tests) / len(tests)
+                    report.append(f"- **{model_result['model']}**: Zeit {avg_time:.1f}s | Kreativ {avg_creativity:.0f} | Altersgerecht {avg_age:.0f}/100\n")
+        
+        # Detaillierte Ergebnisse
         report.append("\n## 📝 Detaillierte Ergebnisse\n")
         
         for model_result in self.results:
             model = model_result["model"]
-            report.append(f"\n### 🤖 {model}\n")
+            source = "🔧 Ollama" if model_result["source"] == "ollama" else "🌐 Mistral API"
+            report.append(f"\n### {source} - {model}\n")
             
             for test in model_result["tests"]:
                 if test.get("success"):
@@ -556,32 +600,15 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
                     report.append(f"- **Absätze:** {test['paragraph_count']}\n")
                     report.append(f"- **Dialoge:** {test['dialogue_count']}\n")
                     
-                    # Grundwortschatz
                     gws = test['grundwortschatz']
                     report.append(f"- **Grundwortschatz:** {gws['unique_words']}/{gws['total_gws_words']} Wörter ({gws['percentage']}%)\n")
                     
-                    # Kreativität
                     creativity = test['creativity']
                     report.append(f"- **Kreativitäts-Score:** {creativity['total_score']}\n")
-                    report.append(f"  - Metaphern: {creativity['metaphern']}\n")
-                    report.append(f"  - Personifikation: {creativity['personifikation']}\n")
-                    report.append(f"  - Sinneswahrnehmungen: {creativity['sinneswahrnehmungen']}\n")
-                    report.append(f"  - Emotionale Ausdrücke: {creativity['emotionale_ausdrücke']}\n")
-                    report.append(f"  - Direkte Rede: {creativity['direkte_rede']}\n")
                     
-                    # Altersangemessenheit
                     age = test['age_appropriateness']
                     klassenstufe_name = "Klasse 1-2" if age.get('klassenstufe') == "12" else "Klasse 3-4"
                     report.append(f"- **Altersangemessenheit ({klassenstufe_name}):** {age['score']}/100 ({age['recommendation']})\n")
-                    report.append(f"  - Ø Satzlänge: {age['avg_sentence_length']} Wörter\n")
-                    report.append(f"  - Lange Sätze: {age['long_sentences']}/{age['total_sentences']}\n")
-                    report.append(f"  - Gesamtwörter: {age['total_words']}\n")
-                    report.append(f"  - Wortvielfalt (TTR): {age['type_token_ratio']}\n")
-                    report.append(f"  - Grundwortschatz-Anteil: {age['grundwortschatz_ratio']:.0%}\n")
-                    if age['issues']:
-                        report.append(f"  - ⚠️ Hinweise: {', '.join(age['issues'])}\n")
-                    if age['complex_words']:
-                        report.append(f"  - ⚠️ Komplexe Wörter: {', '.join(age['complex_words'][:3])}\n")
                     
                     report.append(f"- **Tokens:** {test['tokens_used']}\n")
                     report.append(f"\n**Auszug:**\n> {test['story_preview']}\n")
@@ -592,43 +619,41 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         # Empfehlungen
         report.append("\n## 🏆 Empfehlungen\n")
         
-        # Schnellstes Modell
-        fastest = min(self.results, key=lambda x: sum(t["generation_time"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
-        report.append(f"- **⚡ Schnellstes Modell:** {fastest['model']}\n")
-        
-        # Kreativstes Modell
-        most_creative = max(self.results, key=lambda x: sum(t["creativity"]["total_score"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
-        report.append(f"- **🎨 Kreativstes Modell:** {most_creative['model']}\n")
-        
-        # Best für Altersgruppe
-        best_age = max(self.results, key=lambda x: sum(t["age_appropriateness"]["score"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
-        report.append(f"- **👶 Am besten für Altersgruppe:** {best_age['model']}\n")
-        
-        # Best Grundwortschatz
-        best_gws = max(self.results, key=lambda x: sum(t["grundwortschatz"]["unique_words"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
-        report.append(f"- **📚 Bester Grundwortschatz:** {best_gws['model']}\n")
-        
-        # Gesamtbewertung (gewichteter Score)
-        report.append("\n### 🎯 Gesamtbewertung (Gewichteter Score)\n")
-        report.append("*Berechnung: Kreativität × 2 + Altersgerecht × 3 + GWS-Wörter × 1 - Zeit/50*\n\n")
-        
-        overall_scores = []
-        for model_result in self.results:
-            tests = [t for t in model_result["tests"] if t.get("success")]
-            if tests:
-                avg_creativity = sum(t["creativity"]["total_score"] for t in tests) / len(tests)
-                avg_age = sum(t["age_appropriateness"]["score"] for t in tests) / len(tests)
-                avg_gws = sum(t["grundwortschatz"]["unique_words"] for t in tests) / len(tests)
-                avg_time = sum(t["generation_time"] for t in tests) / len(tests)
-                
-                weighted_score = (avg_creativity * 2) + (avg_age * 3) + (avg_gws * 1) - (avg_time / 50)
-                overall_scores.append((model_result["model"], weighted_score))
-        
-        overall_scores.sort(key=lambda x: x[1], reverse=True)
-        
-        for i, (model, score) in enumerate(overall_scores, 1):
-            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
-            report.append(f"{medal} **{model}** - Score: {score:.1f}\n")
+        if self.results:
+            fastest = min(self.results, key=lambda x: sum(t["generation_time"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
+            report.append(f"- **⚡ Schnellstes Modell:** {fastest['model']} ({fastest['source']})\n")
+            
+            most_creative = max(self.results, key=lambda x: sum(t["creativity"]["total_score"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
+            report.append(f"- **🎨 Kreativstes Modell:** {most_creative['model']} ({most_creative['source']})\n")
+            
+            best_age = max(self.results, key=lambda x: sum(t["age_appropriateness"]["score"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
+            report.append(f"- **👶 Am besten für Altersgruppe:** {best_age['model']} ({best_age['source']})\n")
+            
+            best_gws = max(self.results, key=lambda x: sum(t["grundwortschatz"]["unique_words"] for t in x["tests"] if t.get("success")) / max(len([t for t in x["tests"] if t.get("success")]), 1))
+            report.append(f"- **📚 Bester Grundwortschatz:** {best_gws['model']} ({best_gws['source']})\n")
+            
+            # Gesamtbewertung
+            report.append("\n### 🎯 Gesamtbewertung (Gewichteter Score)\n")
+            report.append("*Berechnung: Kreativität × 2 + Altersgerecht × 3 + GWS-Wörter × 1 - Zeit/50*\n\n")
+            
+            overall_scores = []
+            for model_result in self.results:
+                tests = [t for t in model_result["tests"] if t.get("success")]
+                if tests:
+                    avg_creativity = sum(t["creativity"]["total_score"] for t in tests) / len(tests)
+                    avg_age = sum(t["age_appropriateness"]["score"] for t in tests) / len(tests)
+                    avg_gws = sum(t["grundwortschatz"]["unique_words"] for t in tests) / len(tests)
+                    avg_time = sum(t["generation_time"] for t in tests) / len(tests)
+                    
+                    weighted_score = (avg_creativity * 2) + (avg_age * 3) + (avg_gws * 1) - (avg_time / 50)
+                    source_icon = "🔧" if model_result["source"] == "ollama" else "🌐"
+                    overall_scores.append((model_result["model"], weighted_score, source_icon))
+            
+            overall_scores.sort(key=lambda x: x[1], reverse=True)
+            
+            for i, (model, score, source_icon) in enumerate(overall_scores, 1):
+                medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+                report.append(f"{medal} **{model}** {source_icon} - Score: {score:.1f}\n")
         
         return "".join(report)
     
@@ -639,21 +664,18 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # JSON
-        json_file = output_path / f"results_{timestamp}.json"
+        json_file = output_path / f"full_results_{timestamp}.json"
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump(self.results, f, indent=2, ensure_ascii=False)
         print(f"💾 JSON gespeichert: {json_file}")
         
-        # Markdown Report
         report = self.generate_report()
-        md_file = output_path / f"report_{timestamp}.md"
+        md_file = output_path / f"full_report_{timestamp}.md"
         with open(md_file, "w", encoding="utf-8") as f:
             f.write(report)
         print(f"📄 Report gespeichert: {md_file}")
         
-        # Auch als latest
-        latest_md = output_path / "latest_report.md"
+        latest_md = output_path / "latest_full_report.md"
         with open(latest_md, "w", encoding="utf-8") as f:
             f.write(report)
         print(f"📄 Latest Report: {latest_md}")
@@ -662,29 +684,36 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
 def main():
     """Hauptfunktion"""
     print("\n" + "="*60)
-    print("🧪 mAIrchen Modell-Vergleichstest")
+    print("🧪 mAIrchen - Vollständiger Modell-Vergleichstest")
     print("="*60 + "\n")
     
-    # Prüfe Ollama-Verbindung
-    try:
-        client = OpenAI(api_key="ollama", base_url=OLLAMA_BASE_URL)
-        # Versuche eine einfache Anfrage
-        print("🔍 Prüfe Ollama-Verbindung...")
-        # Note: Ollama unterstützt nicht direkt /models über OpenAI API
-        print(f"✅ Verbunden mit: {OLLAMA_BASE_URL}\n")
-    except Exception as e:
-        print(f"❌ Fehler bei Verbindung zu Ollama: {e}")
-        print(f"   Stelle sicher, dass Ollama läuft: ollama serve")
+    # Prüfe Konfiguration
+    if not MODEL_CONFIGS:
+        print("❌ Keine Modelle konfiguriert!")
+        print("   Bitte prüfe die .env Datei im tools/ Ordner.")
+        print("   Stelle sicher, dass mindestens eine Provider-Konfiguration aktiv ist:")
+        print("   - Ollama: OLLAMA_BASE_URL, OLLAMA_API_KEY, OLLAMA_MODELS")
+        print("   - Mistral API: OPENAI_API_KEY, OPENAI_BASE_URL, MISTRAL_MODELS")
         sys.exit(1)
     
-    # Starte Tests
-    tester = ModelTester(OLLAMA_BASE_URL)
-    tester.test_all_models()
+    # Zeige Konfiguration
+    if OLLAMA_BASE_URL and OLLAMA_MODELS:
+        print(f"🔧 Ollama Base URL: {OLLAMA_BASE_URL}")
+        print(f"   Modelle: {OLLAMA_MODELS}")
+    else:
+        print("⚠️  Ollama nicht konfiguriert (auskommentiert oder fehlend)")
     
-    # Speichere Ergebnisse
+    if OPENAI_API_KEY and OPENAI_BASE_URL and MISTRAL_MODELS:
+        print(f"🌐 Mistral API: {OPENAI_BASE_URL}")
+        print(f"   Modelle: {MISTRAL_MODELS}")
+    else:
+        print("⚠️  Mistral API nicht konfiguriert (auskommentiert oder fehlend)")
+    print()
+    
+    tester = FullModelTester()
+    tester.test_all_models()
     tester.save_results()
     
-    # Zeige Report
     print("\n" + "="*60)
     print("📊 ZUSAMMENFASSUNG")
     print("="*60 + "\n")
