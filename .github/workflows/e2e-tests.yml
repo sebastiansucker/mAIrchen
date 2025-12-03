@@ -41,12 +41,8 @@ jobs:
           OLLAMA_MODEL=ministral-3:8b-cloud
           EOF
 
-      - name: Verify environment in container
+      - name: Start Docker container
         run: |
-          echo "Checking environment variables in container..."
-          docker compose exec -T app sh -c 'echo "AI_PROVIDER: $AI_PROVIDER"'
-          docker compose exec -T app sh -c 'echo "OLLAMA_MODEL: $OLLAMA_MODEL"'
-          docker compose exec -T app sh -c 'if [ -z "$OLLAMA_API_KEY" ]; then echo "❌ OLLAMA_API_KEY is empty"; exit 1; else echo "✅ OLLAMA_API_KEY is set"; fi'
           docker compose up --build -d
           
       - name: Wait for application to be ready
