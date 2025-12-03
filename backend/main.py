@@ -168,17 +168,18 @@ class StoryRequest(BaseModel):
 class RandomSuggestions(BaseModel):
     themen: list[str] = [
         "Freundschaft", "Abenteuer", "Zauber", "Tiere im Wald", 
-        "Eine Reise", "Ein Geheimnis", "Mut", "Hilfsbereitschaft"
+        "Eine Reise", "Ein Geheimnis", "Mut", "Hilfsbereitschaft", "Weihnachten", "Sommerferien", "Ein verlorener Schatz", "Magische Welten",
+        "Die vier Jahreszeiten", "Ein besonderes Fest", "Die Kraft der Fantasie"
     ]
     personen_tiere: list[str] = [
         "Ein kleiner Hase namens Erwin", "Eine mutige Prinzessin namens Helena", "Ein frecher Fuchs namens Felix",
         "Eine weise Eule", "Ein tapferere Ritterin names Hannelore", "Ein tapferer Ritter names Siegfried", 
-        "Ein neugieriges Eichhörnchen", "Ein kleines Mädchen namens Juna", "Ein junger Drache", 
+        "Ein neugieriges Eichhörnchen", "Ein kleines Mädchen namens Juna", "Ein junger Drache",
         "Eine zauberhafte Fee", "Der fröhliche Bär Klaus", "Ein kluger Junge", "Eine singende Nachtigall"
     ]
     orte: list[str] = [
         "im Wald", "am See", "in einem Schloss", "auf einem Bauernhof",
-        "in einem verzauberten Garten", "in den Bergen", "am Meer", "in einem Dorf"
+        "in einem verzauberten Garten", "in den Bergen", "am Meer", "in einem Dorf", "im Zauberwald"
     ]
     stimmungen: list[str] = [
         "fröhlich", "spannend", "mysteriös", "lustig",
