@@ -32,7 +32,7 @@ jobs:
 
       - name: Build and start Docker container
         run: |
-          docker-compose up --build -d
+          docker compose up --build -d
           
       - name: Wait for application to be ready
         run: |
@@ -70,8 +70,8 @@ jobs:
 
       - name: Show container logs on failure
         if: failure()
-        run: docker-compose logs
+        run: docker compose logs
 
       - name: Stop Docker container
         if: always()
-        run: docker-compose down
+        run: docker compose down
