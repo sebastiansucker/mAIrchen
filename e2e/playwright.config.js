@@ -6,6 +6,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
+  timeout: 120000, // 2 minutes per test
   reporter: [
     ['html'],
     ['list']
@@ -15,6 +16,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    actionTimeout: 15000, // 15 seconds for actions
+    navigationTimeout: 15000, // 15 seconds for page navigation
   },
 
   projects: [

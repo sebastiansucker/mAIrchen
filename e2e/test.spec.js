@@ -24,8 +24,8 @@ test.describe('mAIrchen Story Generation', () => {
     // Click the generate story button
     await page.click('#generate-btn');
     
-    // Wait for the story display to be visible (max 60 seconds for longer story)
-    await page.waitForSelector('#story-display', { state: 'visible', timeout: 60000 });
+    // Wait for the story display to be visible (max 90 seconds for longer story)
+    await page.waitForSelector('#story-display', { state: 'visible', timeout: 90000 });
     
     // Verify story title is present
     const storyTitle = await page.locator('#story-title').textContent();
@@ -63,7 +63,7 @@ test.describe('mAIrchen Story Generation', () => {
     await page.click('#generate-btn');
     
     // Wait for story to be generated
-    await page.waitForSelector('#story-display', { state: 'visible', timeout: 60000 });
+    await page.waitForSelector('#story-display', { state: 'visible', timeout: 90000 });
     
     // Verify story was created
     const storyTitle = await page.locator('#story-title').textContent();
