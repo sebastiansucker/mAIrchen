@@ -8,6 +8,22 @@ venv/
 env/
 ENV/
 
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
 # IDEs
 .vscode/
 .idea/
@@ -30,3 +46,7 @@ Thumbs.db
 
 # Tests & comparisons
 test_results/
+
+# binaries
+*/model_comparison
+*/mairchen

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Combined Go Backend + Nginx Frontend
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: mairchen-go
+    environment:
+      - AI_PROVIDER=${AI_PROVIDER:-openai}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.mistral.ai/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-mistral-small-latest}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - RATE_LIMIT_PER_IP=${RATE_LIMIT_PER_IP:-10}
+      - GLOBAL_DAILY_LIMIT=${GLOBAL_DAILY_LIMIT:-1000}
+      - MAX_STORY_LENGTH=${MAX_STORY_LENGTH:-15}
+      - MAX_DAILY_COST=${MAX_DAILY_COST:-5.0}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
+      - PORT=8000
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,37 +1,39 @@
-# Multi-Stage Dockerfile - Frontend + Backend in einem Container
-FROM python:3.11-slim
+# Multi-stage build für Go Backend
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# System-Dependencies für Nginx
-RUN apt-get update && \
-    apt-get install -y nginx && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Copy go mod files
+COPY backend/go.mod backend/go.sum* ./
 
-# Python Dependencies installieren
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Download dependencies
+RUN go mod download
 
-# Backend-Code und Grundwortschatz kopieren
-COPY backend/ .
+# Copy source code
+COPY backend/ ./
 
-# Frontend-Dateien kopieren und Berechtigungen setzen
-COPY frontend/ /var/www/html/
-RUN chmod -R 755 /var/www/html && \
-    find /var/www/html -type f -exec chmod 644 {} \;
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-# Nginx-Konfiguration
-COPY docker/nginx-combined.conf /etc/nginx/sites-available/default
+# Final stage with Nginx
+FROM nginx:alpine
 
-# Startup-Script erstellen
-# Backend läuft nur auf 127.0.0.1 (localhost) - nicht von außen erreichbar!
-RUN echo '#!/bin/bash\n\
-nginx\n\
-uvicorn main:app --host 127.0.0.1 --port 8000\n\
-' > /start.sh && chmod +x /start.sh
+# Install ca-certificates for API calls
+RUN apk --no-cache add ca-certificates
 
-# Nur Port 80 nach außen (Nginx), Backend-Port 8000 ist intern
+# Copy Go binary (gws.md is now embedded in the binary)
+COPY --from=builder /app/main /app/main
+
+# Copy frontend files
+COPY frontend/ /usr/share/nginx/html/
+
+# Copy nginx configuration
+COPY docker/nginx-combined.conf /etc/nginx/conf.d/default.conf
+
+# Copy startup script
+COPY docker/start-go.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 80
 
 CMD ["/start.sh"]
