@@ -165,8 +165,12 @@ function formatStoryText(text) {
     // Teile den Text in Absätze
     const paragraphs = text.split('\n').filter(p => p.trim().length > 0);
     
-    // Erstelle HTML mit Absätzen
-    return paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+    // Erstelle HTML mit Absätzen und formatiere Markdown-Fettdruck
+    return paragraphs.map(p => {
+        // Ersetze **text** mit <strong>text</strong>
+        const formatted = p.trim().replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        return `<p>${formatted}</p>`;
+    }).join('');
 }
 
 // Zurück zum Formular
