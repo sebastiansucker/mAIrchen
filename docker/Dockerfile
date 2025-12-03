@@ -1,9 +1,4 @@
 # Multi-Stage Dockerfile - Frontend + Backend in einem Container
-FROM node:18-alpine as frontend-build
-WORKDIR /frontend
-COPY frontend/ .
-
-# Backend Stage
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -15,14 +10,16 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Python Dependencies installieren
-COPY ../backend/requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Backend-Code und Grundwortschatz kopieren
-COPY ../backend/ .
+COPY backend/ .
 
-# Frontend-Dateien kopieren
-COPY ../frontend/ /var/www/html/
+# Frontend-Dateien kopieren und Berechtigungen setzen
+COPY frontend/ /var/www/html/
+RUN chmod -R 755 /var/www/html && \
+    find /var/www/html -type f -exec chmod 644 {} \;
 
 # Nginx-Konfiguration
 COPY docker/nginx-combined.conf /etc/nginx/sites-available/default

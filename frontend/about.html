@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Über mAIrchen</title>
+    <link rel="icon" type="image/x-icon" href="app_icon.png">
+    <link rel="icon" type="image/svg+xml" href="app_icon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .about-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .about-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        .about-card p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container about-content">
+        <a href="index.html" class="back-link">← Zurück zu mAIrchen</a>
+        
+        <header>
+            <h1>Über mAIrchen</h1>
+        </header>
+
+        <main>
+            <div class="about-card">
+                <h2>Wie funktioniert mAIrchen?</h2>
+                <p>
+                    mAIrchen nutzt künstliche Intelligenz, um individuelle Kindergeschichten zu erstellen. 
+                    Die App verwendet Modelle von <strong>Mistral AI</strong>, die speziell darauf trainiert wurden, natürliche und kreative Texte zu generieren.
+                </p>
+            </div>
+
+            <div class="about-card">
+                <h2>Was ist Mistral AI?</h2>
+                <p>
+                    <strong>Mistral AI</strong> ist ein französisches Unternehmen, das hochmoderne 
+                    Sprachmodelle entwickelt. Die Modelle von Mistral AI zeichnen sich durch:
+                </p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li>Hohe Qualität bei der Textgenerierung</li>
+                    <li>Effizienz und schnelle Antwortzeiten</li>
+                    <li>Europäische Datenschutzstandards</li>
+                    <li>Mehrsprachige Fähigkeiten mit ausgezeichneter deutscher Unterstützung</li>
+                </ul>
+                <p>
+                    Mehr Informationen findest du auf der offiziellen Website: 
+                    <a href="https://mistral.ai" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color);">mistral.ai</a>
+                </p>
+            </div>
+
+            <div class="about-card">
+                <h2>Anpassung an Klassenstufen</h2>
+                <p>
+                    mAIrchen berücksichtigt den offiziellen <strong>Grundwortschatz für Brandenburg</strong> 
+                    und passt die Geschichten an die gewählte Klassenstufe an:
+                </p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Klasse 1/2:</strong> Einfache Wörter, kurze Sätze, ca. 60-70 Wörter pro Minute Lesezeit</li>
+                    <li><strong>Klasse 3/4:</strong> Erweiterte Wörter, längere Sätze, ca. 80-100 Wörter pro Minute Lesezeit</li>
+                </ul>
+            </div>
+
+            <div class="about-card">
+                <h2>Datenschutz & Sicherheit</h2>
+                <p>
+                    Deine Eingaben werden nur zur Generierung der Geschichte verwendet und nicht dauerhaft gespeichert. KI Modelle laufen in einer nicht lernenden privaten Umgebung,
+                    um deine Privatsphäre zu schützen. Das heißt, dass deine Eingaben nicht zum Training der Modelle verwendet werden.
+                </p>
+                <p>
+                    Die Anwendung ist mit Rate-Limiting und Budgetkontrollen ausgestattet, um einen fairen 
+                    Zugang für alle Nutzer zu gewährleisten.
+                </p>
+            </div>
+
+            <div class="about-card">
+                <h2>Open Source</h2>
+                <p>
+                    mAIrchen ist ein Open-Source-Projekt. Der Quellcode ist verfügbar auf 
+                    <a href="https://github.com/sebastiansucker/mAIrchen" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color);">GitHub</a>.
+                </p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
