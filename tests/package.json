@@ -1,0 +1,15 @@
+{
+  "name": "mairchen-e2e",
+  "version": "1.0.0",
+  "description": "End-to-end tests for mAIrchen",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
