@@ -104,13 +104,13 @@ jobs:
           node-version: '20'
 
       - name: Install Playwright dependencies
-        working-directory: e2e
+        working-directory: tests
         run: |
           npm install
           npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        working-directory: e2e
+        working-directory: tests
         run: npm test
 
       - name: Upload Playwright report
@@ -118,7 +118,7 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: e2e/playwright-report/
+          path: tests/playwright-report/
           retention-days: 7
 
       - name: Show container logs on failure
@@ -132,6 +132,7 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
