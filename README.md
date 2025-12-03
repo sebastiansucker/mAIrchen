@@ -73,8 +73,7 @@ OLLAMA_MODEL=gemma3:latest  # Beste Balance: Schnell & gute Qualität
 
 4. Container bauen & starten:
 ```bash
-docker-compose --env-file .env -f docker/docker-compose.yml build
-docker-compose --env-file .env -f docker/docker-compose.yml up -d
+docker-compose up --build -d
 ```
 
 Die App ist nun verfügbar unter:
@@ -163,14 +162,19 @@ Details: [SECURITY.md](SECURITY.md)
 ### Single Container Setup
 Frontend und Backend laufen in einem Docker-Container:
 - **Nginx** serviert das Frontend (Port 80)
-- **FastAPI** Backend läuft auf Port 8000 (intern)
+- **Go Backend** (Gin Framework) läuft auf Port 8000 (intern)
 - Nginx fungiert als Reverse Proxy für `/api/*` Requests
 
-### Backend (FastAPI)
-- Python-basierte REST API
-- OpenAI-kompatibler Client (unterstützt Mistral, Ollama Cloud, Ollama Local)
+### Backend (Go + Gin)
+- Go-basierte REST API mit Gin Framework
+- OpenAI-kompatibler Client (go-openai)
+- Modular aufgebaute Package-Struktur:
+  - `pkg/config` - Provider-Konfiguration
+  - `pkg/data` - Eingebettete Grundwortschatz-Daten
+  - `pkg/prompt` - Prompt-Generierung
+  - `pkg/story` - Story-Generierung
+  - `pkg/analysis` - Grundwortschatz-Analyse
 - Flexible AI-Provider-Konfiguration über Umgebungsvariablen
-- Grundwortschatz-Integration aus `backend/gws.md`
 - Rate Limiting & Cost Tracking
 - Endpunkte:
   - `GET /` - API Info (Provider & Modell)
@@ -192,20 +196,27 @@ mAIrchen/
 ├── .env.example          # Umgebungsvariablen Template
 ├── .gitignore           # Git Ignore Datei
 ├── README.md            # Diese Datei
+├── docker-compose.yml   # Container Orchestrierung
 ├── backend/
-│   ├── main.py          # FastAPI Backend
-│   ├── requirements.txt # Python Dependencies
-│   └── gws.md          # Grundwortschatz Klassen 1-4
+│   ├── main.go          # Go Backend (Gin)
+│   ├── go.mod, go.sum   # Go Dependencies
+│   └── pkg/
+│       ├── config/      # Provider-Konfiguration
+│       ├── data/        # Grundwortschatz (embedded gws.md)
+│       ├── prompt/      # Prompt-Generierung
+│       ├── story/       # Story-Generierung
+│       └── analysis/    # Grundwortschatz-Analyse
 ├── frontend/
 │   ├── index.html      # Haupt-HTML
 │   ├── styles.css      # Styling & Animationen
 │   ├── app.js          # JavaScript Logik
-│   ├── logo.png        # App Logo (transparent)
-│   └── app_icon.png    # App Icon
+│   └── nginx.conf      # Frontend Nginx Config
+├── tools/
+│   └── model_comparison.go  # Benchmark-Tool für Model-Vergleiche
 └── docker/
-    ├── Dockerfile              # Multi-Stage Build
-    ├── docker-compose.yml      # Container Orchestrierung
-    └── nginx-combined.conf     # Nginx Konfiguration
+    ├── Dockerfile              # Multi-Stage Build (Go + Nginx)
+    ├── nginx-combined.conf     # Nginx Konfiguration
+    └── start-go.sh             # Container Start-Script
 ```
 
 ## 🎯 Verwendung
@@ -214,20 +225,40 @@ mAIrchen/
 2. Eingabefelder ausfüllen:
    - Thema (z.B. "Freundschaft")
    - Personen/Tiere (z.B. "Ein kleiner Hase")
-   - Ort (z.B. "im Wald")
-   - Stimmung (z.B. "fröhlich")
-3. Optional: "🎲 Zufällig" Button für automatische Vorschläge
-4. "✨ Geschichte erstellen" klicken
-5. Geschichte im Buchlayout lesen
-
 ## 🛠️ Entwicklung
 
 ### Backend lokal starten
 ```bash
 cd backend
-pip install -r requirements.txt
-export MISTRAL_API_KEY=your-key
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Dependencies installieren
+go mod download
+
+# Umgebungsvariablen setzen
+export AI_PROVIDER=ollama-cloud
+export OLLAMA_API_KEY=your-key
+export OLLAMA_MODEL=ministral-3:8b-cloud
+
+# Backend starten
+go run main.go
+```
+
+### Tests ausführen
+```bash
+cd backend
+# Alle Tests
+go test ./...
+
+# Mit Coverage
+go test ./... -cover
+
+# Verbose Output
+go test ./... -v
+```
+
+### Linting
+```bash
+cd backend
+golangci-lint run
 ```
 
 ### Frontend lokal testen
@@ -237,6 +268,18 @@ cd frontend
 python -m http.server 8080
 ```
 Dann im Browser: http://localhost:8080
+
+### Container neu bauen nach Änderungen
+```bash
+docker-compose up --build -d
+```
+
+### Model Comparison Tool
+Vergleicht verschiedene AI-Modelle für Kindergeschichten:
+```bash
+cd tools
+go run model_comparison.go
+```n im Browser: http://localhost:8080
 
 ### Container neu bauen nach Änderungen
 ```bash
@@ -339,15 +382,35 @@ Die App ist von anderen Geräten im Netzwerk erreichbar:
 
 Das Frontend nutzt automatisch die richtige URL für API-Requests.
 
-## 🐳 Deployment
-
-### Mit GitHub Container Registry
-Der Container wird automatisch bei jedem Push auf `main` gebaut und in die GitHub Container Registry gepusht.
-
-**Container direkt von GitHub pullen:**
+### Manuelles Deployment (Lokaler Build)
 ```bash
-docker pull ghcr.io/sebastiansucker/mairchen:latest
-docker run -d -p 80:80 \
+# Auf dem Server
+git clone git@github.com:sebastiansucker/mAIrchen.git
+cd mAIrchen
+cp .env.example .env
+# .env bearbeiten und API-Key eintragen
+docker-compose up --build -d
+```
+
+## 🧪 Testing & CI/CD
+
+Das Projekt nutzt GitHub Actions für automatisierte Tests und Builds:
+
+### Automated Testing
+- **golangci-lint**: Läuft bei jedem Pull Request und Push auf `main`
+- **Unit Tests**: Alle Packages haben vollständige Test-Coverage
+- **Docker Build**: Automatischer Build und Push zu GitHub Container Registry
+
+### Lokale Tests
+```bash
+# Backend Tests
+cd backend
+go test ./pkg/... -v
+
+# Mit Coverage Report
+go test ./pkg/... -cover -coverprofile=coverage.out
+go tool cover -html=coverage.out
+```ker run -d -p 80:80 \
   -e MISTRAL_API_KEY=your-key \
   -e MISTRAL_BASE_URL=https://api.mistral.ai/v1 \
   -e MISTRAL_MODEL=mistral-small-latest \

@@ -1,0 +1,73 @@
+name: Go CI
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build backend
+        run: |
+          cd backend
+          go build -v -o mairchen main.go
+
+      - name: Build tools
+        run: |
+          cd tools
+          go build -v -o model_comparison model_comparison.go
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run tests on backend
+        run: |
+          cd backend
+          go test ./pkg/... -v -race -coverprofile=coverage.out
+          go tool cover -func=coverage.out
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run golangci-lint on backend
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: backend
+          args: --timeout=5m
+
+      - name: Run golangci-lint on tools
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: tools
+          args: --timeout=5m
