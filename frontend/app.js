@@ -123,7 +123,7 @@ async function generateStory() {
         }
         
         if (data.success) {
-            displayStory(data.story, data.title, data.parameters);
+            displayStory(data.story, data.title, data.parameters, data.grundwortschatz);
         } else {
             throw new Error('Keine Geschichte erhalten');
         }
@@ -137,7 +137,7 @@ async function generateStory() {
 }
 
 // Geschichte anzeigen
-function displayStory(story, title, parameters) {
+function displayStory(story, title, parameters, grundwortschatz = []) {
     // Formatiere die Geschichte mit Absätzen
     const formattedStory = formatStoryText(story);
     
@@ -151,6 +151,14 @@ function displayStory(story, title, parameters) {
     infoOrt.textContent = parameters.ort;
     infoStimmung.textContent = parameters.stimmung;
     infoStil.textContent = parameters.stil;
+    
+    // Zeige Grundwortschatz-Wörter an
+    const infoGrundwortschatz = document.getElementById('info-grundwortschatz');
+    if (grundwortschatz && grundwortschatz.length > 0) {
+        infoGrundwortschatz.textContent = grundwortschatz.join(', ');
+    } else {
+        infoGrundwortschatz.textContent = 'Keine gefunden';
+    }
     
     // Ansicht wechseln
     inputForm.style.display = 'none';

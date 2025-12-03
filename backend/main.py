@@ -104,7 +104,34 @@ def load_grundwortschatz_12():
     except FileNotFoundError:
         return "Grundwortschatz nicht gefunden."
 
+# Extrahiere alle Wörter aus dem Grundwortschatz
+def extract_grundwortschatz_words():
+    """Extrahiert alle Grundwortschatz-Wörter aus gws.md als Dictionary (lowercase -> korrekte Schreibweise)"""
+    gws_path = Path(__file__).parent / "gws.md"
+    words = {}  # lowercase -> korrekte Schreibweise
+    try:
+        with open(gws_path, "r", encoding="utf-8") as f:
+            import re
+            content = f.read()
+            # Finde alle Listeneinträge (- word)
+            for line in content.split('\n'):
+                line = line.strip()
+                if line.startswith('- '):
+                    # Entferne führendes "- "
+                    word = line[2:].strip()
+                    # Entferne alles in Klammern und danach
+                    word = re.split(r'\s*\(', word)[0].strip()
+                    # Entferne Artikel (der, die, das) aber behalte die korrekte Schreibweise
+                    word_without_article = re.sub(r'^(der|die|das)\s+', '', word, flags=re.IGNORECASE).strip()
+                    # Füge Wort hinzu: lowercase als Key, korrekte Schreibweise als Value
+                    if word_without_article:
+                        words[word_without_article.lower()] = word_without_article
+    except Exception as e:
+        logger.warning(f"Fehler beim Extrahieren der Grundwortschatz-Wörter: {e}")
+    return words
+
 GRUNDWORTSCHATZ_12 = load_grundwortschatz_12()
+GRUNDWORTSCHATZ_WORDS = extract_grundwortschatz_words()
 
 class StoryRequest(BaseModel):
     thema: str
@@ -244,6 +271,25 @@ async def get_stats():
             "active_ips": len(request_history)
         }
 
+def find_grundwortschatz_in_text(text: str, klassenstufe: str) -> list[str]:
+    """Findet alle Grundwortschatz-Wörter in einem Text mit korrekter Schreibweise"""
+    import re
+    # Bereinige Text von Markdown und Formatierung
+    clean_text = re.sub(r'\*\*.*?\*\*', lambda m: m.group(0).replace('**', ''), text)
+    # Extrahiere alle Wörter
+    words_in_text = re.findall(r'\b[a-zäöüßA-ZÄÖÜ]+\b', clean_text)
+    
+    # Finde Übereinstimmungen mit Grundwortschatz (mit korrekter Schreibweise)
+    found_words = {}
+    for word in words_in_text:
+        word_lower = word.lower()
+        if word_lower in GRUNDWORTSCHATZ_WORDS:
+            # Verwende die korrekte Schreibweise aus dem Grundwortschatz
+            found_words[word_lower] = GRUNDWORTSCHATZ_WORDS[word_lower]
+    
+    # Sortiere alphabetisch (case-insensitive) und gib als Liste zurück
+    return sorted(list(found_words.values()), key=str.lower)
+
 @app.post("/api/generate-story")
 async def generate_story(story_request: StoryRequest, request: Request):
     """Generiert eine Geschichte basierend auf den Eingaben"""
@@ -307,6 +353,7 @@ TITEL: [Ein kurzer, ansprechender Titel für die Geschichte]
 [Die Geschichte in Absätzen]
 
 Beginne direkt mit "TITEL:" gefolgt vom Titel.
+Schreibe die Geschichte in normalem Text ohne Markdown-Formatierung (keine **fetten** Wörter).
 
 WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wörtern. Mache die Geschichte nicht kürzer!"""
 
@@ -372,10 +419,14 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
             with rate_limit_lock:
                 daily_cost["cost"] += actual_cost
         
+        # Finde Grundwortschatz-Wörter in der Geschichte
+        grundwortschatz_gefunden = find_grundwortschatz_in_text(story, story_request.klassenstufe)
+        
         return {
             "success": True,
             "title": title,
             "story": story,
+            "grundwortschatz": grundwortschatz_gefunden,
             "parameters": {
                 "thema": story_request.thema,
                 "personen_tiere": story_request.personen_tiere,
