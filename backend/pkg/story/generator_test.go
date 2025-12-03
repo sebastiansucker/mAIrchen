@@ -131,7 +131,7 @@ func TestNewGenerator(t *testing.T) {
 
 	// Assert
 	if generator == nil {
-		t.Error("Expected generator to be created")
+		t.Fatal("Expected generator to be created")
 	}
 	if generator.config.OpenAIAPIKey != cfg.OpenAIAPIKey {
 		t.Error("Generator config doesn't match input config")

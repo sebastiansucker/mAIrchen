@@ -17,6 +17,12 @@ jobs:
         with:
           go-version: '1.21'
 
+      - name: Run tests on backend
+        run: |
+          cd backend
+          go test ./pkg/... -v -race -coverprofile=coverage.out
+          go tool cover -func=coverage.out
+
       - name: Run golangci-lint on backend
         uses: golangci/golangci-lint-action@v6
         with:

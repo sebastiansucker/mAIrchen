@@ -7,13 +7,13 @@ import (
 
 func TestLoadConfig_OllamaCloud(t *testing.T) {
 	// Setup
-	os.Setenv("AI_PROVIDER", "ollama-cloud")
-	os.Setenv("OLLAMA_API_KEY", "test-key-123")
-	os.Setenv("OLLAMA_MODEL", "test-model")
+	_ = os.Setenv("AI_PROVIDER", "ollama-cloud")
+	_ = os.Setenv("OLLAMA_API_KEY", "test-key-123")
+	_ = os.Setenv("OLLAMA_MODEL", "test-model")
 	defer func() {
-		os.Unsetenv("AI_PROVIDER")
-		os.Unsetenv("OLLAMA_API_KEY")
-		os.Unsetenv("OLLAMA_MODEL")
+		_ = os.Unsetenv("AI_PROVIDER")
+		_ = os.Unsetenv("OLLAMA_API_KEY")
+		_ = os.Unsetenv("OLLAMA_MODEL")
 	}()
 
 	// Execute
@@ -36,13 +36,13 @@ func TestLoadConfig_OllamaCloud(t *testing.T) {
 
 func TestLoadConfig_OllamaLocal(t *testing.T) {
 	// Setup
-	os.Setenv("AI_PROVIDER", "ollama-local")
-	os.Setenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-	os.Setenv("OLLAMA_MODEL", "llama2")
+	_ = os.Setenv("AI_PROVIDER", "ollama-local")
+	_ = os.Setenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+	_ = os.Setenv("OLLAMA_MODEL", "llama2")
 	defer func() {
-		os.Unsetenv("AI_PROVIDER")
-		os.Unsetenv("OLLAMA_BASE_URL")
-		os.Unsetenv("OLLAMA_MODEL")
+		_ = os.Unsetenv("AI_PROVIDER")
+		_ = os.Unsetenv("OLLAMA_BASE_URL")
+		_ = os.Unsetenv("OLLAMA_MODEL")
 	}()
 
 	// Execute
@@ -65,13 +65,13 @@ func TestLoadConfig_OllamaLocal(t *testing.T) {
 
 func TestLoadConfig_OpenAI(t *testing.T) {
 	// Setup
-	os.Setenv("AI_PROVIDER", "openai")
-	os.Setenv("OPENAI_API_KEY", "sk-test-key")
-	os.Setenv("OPENAI_MODEL", "gpt-4-turbo")
+	_ = os.Setenv("AI_PROVIDER", "openai")
+	_ = os.Setenv("OPENAI_API_KEY", "sk-test-key")
+	_ = os.Setenv("OPENAI_MODEL", "gpt-4-turbo")
 	defer func() {
-		os.Unsetenv("AI_PROVIDER")
-		os.Unsetenv("OPENAI_API_KEY")
-		os.Unsetenv("OPENAI_MODEL")
+		_ = os.Unsetenv("AI_PROVIDER")
+		_ = os.Unsetenv("OPENAI_API_KEY")
+		_ = os.Unsetenv("OPENAI_MODEL")
 	}()
 
 	// Execute
@@ -94,14 +94,14 @@ func TestLoadConfig_OpenAI(t *testing.T) {
 
 func TestLoadConfig_DefaultMistral(t *testing.T) {
 	// Setup - no AI_PROVIDER set
-	os.Unsetenv("AI_PROVIDER")
-	os.Setenv("OPENAI_API_KEY", "mistral-key")
-	os.Setenv("OPENAI_BASE_URL", "https://api.mistral.ai/v1")
-	os.Setenv("OPENAI_MODEL", "mistral-large")
+	_ = os.Unsetenv("AI_PROVIDER")
+	_ = os.Setenv("OPENAI_API_KEY", "mistral-key")
+	_ = os.Setenv("OPENAI_BASE_URL", "https://api.mistral.ai/v1")
+	_ = os.Setenv("OPENAI_MODEL", "mistral-large")
 	defer func() {
-		os.Unsetenv("OPENAI_API_KEY")
-		os.Unsetenv("OPENAI_BASE_URL")
-		os.Unsetenv("OPENAI_MODEL")
+		_ = os.Unsetenv("OPENAI_API_KEY")
+		_ = os.Unsetenv("OPENAI_BASE_URL")
+		_ = os.Unsetenv("OPENAI_MODEL")
 	}()
 
 	// Execute
@@ -118,8 +118,8 @@ func TestLoadConfig_DefaultMistral(t *testing.T) {
 
 func TestGetEnv_WithValue(t *testing.T) {
 	// Setup
-	os.Setenv("TEST_KEY", "test-value")
-	defer os.Unsetenv("TEST_KEY")
+	_ = os.Setenv("TEST_KEY", "test-value")
+	defer func() { _ = os.Unsetenv("TEST_KEY") }()
 
 	// Execute
 	result := getEnv("TEST_KEY", "default-value")
@@ -132,7 +132,7 @@ func TestGetEnv_WithValue(t *testing.T) {
 
 func TestGetEnv_WithDefault(t *testing.T) {
 	// Setup - ensure key doesn't exist
-	os.Unsetenv("NON_EXISTENT_KEY")
+	_ = os.Unsetenv("NON_EXISTENT_KEY")
 
 	// Execute
 	result := getEnv("NON_EXISTENT_KEY", "default-value")
