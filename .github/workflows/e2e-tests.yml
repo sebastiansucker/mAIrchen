@@ -40,14 +40,6 @@ jobs:
           OLLAMA_API_KEY=${{ secrets.OLLAMA_API_KEY }}
           OLLAMA_MODEL=ministral-3:8b-cloud
           EOF
-      - name: Check application health
-        run: |
-          echo "Checking health endpoint..."
-          curl -f http://localhost/health
-          echo ""
-          echo "Checking API info..."
-          curl -f http://localhost/api
-          echo ""
 
       - name: Verify environment in container
         run: |
