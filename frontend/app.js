@@ -10,6 +10,7 @@ const themaInput = document.getElementById('thema');
 const personenInput = document.getElementById('personen');
 const ortInput = document.getElementById('ort');
 const stimmungInput = document.getElementById('stimmung');
+const stilInput = document.getElementById('stil');
 const lengthButtons = document.querySelectorAll('.length-btn');
 const gradeButtons = document.querySelectorAll('.grade-btn');
 let selectedLength = 10; // Standard: 10 Minuten
@@ -42,6 +43,7 @@ const infoThema = document.getElementById('info-thema');
 const infoPersonen = document.getElementById('info-personen');
 const infoOrt = document.getElementById('info-ort');
 const infoStimmung = document.getElementById('info-stimmung');
+const infoStil = document.getElementById('info-stil');
 
 // Event Listeners
 randomBtn.addEventListener('click', getRandomSuggestions);
@@ -59,9 +61,10 @@ async function getRandomSuggestions() {
         personenInput.value = data.personen_tiere;
         ortInput.value = data.ort;
         stimmungInput.value = data.stimmung;
+        stilInput.value = data.stil;
         
         // Animation für visuelle Rückmeldung
-        [themaInput, personenInput, ortInput, stimmungInput].forEach(input => {
+        [themaInput, personenInput, ortInput, stimmungInput, stilInput].forEach(input => {
             input.style.background = '#e0e7ff';
             setTimeout(() => {
                 input.style.background = '';
@@ -81,10 +84,11 @@ async function generateStory() {
     const personen = personenInput.value.trim();
     const ort = ortInput.value.trim();
     const stimmung = stimmungInput.value.trim();
+    const stil = stilInput.value.trim();
     const laenge = selectedLength;
     
     // Validierung
-    if (!thema || !personen || !ort || !stimmung) {
+    if (!thema || !personen || !ort || !stimmung || !stil) {
         alert('Bitte fülle alle Felder aus!');
         return;
     }
@@ -104,6 +108,7 @@ async function generateStory() {
                 personen_tiere: personen,
                 ort: ort,
                 stimmung: stimmung,
+                stil: stil,
                 laenge: laenge,
                 klassenstufe: selectedGrade
             })
@@ -145,6 +150,7 @@ function displayStory(story, title, parameters) {
     infoPersonen.textContent = parameters.personen_tiere;
     infoOrt.textContent = parameters.ort;
     infoStimmung.textContent = parameters.stimmung;
+    infoStil.textContent = parameters.stil;
     
     // Ansicht wechseln
     inputForm.style.display = 'none';

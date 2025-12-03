@@ -113,6 +113,7 @@ class StoryRequest(BaseModel):
     stimmung: str
     laenge: int = 10  # Länge in Minuten, Standard: 10
     klassenstufe: str = "34"  # "12" oder "34", Standard: 3/4 Klasse
+    stil: str = ""  # Stil/Genre der Geschichte
     
     @field_validator('laenge')
     @classmethod
@@ -123,7 +124,7 @@ class StoryRequest(BaseModel):
             raise ValueError(f'Länge darf maximal {MAX_STORY_LENGTH} Minuten sein')
         return v
     
-    @field_validator('thema', 'personen_tiere', 'ort', 'stimmung')
+    @field_validator('thema', 'personen_tiere', 'ort', 'stimmung', 'stil')
     @classmethod
     def validate_string_length(cls, v):
         if len(v) > 200:
@@ -155,6 +156,10 @@ class RandomSuggestions(BaseModel):
     stimmungen: list[str] = [
         "fröhlich", "spannend", "mysteriös", "lustig",
         "abenteuerlich", "gemütlich", "aufregend", "herzlich"
+    ]
+    stile: list[str] = [
+        "Michael Ende", "Marc-Uwe Kling", "Astrid Lindgren", "Janosch",
+        "Cornelia Funke", "Märchen", "Fabel", "Moderne Kindergeschichte"
     ]
 
 @app.get("/")
@@ -221,7 +226,8 @@ async def get_random_suggestions():
         "thema": random.choice(suggestions.themen),
         "personen_tiere": random.choice(suggestions.personen_tiere),
         "ort": random.choice(suggestions.orte),
-        "stimmung": random.choice(suggestions.stimmungen)
+        "stimmung": random.choice(suggestions.stimmungen),
+        "stil": random.choice(suggestions.stile)
     }
 
 @app.get("/api/stats")
@@ -274,6 +280,10 @@ async def generate_story(story_request: StoryRequest, request: Request):
         schwierigkeit = "kindgerecht mit etwas längeren Sätzen und anspruchsvolleren Wörtern"
     
     # Prompt erstellen
+    stil_instruction = ""
+    if story_request.stil:
+        stil_instruction = f"- Stil/Genre: Schreibe im Stil von '{story_request.stil}' oder als {story_request.stil}\n"
+    
     prompt = f"""Du bist ein Geschichtenerzähler für {zielgruppe}. 
     
 Schreibe eine Geschichte mit folgenden Eigenschaften:
@@ -282,7 +292,7 @@ Schreibe eine Geschichte mit folgenden Eigenschaften:
 - Personen/Tiere: {story_request.personen_tiere}
 - Ort: {story_request.ort}
 - Stimmung: {story_request.stimmung}
-- Schwierigkeitsgrad: {schwierigkeit}
+{stil_instruction}- Schwierigkeitsgrad: {schwierigkeit}
 
 WICHTIG: Verwende beim Schreiben häufig Wörter aus dem Grundwortschatz als Leseübung. 
 Die Geschichte sollte kindgerecht, spannend und lehrreich sein.
@@ -371,6 +381,7 @@ WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. {max_words} Wör
                 "personen_tiere": story_request.personen_tiere,
                 "ort": story_request.ort,
                 "stimmung": story_request.stimmung,
+                "stil": story_request.stil,
                 "laenge": story_request.laenge,
                 "klassenstufe": story_request.klassenstufe
             }
