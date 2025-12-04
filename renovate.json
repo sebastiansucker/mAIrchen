@@ -4,6 +4,11 @@
     "config:recommended"
   ],
   "postUpdateOptions": [
-    "gomodTidy"
-  ]
+    "gomodTidy1.17"
+  ],
+  "gomod": {
+    "postUpdateOptions": [
+      "gomodTidy1.17"
+    ]
+  }
 }
