@@ -23,11 +23,13 @@ jobs:
       - name: Build backend
         run: |
           cd backend
+          go mod tidy
           go build -v -o mairchen main.go
 
       - name: Build tools
         run: |
           cd tools
+          go mod tidy
           go build -v -o model_comparison model_comparison.go
 
   test:
