@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.21'
+          go-version: '1.25'
 
       - name: Build backend
         run: |
@@ -41,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.21'
+          go-version: '1.25'
 
       - name: Run tests on backend
         run: |
@@ -62,7 +62,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.21'
+          go-version: '1.25'
 
       - name: Verify OLLAMA_API_KEY secret
         run: |
@@ -140,7 +140,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.21'
+          go-version: '1.25'
 
       - name: Run golangci-lint on backend
         uses: golangci/golangci-lint-action@v9
