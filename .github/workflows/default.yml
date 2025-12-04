@@ -143,14 +143,14 @@ jobs:
           go-version: '1.21'
 
       - name: Run golangci-lint on backend
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           working-directory: backend
           args: --timeout=5m
 
       - name: Run golangci-lint on tools
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           working-directory: tools
