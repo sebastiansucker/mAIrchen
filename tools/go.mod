@@ -7,6 +7,6 @@ require (
 	github.com/sebastiansucker/mAIrchen/backend v0.0.0
 )
 
-require github.com/sashabaranov/go-openai v1.35.6 // indirect
+require github.com/sashabaranov/go-openai v1.41.2 // indirect
 
 replace github.com/sebastiansucker/mAIrchen/backend => ../backend
