@@ -144,6 +144,16 @@ jobs:
         with:
           go-version: '1.25'
 
+      - name: Run go mod tidy on backend
+        run: |
+          cd backend
+          go mod tidy
+
+      - name: Run go mod tidy on tools
+        run: |
+          cd tools
+          go mod tidy
+
       - name: Run golangci-lint on backend
         uses: golangci/golangci-lint-action@v9
         with:
