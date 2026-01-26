@@ -95,6 +95,18 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Sto
 	// Format and clean up ENDE marker
 	storyText = formatEndeMarker(storyText)
 	
+	// Spell check and correction
+	fmt.Printf("Starte Rechtschreibkorrektur...\n")
+	correctedStory, correctionTokens, err := g.correctSpelling(ctx, client, model, storyText)
+	if err != nil {
+		fmt.Printf("⚠️  Rechtschreibkorrektur fehlgeschlagen: %v - verwende Original\n", err)
+		correctedStory = storyText
+	} else {
+		fmt.Printf("✅ Rechtschreibkorrektur abgeschlossen - Tokens: %d\n", correctionTokens)
+		storyText = correctedStory
+		tokensUsed += correctionTokens
+	}
+	
 	// Find Grundwortschatz words
 	gwsWords := analysis.FindGrundwortschatzInText(storyText, g.gwsDict)
 	
@@ -142,6 +154,36 @@ func parseStory(content string) (string, string) {
 	return title, story
 }
 
+func (g *Generator) correctSpelling(ctx context.Context, client *openai.Client, model, text string) (string, int, error) {
+	correctionPrompt := fmt.Sprintf(`Korrigiere AUSSCHLIESSLICH Rechtschreibfehler und Tippfehler in folgendem Text.
+Ändere NICHTS am Inhalt, Stil, Satzbau oder Formulierungen. Füge nichts hinzu, lasse nichts weg.
+Gib NUR den korrigierten Text zurück, ohne Kommentare oder Erklärungen.
+
+Text:
+%s`, text)
+
+	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: model,
+		Messages: []openai.ChatCompletionMessage{
+			{Role: openai.ChatMessageRoleSystem, Content: "Du bist ein präziser Korrektor für deutsche Texte."},
+			{Role: openai.ChatMessageRoleUser, Content: correctionPrompt},
+		},
+		Temperature: 0.1, // Niedrige Temperatur für konsistente Korrektur
+		MaxTokens:   8000,
+	})
+	
+	if err != nil {
+		return text, 0, err
+	}
+	
+	if len(resp.Choices) == 0 {
+		return text, 0, fmt.Errorf("keine Korrektur-Response")
+	}
+	
+	correctedText := strings.TrimSpace(resp.Choices[0].Message.Content)
+	return correctedText, resp.Usage.TotalTokens, nil
+}
+
 func removeMarkdownFormatting(text string) string {
 	// Remove bold markers
 	re := regexp.MustCompile(`\*\*(.*?)\*\*`)
@@ -162,9 +204,9 @@ func removeMarkdownFormatting(text string) string {
 }
 
 func formatEndeMarker(text string) string {
-	// Find "ENDE" as a whole word (case-insensitive) and cut everything after it
-	// Use regex to match ENDE as a complete word with word boundaries
-	re := regexp.MustCompile(`(?i)\bENDE\b`)
+	// Find "ENDE" alone on a line at the beginning (case-insensitive)
+	// Matches: whitespace, ENDE, whitespace, newline or end of string
+	re := regexp.MustCompile(`(?im)^\s*ENDE\s*$`)
 	loc := re.FindStringIndex(text)
 	
 	if loc == nil {
@@ -172,7 +214,7 @@ func formatEndeMarker(text string) string {
 		return text
 	}
 	
-	// Cut everything after "ENDE" (including the word itself)
+	// Cut everything after "ENDE" line (including the line itself)
 	textBeforeEnde := strings.TrimSpace(text[:loc[0]])
 	
 	// Format ENDE marker centered with decorative line
