@@ -24,8 +24,8 @@ func BuildPrompt(req StoryRequest) (string, string) {
 	var zielgruppe, schwierigkeit, grundwortschatz string
 	
 	if req.Klassenstufe == "12" {
-		minWords = req.Laenge * 60
-		maxWords = req.Laenge * 70
+		minWords = req.Laenge * 50
+		maxWords = req.Laenge * 90
 		zielgruppe = "Kinder der Klassenstufen 1 & 2"
 		schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
 		
@@ -34,7 +34,7 @@ func BuildPrompt(req StoryRequest) (string, string) {
 		grundwortschatz = parts[0]
 	} else {
 		minWords = req.Laenge * 80
-		maxWords = req.Laenge * 100
+		maxWords = req.Laenge * 120
 		zielgruppe = "Kinder der Klassenstufen 3 & 4"
 		schwierigkeit = "kindgerecht mit etwas längeren Sätzen und anspruchsvolleren Wörtern"
 		grundwortschatz = data.GrundwortschatzContent
@@ -48,34 +48,32 @@ func BuildPrompt(req StoryRequest) (string, string) {
 	systemPrompt := fmt.Sprintf("Du bist ein kreativer Geschichtenerzähler für %s.", zielgruppe)
 	
 	userPrompt := fmt.Sprintf(`Schreibe eine Geschichte mit folgenden Eigenschaften:
-- Lesezeit: etwa %d Minuten (ca. %d-%d Wörter)
+- Lesezeit: etwa %d Minuten - %d-%d Wörter
 - Thema: %s
 - Personen/Tiere: %s
 - Ort: %s
 - Stimmung: %s
 %s- Schwierigkeitsgrad: %s
+- am Ende das Wort "ENDE"
 
-WICHTIG: Verwende beim Schreiben häufig Wörter aus dem Grundwortschatz als Leseübung.
 Die Geschichte sollte kindgerecht, spannend und lehrreich sein.
+
 Schreibe die Geschichte in normalem Text ohne Markdown-Formatierung (keine **fett** markierten Wörter).
 
+WICHTIG: Verwende beim Schreiben häufig Wörter aus dem angehängten Grundwortschatz als Leseübung. Erstelle aber keine Übersicht der Verwendeten Wörter am Ende.
 Hier ist der Grundwortschatz zur Orientierung:
 %s
 
 Format:
 Gib die Antwort im folgenden Format zurück:
 TITEL: [Ein kurzer, ansprechender Titel für die Geschichte]
-
 [Die Geschichte in Absätzen]
-
-Beginne direkt mit "TITEL:" gefolgt vom Titel.
-
-WICHTIG: Schreibe wirklich die vollständige Geschichte mit ca. %d Wörtern. Mache die Geschichte nicht kürzer!`,
+ENDE
+`,
 		req.Laenge, minWords, maxWords,
 		req.Thema, req.PersonenTiere, req.Ort, req.Stimmung,
 		stilInstruction, schwierigkeit,
-		grundwortschatz,
-		maxWords)
+		grundwortschatz)
 	
 	return systemPrompt, userPrompt
 }

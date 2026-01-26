@@ -42,11 +42,15 @@ func NewGenerator(cfg *config.Config) *Generator {
 func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Story, error) {
 	startTime := time.Now()
 	
+	fmt.Printf("\n=== Story Generation Start ===\n")
+	fmt.Printf("Thema: %s, Länge: %d min, Klassenstufe: %s\n", req.Thema, req.Laenge, req.Klassenstufe)
+	
 	// Use configured model if not specified in request
 	model := req.Model
 	if model == "" {
 		model = g.config.DefaultModel
 	}
+	fmt.Printf("Modell: %s\n", model)
 	
 	// Build prompts
 	systemPrompt, userPrompt := prompt.BuildPrompt(req)
@@ -58,10 +62,7 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Sto
 	}
 	client := openai.NewClientWithConfig(clientConfig)
 	
-	// Estimate required tokens
-	estimatedTokens := int(float64(req.Laenge) * 100 * 1.3) + 200
-	
-	// Make API request
+	// Make API request with high token limit
 	resp, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model: model,
 		Messages: []openai.ChatCompletionMessage{
@@ -69,7 +70,7 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Sto
 			{Role: openai.ChatMessageRoleUser, Content: userPrompt},
 		},
 		Temperature: 0.8,
-		MaxTokens:   estimatedTokens,
+		MaxTokens:   8000,
 	})
 	
 	if err != nil {
@@ -81,14 +82,25 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Sto
 	}
 	
 	content := resp.Choices[0].Message.Content
+	tokensUsed := resp.Usage.TotalTokens
+	
+	fmt.Printf("API Response - Tokens: %d, Zeichen: %d\n", tokensUsed, len(content))
+	
+	// Remove markdown formatting
+	content = removeMarkdownFormatting(content)
 	
 	// Parse title and story
 	title, storyText := parseStory(content)
+	
+	// Format and clean up ENDE marker
+	storyText = formatEndeMarker(storyText)
 	
 	// Find Grundwortschatz words
 	gwsWords := analysis.FindGrundwortschatzInText(storyText, g.gwsDict)
 	
 	generationTime := time.Since(startTime).Seconds()
+	
+	fmt.Printf("=== Generation abgeschlossen - Gesamt-Tokens: %d, Zeit: %.1fs ===\n\n", tokensUsed, generationTime)
 	
 	return &Story{
 		Title:           title,
@@ -96,7 +108,7 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Sto
 		Grundwortschatz: gwsWords,
 		Model:           model,
 		Provider:        g.config.AIProvider,
-		TokensUsed:      resp.Usage.TotalTokens,
+		TokensUsed:      tokensUsed,
 		GenerationTime:  generationTime,
 	}, nil
 }
@@ -105,10 +117,15 @@ func parseStory(content string) (string, string) {
 	title := "Ohne Titel"
 	story := content
 	
-	if strings.Contains(content, "TITEL:") {
-		parts := strings.SplitN(content, "TITEL:", 2)
-		if len(parts) > 1 {
-			rest := strings.TrimSpace(parts[1])
+	// Check for title in various formats (case-insensitive)
+	contentUpper := strings.ToUpper(content)
+	
+	if strings.Contains(contentUpper, "TITEL:") {
+		// Find the actual position in original content
+		idx := strings.Index(contentUpper, "TITEL:")
+		if idx >= 0 {
+			// Get the part after "TITEL:" (or "Titel:" or "titel:")
+			rest := strings.TrimSpace(content[idx+6:]) // 6 = len("TITEL:")
 			titleEnd := strings.Index(rest, "\n")
 			if titleEnd > 0 {
 				title = strings.TrimSpace(rest[:titleEnd])
@@ -120,8 +137,7 @@ func parseStory(content string) (string, string) {
 		}
 	}
 	
-	// Remove markdown formatting
-	story = removeMarkdownFormatting(story)
+	// Note: Markdown formatting is already removed before this function
 	
 	return title, story
 }
@@ -135,5 +151,32 @@ func removeMarkdownFormatting(text string) string {
 	re = regexp.MustCompile(`\*(.*?)\*`)
 	text = re.ReplaceAllString(text, "$1")
 	
+	// Remove trailing markdown markers (e.g., "**Ende.**" -> "Ende.")
+	text = strings.TrimRight(text, "*")
+	
+	// Remove common markdown patterns at the end
+	re = regexp.MustCompile(`\*\*\s*$`)
+	text = re.ReplaceAllString(text, "")
+	
 	return text
+}
+
+func formatEndeMarker(text string) string {
+	// Find "ENDE" as a whole word (case-insensitive) and cut everything after it
+	// Use regex to match ENDE as a complete word with word boundaries
+	re := regexp.MustCompile(`(?i)\bENDE\b`)
+	loc := re.FindStringIndex(text)
+	
+	if loc == nil {
+		// No ENDE found, return as is
+		return text
+	}
+	
+	// Cut everything after "ENDE" (including the word itself)
+	textBeforeEnde := strings.TrimSpace(text[:loc[0]])
+	
+	// Format ENDE marker centered with decorative line
+	endeFormatted := "\n\n" + strings.Repeat(" ", 25) + " ★ ENDE ★ " + strings.Repeat(" ", 25)
+	
+	return textBeforeEnde + endeFormatted
 }

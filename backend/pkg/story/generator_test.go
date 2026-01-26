@@ -25,7 +25,7 @@ Es war einmal ein kleiner Hase.`,
 			input: `TITEL: **Der Fuchs**
 Der Fuchs war *sehr* schlau.`,
 			expectTitle: "**Der Fuchs**",
-			expectStory: "Der Fuchs war sehr schlau.",
+			expectStory: "Der Fuchs war *sehr* schlau.",
 		},
 		{
 			name:        "Missing TITEL",

@@ -50,8 +50,11 @@ type TestResult struct {
 	ParagraphCount  int                     `json:"paragraph_count,omitempty"`
 	DialogueCount   int                     `json:"dialogue_count,omitempty"`
 	Grundwortschatz GrundwortschatzAnalysis `json:"grundwortschatz,omitempty"`
+	Quality         QualityAssessment       `json:"quality,omitempty"`
 	TokensUsed      int                     `json:"tokens_used,omitempty"`
 	StoryPreview    string                  `json:"story_preview,omitempty"`
+	SystemPrompt    string                  `json:"system_prompt,omitempty"`
+	UserPrompt      string                  `json:"user_prompt,omitempty"`
 	Error           string                  `json:"error,omitempty"`
 }
 
@@ -61,6 +64,18 @@ type GrundwortschatzAnalysis struct {
 	TotalOccurrences int      `json:"total_occurrences"`
 	Percentage       float64  `json:"percentage"`
 	TopWords         []string `json:"top_words"`
+}
+
+// QualityAssessment holds story quality metrics
+type QualityAssessment struct {
+	HasProperEnding    bool     `json:"has_proper_ending"`
+	HasEndeMarker      bool     `json:"has_ende_marker"`
+	IsComplete         bool     `json:"is_complete"`
+	HasClearStructure  bool     `json:"has_clear_structure"`
+	HasDialogue        bool     `json:"has_dialogue"`
+	EndingIndicators   []string `json:"ending_indicators,omitempty"`
+	IssuesFound        []string `json:"issues_found,omitempty"`
+	QualityScore       float64  `json:"quality_score"` // 0-100
 }
 
 // ModelResults holds all results for a model
@@ -74,48 +89,48 @@ type ModelResults struct {
 
 var testCases = []TestCase{
 	{
-		Name:          "Klasse 1-2: Einfach - Tiere",
+		Name:          "Klasse 1-2: Kurz (5 Min) - Tiere",
 		Thema:         "Tiere und Natur",
 		PersonenTiere: "Ein kleiner Hase",
 		Ort:           "auf der Wiese",
 		Stimmung:      "fröhlich",
-		Laenge:        2,
+		Laenge:        5,
 		Klassenstufe:  "12",
 	},
 	{
-		Name:          "Klasse 1-2: Mittel - Freundschaft",
+		Name:          "Klasse 1-2: Standard (10 Min) - Freundschaft",
 		Thema:         "Freundschaft",
 		PersonenTiere: "Ein Igel und ein Eichhörnchen",
 		Ort:           "im Wald",
 		Stimmung:      "herzlich",
-		Laenge:        3,
+		Laenge:        10,
 		Klassenstufe:  "12",
 	},
 	{
-		Name:          "Klasse 3-4: Einfach - Freundschaft",
+		Name:          "Klasse 3-4: Kurz (5 Min) - Freundschaft",
 		Thema:         "Freundschaft",
 		PersonenTiere: "Ein kleiner Igel",
 		Ort:           "im Wald",
 		Stimmung:      "herzlich",
-		Laenge:        3,
-		Klassenstufe:  "34",
-	},
-	{
-		Name:          "Klasse 3-4: Mittel - Abenteuer",
-		Thema:         "Abenteuer",
-		PersonenTiere: "Eine mutige Maus",
-		Ort:           "in einer alten Mühle",
-		Stimmung:      "spannend",
 		Laenge:        5,
 		Klassenstufe:  "34",
 	},
 	{
-		Name:          "Klasse 3-4: Komplex - Zauber",
+		Name:          "Klasse 3-4: Standard (10 Min) - Abenteuer",
+		Thema:         "Abenteuer",
+		PersonenTiere: "Eine mutige Maus",
+		Ort:           "in einer alten Mühle",
+		Stimmung:      "spannend",
+		Laenge:        10,
+		Klassenstufe:  "34",
+	},
+	{
+		Name:          "Klasse 3-4: Lang (15 Min) - Zauber",
 		Thema:         "Zauber und Magie",
 		PersonenTiere: "Eine junge Hexe und ihr Kater",
 		Ort:           "in einem verzauberten Garten",
 		Stimmung:      "mysteriös",
-		Laenge:        3,
+		Laenge:        15,
 		Klassenstufe:  "34",
 	},
 }
@@ -187,6 +202,9 @@ func main() {
 	log.Printf("\n%s\n", strings.Repeat("=", 60))
 	log.Println("✅ Alle Tests abgeschlossen!")
 	log.Printf("%s\n\n", strings.Repeat("=", 60))
+
+	// Print summary to terminal
+	printSummary(allResults)
 
 	// Save results
 	saveResults(allResults)
@@ -275,6 +293,9 @@ func runTest(gen *story.Generator, testCase TestCase, modelConfig ModelConfig, g
 		Model:         modelConfig.Model,
 	}
 
+	// Build prompts for logging
+	systemPrompt, userPrompt := prompt.BuildPrompt(req)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
@@ -299,6 +320,7 @@ func runTest(gen *story.Generator, testCase TestCase, modelConfig ModelConfig, g
 	dialogueCount := countDialogues(generatedStory.Content)
 
 	gwsAnalysis := analyzeGrundwortschatz(generatedStory.Content, generatedStory.Grundwortschatz, gwsDict)
+	qualityAssessment := assessQuality(generatedStory.Content, generatedStory.Title, paragraphCount)
 
 	preview := generatedStory.Content
 	if len(preview) > 200 {
@@ -315,9 +337,12 @@ func runTest(gen *story.Generator, testCase TestCase, modelConfig ModelConfig, g
 		WordCount:       wordCount,
 		ParagraphCount:  paragraphCount,
 		DialogueCount:   dialogueCount,
+		Quality:         qualityAssessment,
 		Grundwortschatz: gwsAnalysis,
 		TokensUsed:      generatedStory.TokensUsed,
 		StoryPreview:    preview,
+		SystemPrompt:    systemPrompt,
+		UserPrompt:      userPrompt,
 	}
 }
 
@@ -376,6 +401,206 @@ func analyzeGrundwortschatz(text string, foundWords []string, gwsDict map[string
 	}
 }
 
+func assessQuality(content string, title string, paragraphCount int) QualityAssessment {
+	issues := []string{}
+	endingIndicators := []string{}
+	
+	// Check for title
+	if title == "" || strings.TrimSpace(title) == "" {
+		issues = append(issues, "Kein Titel vorhanden")
+	}
+	
+	// Check story length (minimum reasonable length)
+	wordCount := countWords(content)
+	if wordCount < 100 {
+		issues = append(issues, fmt.Sprintf("Geschichte zu kurz (%d Wörter)", wordCount))
+	}
+	
+	// Check for structure (paragraphs)
+	hasStructure := paragraphCount >= 3
+	if !hasStructure {
+		issues = append(issues, fmt.Sprintf("Zu wenige Absätze für klare Struktur (%d)", paragraphCount))
+	}
+	
+	// Check for dialogue
+	hasDialogue := countDialogues(content) > 0
+	
+	// Check for proper ending indicators
+	contentLower := strings.ToLower(content)
+	lastPart := ""
+	if len(content) > 200 {
+		lastPart = contentLower[len(contentLower)-200:]
+	} else {
+		lastPart = contentLower
+	}
+	
+	// Check if original response contained ENDE marker (before it was removed)
+	hasEndeMarker := strings.Contains(contentLower, "ende\n") || 
+		strings.HasSuffix(strings.TrimSpace(contentLower), "ende")
+	
+	if hasEndeMarker {
+		endingIndicators = append(endingIndicators, "ENDE-Marker gefunden")
+	} else {
+		issues = append(issues, "Kein ENDE-Marker gefunden")
+	}
+	
+	endingPhrases := []string{
+		"ende", "schluss", "seitdem", "von da an", "von nun an",
+		"für immer", "glücklich", "und so", "und wenn",
+		"bis heute", "nie wieder", "von diesem tag an",
+		"lebten sie", "waren sie", "blieb", "war es",
+	}
+	
+	for _, phrase := range endingPhrases {
+		if strings.Contains(lastPart, phrase) {
+			endingIndicators = append(endingIndicators, phrase)
+		}
+	}
+	
+	// Check for abrupt ending (story ends mid-sentence or with incomplete thought)
+	hasProperEnding := true
+	trimmedContent := strings.TrimSpace(content)
+	
+	// Check if ends with proper punctuation
+	if len(trimmedContent) > 0 {
+		lastChar := trimmedContent[len(trimmedContent)-1]
+		if lastChar != '.' && lastChar != '!' && lastChar != '?' {
+			issues = append(issues, "Geschichte endet ohne Satzzeichen")
+			hasProperEnding = false
+		}
+	}
+	
+	// Check if ends with dialogue (often incomplete)
+	if strings.HasSuffix(trimmedContent, "\"") || strings.HasSuffix(trimmedContent, string(rune(0x201C))) || strings.HasSuffix(trimmedContent, string(rune(0x201D))) {
+		if len(endingIndicators) == 0 {
+			issues = append(issues, "Geschichte endet möglicherweise mit Dialog statt Abschluss")
+			hasProperEnding = false
+		}
+	}
+	
+	// Check for incomplete sentences at the end
+	lines := strings.Split(strings.TrimSpace(content), "\n")
+	if len(lines) > 0 {
+		lastLine := strings.TrimSpace(lines[len(lines)-1])
+		lastLineLower := strings.ToLower(lastLine)
+		
+		// Allow typical fairy tale endings that start with "und so", "und wenn", etc.
+		validEndingStarts := []string{"und so", "und wenn", "und seitdem", "und von da an"}
+		isValidEnding := false
+		for _, validStart := range validEndingStarts {
+			if strings.HasPrefix(lastLineLower, validStart) {
+				isValidEnding = true
+				break
+			}
+		}
+		
+		// Only flag as incomplete if it starts with problematic words AND is not a valid ending
+		if !isValidEnding {
+			incompleteWords := []string{"und", "aber", "doch", "da", "als", "wenn", "weil", "dass"}
+			for _, word := range incompleteWords {
+				if strings.HasPrefix(lastLineLower, word+" ") {
+					issues = append(issues, fmt.Sprintf("Letzter Satz beginnt mit '%s' (möglicherweise unvollständig)", word))
+					hasProperEnding = false
+					break
+				}
+			}
+		}
+	}
+	
+	// Determine if story is complete
+	// Story is complete if: has ENDE marker OR (has proper ending AND ending indicators AND good structure)
+	isComplete := hasEndeMarker || (hasProperEnding && len(endingIndicators) > 1 && paragraphCount >= 3)
+	
+	// Calculate quality score (0-100)
+	score := 100.0
+	if !hasEndeMarker {
+		score -= 30 // Heavy penalty for missing ENDE marker
+		issues = append(issues, "ENDE-Marker fehlt")
+	}
+	if !hasProperEnding {
+		score -= 20
+	}
+	if len(endingIndicators) <= 1 { // Only ENDE marker or nothing
+		score -= 15
+	}
+	if !hasStructure {
+		score -= 20
+	}
+	if wordCount < 150 {
+		score -= 10
+	}
+	if !hasDialogue {
+		score -= 5
+	}
+	if len(issues) > 3 {
+		score -= 5
+	}
+	
+	if score < 0 {
+		score = 0
+	}
+	
+	return QualityAssessment{
+		HasProperEnding:   hasProperEnding,
+		HasEndeMarker:     hasEndeMarker,
+		IsComplete:        isComplete,
+		HasClearStructure: hasStructure,
+		HasDialogue:       hasDialogue,
+		EndingIndicators:  endingIndicators,
+		IssuesFound:       issues,
+		QualityScore:      score,
+	}
+}
+
+func printSummary(allResults []ModelResults) {
+	log.Printf("\n%s\n", strings.Repeat("=", 80))
+	log.Println("📊 ZUSAMMENFASSUNG DER TESTERGEBNISSE")
+	log.Printf("%s\n\n", strings.Repeat("=", 80))
+
+	// Header
+	log.Printf("%-35s | %8s | %8s | %7s | %7s | %8s\n",
+		"Modell", "Ø Zeit", "Ø Wörter", "GWS %", "Qual.", "ENDE ✓")
+	log.Printf("%s\n", strings.Repeat("-", 80))
+
+	for _, modelResult := range allResults {
+		successfulTests := 0
+		var totalTime, totalWords, totalGWSPerc, totalQualityScore float64
+		endeMarkerCount := 0
+
+		for _, test := range modelResult.Tests {
+			if test.Success {
+				successfulTests++
+				totalTime += test.GenerationTime
+				totalWords += float64(test.WordCount)
+				totalGWSPerc += test.Grundwortschatz.Percentage
+				totalQualityScore += test.Quality.QualityScore
+				if test.Quality.HasEndeMarker {
+					endeMarkerCount++
+				}
+			}
+		}
+
+		if successfulTests > 0 {
+			avgTime := totalTime / float64(successfulTests)
+			avgWords := totalWords / float64(successfulTests)
+			avgGWS := totalGWSPerc / float64(successfulTests)
+			avgQuality := totalQualityScore / float64(successfulTests)
+
+			modelName := fmt.Sprintf("%s (%s)", modelResult.Model, modelResult.Provider)
+			log.Printf("%-35s | %6.1fs | %8.0f | %6.1f%% | %6.0f | %3d/%d\n",
+				modelName, avgTime, avgWords, avgGWS, avgQuality,
+				endeMarkerCount, successfulTests)
+		}
+	}
+
+	log.Printf("\n%s\n", strings.Repeat("=", 80))
+	log.Printf("💾 Ergebnisse gespeichert in: test_results/\n")
+	log.Printf("   - latest_results.json\n")
+	log.Printf("   - latest_prompts.md\n")
+	log.Printf("   - latest_full_report.md\n")
+	log.Printf("%s\n\n", strings.Repeat("=", 80))
+}
+
 func saveResults(allResults []ModelResults) {
 	// Create output directory
 	if err := os.MkdirAll("test_results", 0755); err != nil {
@@ -383,8 +608,7 @@ func saveResults(allResults []ModelResults) {
 		return
 	}
 
-	timestamp := time.Now().Format("20060102_150405")
-	filename := fmt.Sprintf("test_results/full_results_%s.json", timestamp)
+	filename := "test_results/latest_results.json"
 
 	data, err := json.MarshalIndent(allResults, "", "  ")
 	if err != nil {
@@ -398,11 +622,57 @@ func saveResults(allResults []ModelResults) {
 	}
 
 	log.Printf("💾 JSON gespeichert: %s", filename)
+	
+	// Save prompts separately for better readability
+	savePrompts(allResults, "")
+}
+
+func savePrompts(allResults []ModelResults, timestamp string) {
+	latestPromptFilename := "test_results/latest_prompts.md"
+	
+	var sb strings.Builder
+	
+	sb.WriteString("# 📝 Generierte Prompts - Modell-Vergleich\n\n")
+	sb.WriteString(fmt.Sprintf("**Datum:** %s\n\n", time.Now().Format("02.01.2006 15:04")))
+	
+	for _, modelResult := range allResults {
+		sb.WriteString(fmt.Sprintf("## Modell: %s (%s)\n\n", modelResult.Model, modelResult.Provider))
+		
+		for i, test := range modelResult.Tests {
+			if !test.Success {
+				continue
+			}
+			
+			sb.WriteString(fmt.Sprintf("### Test %d: %s\n\n", i+1, test.TestCase))
+			
+			sb.WriteString("#### System Prompt\n\n")
+			sb.WriteString("```\n")
+			sb.WriteString(test.SystemPrompt)
+			sb.WriteString("\n```\n\n")
+			
+			sb.WriteString("#### User Prompt\n\n")
+			sb.WriteString("```\n")
+			sb.WriteString(test.UserPrompt)
+			sb.WriteString("\n```\n\n")
+			
+			sb.WriteString(fmt.Sprintf("**Ergebnis:** %d Wörter, %d Tokens, %.1fs\n\n", 
+				test.WordCount, test.TokensUsed, test.GenerationTime))
+			
+			sb.WriteString("---\n\n")
+		}
+	}
+	
+	content := sb.String()
+	
+	// Save latest version only
+	if err := os.WriteFile(latestPromptFilename, []byte(content), 0644); err != nil {
+		log.Printf("⚠️  Fehler beim Speichern der Prompts: %v", err)
+		return
+	}
+	log.Printf("📄 Prompts gespeichert: %s", latestPromptFilename)
 }
 
 func generateReport(allResults []ModelResults) {
-	timestamp := time.Now().Format("20060102_150405")
-	filename := fmt.Sprintf("test_results/full_report_%s.md", timestamp)
 	latestFilename := "test_results/latest_full_report.md"
 
 	var sb strings.Builder
@@ -415,12 +685,12 @@ func generateReport(allResults []ModelResults) {
 
 	// Overview table
 	sb.WriteString("## 📈 Gesamtübersicht\n\n")
-	sb.WriteString("| Modell | Provider | Ø Zeit (s) | Ø Wörter | GWS % | Erfolg |\n")
-	sb.WriteString("|--------|----------|------------|----------|-------|--------|\n")
+	sb.WriteString("| Modell | Provider | Ø Zeit (s) | Ø Wörter | GWS % | Qualität | Erfolg |\n")
+	sb.WriteString("|--------|----------|------------|----------|-------|----------|--------|\n")
 
 	for _, modelResult := range allResults {
 		successfulTests := 0
-		var totalTime, totalWords, totalGWSPerc float64
+		var totalTime, totalWords, totalGWSPerc, totalQualityScore float64
 
 		for _, test := range modelResult.Tests {
 			if test.Success {
@@ -428,6 +698,7 @@ func generateReport(allResults []ModelResults) {
 				totalTime += test.GenerationTime
 				totalWords += float64(test.WordCount)
 				totalGWSPerc += test.Grundwortschatz.Percentage
+				totalQualityScore += test.Quality.QualityScore
 			}
 		}
 
@@ -435,6 +706,7 @@ func generateReport(allResults []ModelResults) {
 			avgTime := totalTime / float64(successfulTests)
 			avgWords := totalWords / float64(successfulTests)
 			avgGWS := totalGWSPerc / float64(successfulTests)
+			avgQuality := totalQualityScore / float64(successfulTests)
 
 			providerIcon := "🔧"
 			switch modelResult.Provider {
@@ -444,9 +716,9 @@ func generateReport(allResults []ModelResults) {
 				providerIcon = "☁️"
 			}
 
-			sb.WriteString(fmt.Sprintf("| %s | %s %s | %.1f | %.0f | %.1f%% | %d/%d |\n",
+			sb.WriteString(fmt.Sprintf("| %s | %s %s | %.1f | %.0f | %.1f%% | %.0f | %d/%d |\n",
 				modelResult.Model, providerIcon, modelResult.Provider,
-				avgTime, avgWords, avgGWS, successfulTests, len(modelResult.Tests)))
+				avgTime, avgWords, avgGWS, avgQuality, successfulTests, len(modelResult.Tests)))
 		}
 	}
 
@@ -476,6 +748,34 @@ func generateReport(allResults []ModelResults) {
 				sb.WriteString(fmt.Sprintf("- **Grundwortschatz:** %d Wörter (%.1f%%)\n",
 					test.Grundwortschatz.UniqueWords, test.Grundwortschatz.Percentage))
 				sb.WriteString(fmt.Sprintf("- **Tokens:** %d\n", test.TokensUsed))
+				
+				// Quality assessment
+				sb.WriteString(fmt.Sprintf("\n**Qualitätsbewertung:** %.0f/100\n", test.Quality.QualityScore))
+				if test.Quality.IsComplete {
+					sb.WriteString("- ✅ Geschichte ist vollständig\n")
+				} else {
+					sb.WriteString("- ❌ Geschichte ist unvollständig\n")
+				}
+				if test.Quality.HasEndeMarker {
+					sb.WriteString("- ✅ ENDE-Marker vorhanden\n")
+				} else {
+					sb.WriteString("- ❌ ENDE-Marker fehlt\n")
+				}
+				if test.Quality.HasProperEnding {
+					sb.WriteString("- ✅ Hat ein richtiges Ende\n")
+				} else {
+					sb.WriteString("- ❌ Ende fehlt oder ist abrupt\n")
+				}
+				if test.Quality.HasClearStructure {
+					sb.WriteString("- ✅ Klare Struktur vorhanden\n")
+				}
+				if len(test.Quality.EndingIndicators) > 0 {
+					sb.WriteString(fmt.Sprintf("- 📝 Abschluss-Indikatoren: %s\n", strings.Join(test.Quality.EndingIndicators, ", ")))
+				}
+				if len(test.Quality.IssuesFound) > 0 {
+					sb.WriteString(fmt.Sprintf("- ⚠️ Probleme: %s\n", strings.Join(test.Quality.IssuesFound, "; ")))
+				}
+				
 				sb.WriteString(fmt.Sprintf("\n**Auszug:**\n> %s\n", test.StoryPreview))
 			} else {
 				sb.WriteString(fmt.Sprintf("- **Fehler:** %s\n", test.Error))
@@ -540,17 +840,10 @@ func generateReport(allResults []ModelResults) {
 
 	report := sb.String()
 
-	// Save report
-	if err := os.WriteFile(filename, []byte(report), 0644); err != nil {
+	// Save report (latest only)
+	if err := os.WriteFile(latestFilename, []byte(report), 0644); err != nil {
 		log.Printf("⚠️  Fehler beim Speichern des Reports: %v", err)
 		return
 	}
-	log.Printf("📄 Report gespeichert: %s", filename)
-
-	// Save as latest
-	if err := os.WriteFile(latestFilename, []byte(report), 0644); err != nil {
-		log.Printf("⚠️  Fehler beim Speichern des Latest Reports: %v", err)
-		return
-	}
-	log.Printf("📄 Latest Report: %s", latestFilename)
+	log.Printf("📄 Report gespeichert: %s", latestFilename)
 }

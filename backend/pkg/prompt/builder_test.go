@@ -25,8 +25,8 @@ func TestBuildPrompt_Klasse12(t *testing.T) {
 		t.Error("System prompt should mention Klasse 1 & 2")
 	}
 
-	if !strings.Contains(userPrompt, "120-140 Wörter") {
-		t.Error("User prompt should mention 120-140 words for 2 minutes, Klasse 1-2")
+	if !strings.Contains(userPrompt, "100-180") {
+		t.Error("User prompt should mention 100-180 words range for 2 minutes, Klasse 1-2")
 	}
 
 	if !strings.Contains(userPrompt, "Freundschaft") {
@@ -74,8 +74,8 @@ func TestBuildPrompt_Klasse34(t *testing.T) {
 		t.Error("System prompt should mention Klasse 3 & 4")
 	}
 
-	if !strings.Contains(userPrompt, "240-300 Wörter") {
-		t.Error("User prompt should mention 240-300 words for 3 minutes, Klasse 3-4")
+	if !strings.Contains(userPrompt, "240-360") {
+		t.Error("User prompt should mention 240-360 words range for 3 minutes, Klasse 3-4")
 	}
 
 	if !strings.Contains(userPrompt, "kindgerecht mit etwas längeren Sätzen") {
@@ -163,10 +163,10 @@ func TestBuildPrompt_WordCountCalculation(t *testing.T) {
 		expectedMin  string
 		expectedMax  string
 	}{
-		{"12", 1, "60-70", "70"},
-		{"12", 3, "180-210", "210"},
-		{"34", 1, "80-100", "100"},
-		{"34", 5, "400-500", "500"},
+		{"12", 1, "50-90", "90"},
+		{"12", 3, "150-270", "270"},
+		{"34", 1, "80-120", "120"},
+		{"34", 5, "400-600", "600"},
 	}
 
 	for _, tt := range tests {
@@ -182,12 +182,9 @@ func TestBuildPrompt_WordCountCalculation(t *testing.T) {
 
 			_, userPrompt := BuildPrompt(req)
 
-			if !strings.Contains(userPrompt, tt.expectedMin+" Wörter") {
-				t.Errorf("Expected prompt to contain '%s Wörter'", tt.expectedMin)
-			}
-
-			if !strings.Contains(userPrompt, tt.expectedMax+" Wörtern") {
-				t.Errorf("Expected prompt to contain '%s Wörtern'", tt.expectedMax)
+			// Die Wortanzahl wird jetzt nicht mehr direkt im ersten Teil erwähnt, nur die Orientierung
+			if !strings.Contains(userPrompt, tt.expectedMin) {
+				t.Errorf("Expected prompt to contain '%s'", tt.expectedMin)
 			}
 		})
 	}

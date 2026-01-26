@@ -85,10 +85,10 @@ var suggestions = struct {
 		"Die vier Jahreszeiten", "Ein besonderes Fest", "Die Kraft der Fantasie",
 	},
 	PersonenTiere: []string{
-		"Ein kleiner Hase namens Erwin", "Eine mutige Prinzessin namens Helena", "Ein frecher Fuchs namens Felix",
+		"Ein kleiner Hase namens Erwin, ein Hund namens Bruno", "Eine mutige Prinzessin namens Helena", "Ein frecher Fuchs namens Felix",
 		"Eine weise Eule", "Ein tapferere Ritterin names Hannelore", "Ein tapferer Ritter names Siegfried",
 		"Ein neugieriges Eichhörnchen", "Ein kleines Mädchen namens Juna", "Ein junger Drache",
-		"Eine zauberhafte Fee", "Der fröhliche Bär Klaus", "Ein kluger Junge", "Eine singende Nachtigall",
+		"Eine störrische Fee", "Der fröhliche Bär Klaus", "Ein kluger Junge", "Eine singende Nachtigall",
 	},
 	Orte: []string{
 		"im Wald", "am See", "in einem Schloss", "auf einem Bauernhof",

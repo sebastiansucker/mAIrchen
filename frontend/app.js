@@ -88,8 +88,8 @@ async function generateStory() {
     const laenge = selectedLength;
     
     // Validierung
-    if (!thema || !personen || !ort || !stimmung || !stil) {
-        alert('Bitte fülle alle Felder aus!');
+    if (!thema || !personen || !ort || !stimmung) {
+        alert('Bitte fülle alle Pflichtfelder aus!');
         return;
     }
     
@@ -150,7 +150,15 @@ function displayStory(story, title, parameters, grundwortschatz = []) {
     infoPersonen.textContent = parameters.personen_tiere;
     infoOrt.textContent = parameters.ort;
     infoStimmung.textContent = parameters.stimmung;
-    infoStil.textContent = parameters.stil;
+    
+    // Stil/Genre: nur anzeigen, wenn vorhanden
+    const stilRow = infoStil.parentElement;
+    if (parameters.stil && parameters.stil.trim() !== '') {
+        infoStil.textContent = parameters.stil;
+        stilRow.style.display = '';
+    } else {
+        stilRow.style.display = 'none';
+    }
     
     // Zeige Grundwortschatz-Wörter an
     const infoGrundwortschatz = document.getElementById('info-grundwortschatz');
