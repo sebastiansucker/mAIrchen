@@ -107,6 +107,9 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Sto
 		tokensUsed += correctionTokens
 	}
 	
+	// Remove markdown formatting again (in case spell checker added it)
+	storyText = removeMarkdownFormatting(storyText)
+	
 	// Find Grundwortschatz words
 	gwsWords := analysis.FindGrundwortschatzInText(storyText, g.gwsDict)
 	
@@ -157,7 +160,8 @@ func parseStory(content string) (string, string) {
 func (g *Generator) correctSpelling(ctx context.Context, client *openai.Client, model, text string) (string, int, error) {
 	correctionPrompt := fmt.Sprintf(`Korrigiere AUSSCHLIESSLICH Rechtschreibfehler und Tippfehler in folgendem Text.
 Ändere NICHTS am Inhalt, Stil, Satzbau oder Formulierungen. Füge nichts hinzu, lasse nichts weg.
-Gib NUR den korrigierten Text zurück, ohne Kommentare oder Erklärungen.
+Verwende KEINE Markdown-Formatierung (keine *Sternchen* oder **fett**).
+Gib NUR den korrigierten Text in normalem Text zurück, ohne Kommentare oder Erklärungen.
 
 Text:
 %s`, text)
