@@ -129,13 +129,18 @@ func TestNewGenerator(t *testing.T) {
 	// Execute
 	generator := NewGenerator(cfg)
 
-	// Assert
+	// Assert - nil check with return
 	if generator == nil {
 		t.Fatal("Expected generator to be created")
+		return
 	}
+	
+	// Check config
 	if generator.config.OpenAIAPIKey != cfg.OpenAIAPIKey {
 		t.Error("Generator config doesn't match input config")
 	}
+	
+	// Check GWS dictionary
 	if generator.gwsDict == nil {
 		t.Error("GWS dictionary should be initialized")
 	}

@@ -100,7 +100,6 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest) (*Sto
 	correctedStory, correctionTokens, err := g.correctSpelling(ctx, client, model, storyText)
 	if err != nil {
 		fmt.Printf("⚠️  Rechtschreibkorrektur fehlgeschlagen: %v - verwende Original\n", err)
-		correctedStory = storyText
 	} else {
 		fmt.Printf("✅ Rechtschreibkorrektur abgeschlossen - Tokens: %d\n", correctionTokens)
 		storyText = correctedStory
