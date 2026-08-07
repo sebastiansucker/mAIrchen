@@ -6,7 +6,7 @@ test.describe('mAIrchen Story Generation', () => {
     await page.goto('http://localhost:80');
     
     // Wait for page to load
-    await expect(page.locator('h1')).toContainText('mAIrchen');
+    await expect(page.locator('header h1')).toContainText('mAIrchen');
     
     // Click the random button to fill all fields
     await page.click('#random-btn');
