@@ -42,22 +42,26 @@
 
                 <div class="form-group">
                     <label for="thema">Thema:</label>
-                    <input type="text" id="thema" placeholder="z.B. Freundschaft, Abenteuer, Zauber">
+                    <input type="text" id="thema" placeholder="z.B. Freundschaft, Abenteuer, Zauber" aria-describedby="thema-error">
+                    <span id="thema-error" class="field-error" role="alert"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="personen">Personen/Tiere:</label>
-                    <input type="text" id="personen" placeholder="z.B. Ein kleiner Hase, Eine mutige Prinzessin">
+                    <input type="text" id="personen" placeholder="z.B. Ein kleiner Hase, Eine mutige Prinzessin" aria-describedby="personen-error">
+                    <span id="personen-error" class="field-error" role="alert"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="ort">Ort:</label>
-                    <input type="text" id="ort" placeholder="z.B. im Wald, am See, in einem Schloss">
+                    <input type="text" id="ort" placeholder="z.B. im Wald, am See, in einem Schloss" aria-describedby="ort-error">
+                    <span id="ort-error" class="field-error" role="alert"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="stimmung">Stimmung:</label>
-                    <input type="text" id="stimmung" placeholder="z.B. fröhlich, spannend, lustig">
+                    <input type="text" id="stimmung" placeholder="z.B. fröhlich, spannend, lustig" aria-describedby="stimmung-error">
+                    <span id="stimmung-error" class="field-error" role="alert"></span>
                     <div class="mood-chips">
                         <button type="button" class="mood-chip" data-mood="Fröhlich">Fröhlich</button>
                         <button type="button" class="mood-chip" data-mood="Spannend">Spannend</button>
