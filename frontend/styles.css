@@ -680,6 +680,36 @@ header h1 {
     margin-bottom: 20px;
 }
 
+/* Tinten-Tupfer-Effekt: jeder Buchstabe "landet" wie frisch mit der Feder
+   getupft - kurz größer und leicht verschwommen, dann auf normale Größe
+   und Schärfe einschwingend. */
+.ink-char {
+    display: inline-block;
+    animation: ink-drop 320ms ease-out;
+}
+
+@keyframes ink-drop {
+    0% {
+        opacity: 0;
+        transform: scale(1.6);
+        filter: blur(2px);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ink-char {
+        animation: none;
+    }
+}
+
 .story-info {
     background: #f9fafb;
     padding: 20px;
