@@ -82,7 +82,7 @@ jobs:
           cat > .env << EOF
           AI_PROVIDER=ollama-cloud
           OLLAMA_API_KEY=${{ secrets.OLLAMA_API_KEY }}
-          OLLAMA_MODEL=ministral-3:8b-cloud
+          OLLAMA_MODEL=gemma4:cloud
           EOF
 
       - name: Start Docker container

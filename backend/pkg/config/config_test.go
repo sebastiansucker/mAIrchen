@@ -92,6 +92,28 @@ func TestLoadConfig_OpenAI(t *testing.T) {
 	}
 }
 
+func TestLoadConfig_OpenAI_CustomBaseURL(t *testing.T) {
+	// Setup
+	_ = os.Setenv("AI_PROVIDER", "openai")
+	_ = os.Setenv("OPENAI_API_KEY", "mistral-key")
+	_ = os.Setenv("OPENAI_BASE_URL", "https://api.mistral.ai/v1")
+	_ = os.Setenv("OPENAI_MODEL", "mistral-small-latest")
+	defer func() {
+		_ = os.Unsetenv("AI_PROVIDER")
+		_ = os.Unsetenv("OPENAI_API_KEY")
+		_ = os.Unsetenv("OPENAI_BASE_URL")
+		_ = os.Unsetenv("OPENAI_MODEL")
+	}()
+
+	// Execute
+	cfg := LoadConfig()
+
+	// Assert - AI_PROVIDER=openai must still respect an explicit OPENAI_BASE_URL
+	if cfg.OpenAIBaseURL != "https://api.mistral.ai/v1" {
+		t.Errorf("Expected OpenAIBaseURL 'https://api.mistral.ai/v1', got '%s'", cfg.OpenAIBaseURL)
+	}
+}
+
 func TestLoadConfig_DefaultMistral(t *testing.T) {
 	// Setup - no AI_PROVIDER set
 	_ = os.Unsetenv("AI_PROVIDER")
