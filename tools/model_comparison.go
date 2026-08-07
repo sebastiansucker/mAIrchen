@@ -633,17 +633,17 @@ func savePrompts(allResults []ModelResults, timestamp string) {
 	var sb strings.Builder
 	
 	sb.WriteString("# 📝 Generierte Prompts - Modell-Vergleich\n\n")
-	sb.WriteString(fmt.Sprintf("**Datum:** %s\n\n", time.Now().Format("02.01.2006 15:04")))
+	fmt.Fprintf(&sb, "**Datum:** %s\n\n", time.Now().Format("02.01.2006 15:04"))
 	
 	for _, modelResult := range allResults {
-		sb.WriteString(fmt.Sprintf("## Modell: %s (%s)\n\n", modelResult.Model, modelResult.Provider))
+		fmt.Fprintf(&sb, "## Modell: %s (%s)\n\n", modelResult.Model, modelResult.Provider)
 		
 		for i, test := range modelResult.Tests {
 			if !test.Success {
 				continue
 			}
 			
-			sb.WriteString(fmt.Sprintf("### Test %d: %s\n\n", i+1, test.TestCase))
+			fmt.Fprintf(&sb, "### Test %d: %s\n\n", i+1, test.TestCase)
 			
 			sb.WriteString("#### System Prompt\n\n")
 			sb.WriteString("```\n")
@@ -655,8 +655,8 @@ func savePrompts(allResults []ModelResults, timestamp string) {
 			sb.WriteString(test.UserPrompt)
 			sb.WriteString("\n```\n\n")
 			
-			sb.WriteString(fmt.Sprintf("**Ergebnis:** %d Wörter, %d Tokens, %.1fs\n\n", 
-				test.WordCount, test.TokensUsed, test.GenerationTime))
+			fmt.Fprintf(&sb, "**Ergebnis:** %d Wörter, %d Tokens, %.1fs\n\n", 
+				test.WordCount, test.TokensUsed, test.GenerationTime)
 			
 			sb.WriteString("---\n\n")
 		}
@@ -679,9 +679,9 @@ func generateReport(allResults []ModelResults) {
 
 	// Header
 	sb.WriteString("# 📊 Modell-Vergleichsbericht - Kindergeschichten\n\n")
-	sb.WriteString(fmt.Sprintf("**Datum:** %s\n", time.Now().Format("02.01.2006 15:04")))
-	sb.WriteString(fmt.Sprintf("**Getestete Modelle:** %d\n", len(allResults)))
-	sb.WriteString(fmt.Sprintf("**Test-Cases:** %d\n\n", len(testCases)))
+	fmt.Fprintf(&sb, "**Datum:** %s\n", time.Now().Format("02.01.2006 15:04"))
+	fmt.Fprintf(&sb, "**Getestete Modelle:** %d\n", len(allResults))
+	fmt.Fprintf(&sb, "**Test-Cases:** %d\n\n", len(testCases))
 
 	// Overview table
 	sb.WriteString("## 📈 Gesamtübersicht\n\n")
@@ -716,9 +716,9 @@ func generateReport(allResults []ModelResults) {
 				providerIcon = "☁️"
 			}
 
-			sb.WriteString(fmt.Sprintf("| %s | %s %s | %.1f | %.0f | %.1f%% | %.0f | %d/%d |\n",
+			fmt.Fprintf(&sb, "| %s | %s %s | %.1f | %.0f | %.1f%% | %.0f | %d/%d |\n",
 				modelResult.Model, providerIcon, modelResult.Provider,
-				avgTime, avgWords, avgGWS, avgQuality, successfulTests, len(modelResult.Tests)))
+				avgTime, avgWords, avgGWS, avgQuality, successfulTests, len(modelResult.Tests))
 		}
 	}
 
@@ -734,23 +734,23 @@ func generateReport(allResults []ModelResults) {
 			providerIcon = "☁️"
 		}
 
-		sb.WriteString(fmt.Sprintf("\n### %s %s - %s\n", providerIcon, modelResult.Provider, modelResult.Model))
+		fmt.Fprintf(&sb, "\n### %s %s - %s\n", providerIcon, modelResult.Provider, modelResult.Model)
 
 		for _, test := range modelResult.Tests {
-			sb.WriteString(fmt.Sprintf("\n#### %s\n", test.TestCase))
+			fmt.Fprintf(&sb, "\n#### %s\n", test.TestCase)
 
 			if test.Success {
-				sb.WriteString(fmt.Sprintf("- **Zeit:** %.1fs\n", test.GenerationTime))
-				sb.WriteString(fmt.Sprintf("- **Titel:** %s\n", test.Title))
-				sb.WriteString(fmt.Sprintf("- **Wörter:** %d\n", test.WordCount))
-				sb.WriteString(fmt.Sprintf("- **Absätze:** %d\n", test.ParagraphCount))
-				sb.WriteString(fmt.Sprintf("- **Dialoge:** %d\n", test.DialogueCount))
-				sb.WriteString(fmt.Sprintf("- **Grundwortschatz:** %d Wörter (%.1f%%)\n",
-					test.Grundwortschatz.UniqueWords, test.Grundwortschatz.Percentage))
-				sb.WriteString(fmt.Sprintf("- **Tokens:** %d\n", test.TokensUsed))
+				fmt.Fprintf(&sb, "- **Zeit:** %.1fs\n", test.GenerationTime)
+				fmt.Fprintf(&sb, "- **Titel:** %s\n", test.Title)
+				fmt.Fprintf(&sb, "- **Wörter:** %d\n", test.WordCount)
+				fmt.Fprintf(&sb, "- **Absätze:** %d\n", test.ParagraphCount)
+				fmt.Fprintf(&sb, "- **Dialoge:** %d\n", test.DialogueCount)
+				fmt.Fprintf(&sb, "- **Grundwortschatz:** %d Wörter (%.1f%%)\n",
+					test.Grundwortschatz.UniqueWords, test.Grundwortschatz.Percentage)
+				fmt.Fprintf(&sb, "- **Tokens:** %d\n", test.TokensUsed)
 				
 				// Quality assessment
-				sb.WriteString(fmt.Sprintf("\n**Qualitätsbewertung:** %.0f/100\n", test.Quality.QualityScore))
+				fmt.Fprintf(&sb, "\n**Qualitätsbewertung:** %.0f/100\n", test.Quality.QualityScore)
 				if test.Quality.IsComplete {
 					sb.WriteString("- ✅ Geschichte ist vollständig\n")
 				} else {
@@ -770,15 +770,15 @@ func generateReport(allResults []ModelResults) {
 					sb.WriteString("- ✅ Klare Struktur vorhanden\n")
 				}
 				if len(test.Quality.EndingIndicators) > 0 {
-					sb.WriteString(fmt.Sprintf("- 📝 Abschluss-Indikatoren: %s\n", strings.Join(test.Quality.EndingIndicators, ", ")))
+					fmt.Fprintf(&sb, "- 📝 Abschluss-Indikatoren: %s\n", strings.Join(test.Quality.EndingIndicators, ", "))
 				}
 				if len(test.Quality.IssuesFound) > 0 {
-					sb.WriteString(fmt.Sprintf("- ⚠️ Probleme: %s\n", strings.Join(test.Quality.IssuesFound, "; ")))
+					fmt.Fprintf(&sb, "- ⚠️ Probleme: %s\n", strings.Join(test.Quality.IssuesFound, "; "))
 				}
 				
-				sb.WriteString(fmt.Sprintf("\n**Auszug:**\n> %s\n", test.StoryPreview))
+				fmt.Fprintf(&sb, "\n**Auszug:**\n> %s\n", test.StoryPreview)
 			} else {
-				sb.WriteString(fmt.Sprintf("- **Fehler:** %s\n", test.Error))
+				fmt.Fprintf(&sb, "- **Fehler:** %s\n", test.Error)
 			}
 		}
 	}
@@ -808,8 +808,8 @@ func generateReport(allResults []ModelResults) {
 			}
 		}
 		if fastest != nil {
-			sb.WriteString(fmt.Sprintf("- **⚡ Schnellstes Modell:** %s (%s) - %.1fs\n",
-				fastest.Model, fastest.Provider, fastestAvg))
+			fmt.Fprintf(&sb, "- **⚡ Schnellstes Modell:** %s (%s) - %.1fs\n",
+				fastest.Model, fastest.Provider, fastestAvg)
 		}
 
 		// Find best GWS
@@ -833,8 +833,8 @@ func generateReport(allResults []ModelResults) {
 			}
 		}
 		if bestGWS != nil {
-			sb.WriteString(fmt.Sprintf("- **📚 Bester Grundwortschatz:** %s (%s) - %.1f%%\n",
-				bestGWS.Model, bestGWS.Provider, bestGWSAvg))
+			fmt.Fprintf(&sb, "- **📚 Bester Grundwortschatz:** %s (%s) - %.1f%%\n",
+				bestGWS.Model, bestGWS.Provider, bestGWSAvg)
 		}
 	}
 
