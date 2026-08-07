@@ -155,7 +155,16 @@ Die API ist über Port 80 erreichbar, aber durch mehrere Schutzebenen gesichert:
 3. Rate Limiting prüft jede Anfrage anhand der IP-Adresse
 4. CORS verhindert Zugriff von fremden Websites
 
-Details: [SECURITY.md](SECURITY.md)
+### Für Produktion
+
+In der Produktion sollten Sie `ALLOWED_ORIGINS` auf Ihre echte Domain(s) setzen:
+
+```bash
+# In .env
+ALLOWED_ORIGINS=https://mairchen.de,https://www.mairchen.de
+```
+
+Dies verhindert, dass andere Websites Ihre API nutzen können, auch wenn sie die URL kennen. Das Frontend kann weiterhin von Client-Geräten auf die API zugreifen, da die Requests über Ihren Server laufen.
 
 ## 🏗️ Architektur
 
@@ -225,6 +234,12 @@ mAIrchen/
 2. Eingabefelder ausfüllen:
    - Thema (z.B. "Freundschaft")
    - Personen/Tiere (z.B. "Ein kleiner Hase")
+   - Ort (z.B. "im Wald")
+   - Stimmung (z.B. "fröhlich")
+   - Optional: Stil/Genre auswählen
+3. Länge (Minuten) und Klassenstufe wählen
+4. Auf "Zufall" klicken für automatische Vorschläge, oder direkt "Geschichte erstellen"
+
 ## 🛠️ Entwicklung
 
 ### Backend lokal starten
@@ -279,32 +294,6 @@ Vergleicht verschiedene AI-Modelle für Kindergeschichten:
 ```bash
 cd tools
 go run model_comparison.go
-```n im Browser: http://localhost:8080
-
-### Container neu bauen nach Änderungen
-```bash
-docker-compose --env-file .env -f docker/docker-compose.yml build
-docker-compose --env-file .env -f docker/docker-compose.yml up -d
-```
-
-## 📝 API Endpunkte
-
-### Zufällige Vorschläge
-```http
-GET /api/random
-```
-
-### Geschichte generieren
-```http
-POST /api/generate-story
-Content-Type: application/json
-
-{
-  "thema": "Abenteuer",
-  "personen_tiere": "Ein mutiger Fuchs",
-  "ort": "im Wald",
-  "stimmung": "spannend"
-}
 ```
 
 ## 🔧 Konfiguration
@@ -355,25 +344,6 @@ OPENAI_MODEL=meta-llama/llama-3.2-3b-instruct
 
 **Wichtig**: Die `.env` Datei ist in `.gitignore` und wird nicht ins Repository committed!
 
-## 🔒 Sicherheit
-
-Die API ist durch mehrere Sicherheitsebenen geschützt:
-
-1. **Backend nur auf localhost**: Das FastAPI-Backend lauscht nur auf `127.0.0.1:8000` und ist von außen nicht direkt erreichbar
-2. **Nginx als einziger Zugangspunkt**: Nur Nginx kann auf das Backend zugreifen und fungiert als Reverse Proxy
-3. **CORS-Einschränkung**: Nur erlaubte Origins (konfiguriert via `ALLOWED_ORIGINS`) können API-Requests durchführen
-
-### Für Produktion
-
-In der Produktion sollten Sie `ALLOWED_ORIGINS` auf Ihre echte Domain(s) setzen:
-
-```bash
-# In .env
-ALLOWED_ORIGINS=https://mairchen.de,https://www.mairchen.de
-```
-
-Dies verhindert, dass andere Websites Ihre API nutzen können, auch wenn sie die URL kennen. Das Frontend kann weiterhin von Client-Geräten auf die API zugreifen, da die Requests über Ihren Server laufen.
-
 ## 🌐 Netzwerk-Zugriff
 
 Die App ist von anderen Geräten im Netzwerk erreichbar:
@@ -381,16 +351,6 @@ Die App ist von anderen Geräten im Netzwerk erreichbar:
 2. Öffne auf einem anderen Gerät: `http://<deine-ip>`
 
 Das Frontend nutzt automatisch die richtige URL für API-Requests.
-
-### Manuelles Deployment (Lokaler Build)
-```bash
-# Auf dem Server
-git clone git@github.com:sebastiansucker/mAIrchen.git
-cd mAIrchen
-cp .env.example .env
-# .env bearbeiten und API-Key eintragen
-docker-compose up --build -d
-```
 
 ## 🧪 Testing & CI/CD
 
@@ -410,15 +370,23 @@ go test ./pkg/... -v
 # Mit Coverage Report
 go test ./pkg/... -cover -coverprofile=coverage.out
 go tool cover -html=coverage.out
-```ker run -d -p 80:80 \
-  -e MISTRAL_API_KEY=your-key \
-  -e MISTRAL_BASE_URL=https://api.mistral.ai/v1 \
-  -e MISTRAL_MODEL=mistral-small-latest \
+```
+
+## 📦 Deployment über GitHub Container Registry
+
+Fertige Images werden bei jedem Push auf `main` automatisch nach `ghcr.io/sebastiansucker/mairchen` gebaut und veröffentlicht.
+
+**Mit Docker:**
+```bash
+docker run -d -p 80:80 \
+  -e OPENAI_API_KEY=your-key \
+  -e OPENAI_BASE_URL=https://api.mistral.ai/v1 \
+  -e OPENAI_MODEL=mistral-small-latest \
   --name mairchen-app \
   ghcr.io/sebastiansucker/mairchen:latest
 ```
 
-**Mit Docker Compose und GitHub Registry:**
+**Mit Docker Compose:**
 ```yaml
 services:
   app:
@@ -427,9 +395,9 @@ services:
     ports:
       - "80:80"
     environment:
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - MISTRAL_BASE_URL=${MISTRAL_BASE_URL:-https://api.mistral.ai/v1}
-      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-small-latest}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.mistral.ai/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-mistral-small-latest}
     restart: unless-stopped
 ```
 
@@ -440,5 +408,5 @@ git clone git@github.com:sebastiansucker/mAIrchen.git
 cd mAIrchen
 cp .env.example .env
 # .env bearbeiten und API-Key eintragen
-docker-compose --env-file .env -f docker/docker-compose.yml up -d
+docker-compose up --build -d
 ```
