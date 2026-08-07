@@ -96,6 +96,7 @@ let revealQueue = '';
 let revealTimer = null;
 let streamComplete = false;
 let currentParagraphEl = null;
+let currentWordEl = null;
 let currentAbortController = null;
 
 // Geschichte generieren
@@ -226,6 +227,7 @@ function onStoryTitle(title) {
     storyContent.innerHTML = '';
     revealQueue = '';
     currentParagraphEl = null;
+    currentWordEl = null;
     delete storyDisplay.dataset.streamComplete;
 
     inputForm.style.display = 'none';
@@ -318,21 +320,32 @@ function tickReveal() {
 // Hängt ein paar Zeichen an den aktuellen Absatz an; \n schließt den
 // aktuellen Absatz und öffnet beim nächsten Zeichen einen neuen. Jedes
 // Zeichen bekommt einen eigenen <span> mit "Tinten-Tupfer"-Animation
-// (siehe .ink-char in styles.css).
+// (siehe .ink-char in styles.css). Da jedes Zeichen ein eigenes
+// display:inline-block-Element ist, darf der Browser sonst auch mitten in
+// einem Wort umbrechen; deshalb werden die Zeichen eines Worts zusätzlich
+// in einen .ink-word-Wrapper gruppiert, der als Ganzes umgebrochen wird.
 function appendRevealedText(fragment) {
     for (const ch of fragment) {
         if (ch === '\n') {
             currentParagraphEl = null;
+            currentWordEl = null;
             continue;
         }
         if (!currentParagraphEl) {
             currentParagraphEl = document.createElement('p');
             storyContent.appendChild(currentParagraphEl);
         }
+        if (/\s/.test(ch)) {
+            currentWordEl = null;
+        } else if (!currentWordEl) {
+            currentWordEl = document.createElement('span');
+            currentWordEl.className = 'ink-word';
+            currentParagraphEl.appendChild(currentWordEl);
+        }
         const charEl = document.createElement('span');
         charEl.className = 'ink-char';
         charEl.textContent = ch;
-        currentParagraphEl.appendChild(charEl);
+        (currentWordEl || currentParagraphEl).appendChild(charEl);
     }
 }
 

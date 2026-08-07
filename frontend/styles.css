@@ -688,6 +688,13 @@ header h1 {
     animation: ink-drop 320ms ease-out;
 }
 
+/* Gruppiert die .ink-char-Spans eines Worts zu einem einzigen
+   umbrechbaren Block, damit der Browser nur zwischen Wörtern statt
+   mitten im Wort auf inline-block-Zeichengrenzen umbricht. */
+.ink-word {
+    display: inline-block;
+}
+
 @keyframes ink-drop {
     0% {
         opacity: 0;
