@@ -1,9 +1,15 @@
 package story
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
+	"github.com/sashabaranov/go-openai"
 	"github.com/sebastiansucker/mAIrchen/backend/pkg/config"
 )
 
@@ -187,6 +193,75 @@ func TestStreamParser_MarkdownStrippedPerLine(t *testing.T) {
 	}
 	if !strings.Contains(got, "Fett und kursiv Text.") {
 		t.Errorf("expected cleaned text, got %q", got)
+	}
+}
+
+func TestCreateChatCompletionStreamWithRetry_RetriesOnFailureThenSucceeds(t *testing.T) {
+	origDelay := streamRetryDelay
+	streamRetryDelay = time.Millisecond
+	defer func() { streamRetryDelay = origDelay }()
+
+	var attempts int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := atomic.AddInt32(&attempts, 1)
+		if n < 2 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.WriteHeader(http.StatusOK)
+		flusher := w.(http.Flusher)
+		_, _ = w.Write([]byte("data: {\"choices\":[{\"delta\":{\"content\":\"hi\"},\"index\":0,\"finish_reason\":\"\"}]}\n\n"))
+		flusher.Flush()
+		_, _ = w.Write([]byte("data: [DONE]\n\n"))
+		flusher.Flush()
+	}))
+	defer server.Close()
+
+	clientConfig := openai.DefaultConfig("test-key")
+	clientConfig.BaseURL = server.URL
+	client := openai.NewClientWithConfig(clientConfig)
+
+	stream, err := createChatCompletionStreamWithRetry(context.Background(), client, openai.ChatCompletionRequest{
+		Model:    "test-model",
+		Messages: []openai.ChatCompletionMessage{{Role: openai.ChatMessageRoleUser, Content: "hi"}},
+	})
+	if err != nil {
+		t.Fatalf("expected retry to eventually succeed, got error: %v", err)
+	}
+	defer func() { _ = stream.Close() }()
+
+	if got := atomic.LoadInt32(&attempts); got != 2 {
+		t.Errorf("expected exactly 2 attempts (1 failure + 1 success), got %d", got)
+	}
+}
+
+func TestCreateChatCompletionStreamWithRetry_GivesUpAfterMaxAttempts(t *testing.T) {
+	origDelay := streamRetryDelay
+	streamRetryDelay = time.Millisecond
+	defer func() { streamRetryDelay = origDelay }()
+
+	var attempts int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&attempts, 1)
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	clientConfig := openai.DefaultConfig("test-key")
+	clientConfig.BaseURL = server.URL
+	client := openai.NewClientWithConfig(clientConfig)
+
+	_, err := createChatCompletionStreamWithRetry(context.Background(), client, openai.ChatCompletionRequest{
+		Model:    "test-model",
+		Messages: []openai.ChatCompletionMessage{{Role: openai.ChatMessageRoleUser, Content: "hi"}},
+	})
+	if err == nil {
+		t.Fatal("expected an error after exhausting all retries")
+	}
+
+	if got := atomic.LoadInt32(&attempts); got != streamRetryAttempts+1 {
+		t.Errorf("expected exactly %d attempts, got %d", streamRetryAttempts+1, got)
 	}
 }
 
