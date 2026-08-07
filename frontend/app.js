@@ -182,15 +182,22 @@ function displayStory(story, title, parameters, grundwortschatz = []) {
     }, 100);
 }
 
+// HTML escapen, damit vom Modell zurückgegebener Text nicht als Markup interpretiert wird
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Text formatieren
 function formatStoryText(text) {
     // Teile den Text in Absätze
     const paragraphs = text.split('\n').filter(p => p.trim().length > 0);
-    
+
     // Erstelle HTML mit Absätzen und formatiere Markdown-Fettdruck
     return paragraphs.map(p => {
-        // Ersetze **text** mit <strong>text</strong>
-        const formatted = p.trim().replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Erst escapen, dann **text** durch <strong>text</strong> ersetzen
+        const formatted = escapeHtml(p.trim()).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         return `<p>${formatted}</p>`;
     }).join('');
 }

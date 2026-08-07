@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,7 @@ var (
 	MaxDailyCost     float64
 	CostPerRequest   = 0.0015
 	AllowedOrigins   []string
+	MaxFieldLength   = 200
 	appConfig        *config.Config
 	storyGenerator   *story.Generator
 )
@@ -154,10 +156,11 @@ func getEnvFloat(key string, defaultValue float64) float64 {
 }
 
 func getClientIP(c *gin.Context) string {
-	forwarded := c.GetHeader("X-Forwarded-For")
-	if forwarded != "" {
-		parts := strings.Split(forwarded, ",")
-		return strings.TrimSpace(parts[0])
+	// Nginx always overwrites X-Real-IP with the actual connecting address
+	// ($remote_addr), so unlike X-Forwarded-For it cannot be spoofed by a
+	// client to bypass per-IP rate limiting.
+	if realIP := c.GetHeader("X-Real-IP"); realIP != "" {
+		return strings.TrimSpace(realIP)
 	}
 	return c.ClientIP()
 }
@@ -192,7 +195,7 @@ func checkRateLimit(ip string) (bool, string) {
 		return false, fmt.Sprintf("Tägliches Anfrage-Limit erreicht. Bitte in ~%dh erneut versuchen.", hoursUntilReset)
 	}
 
-	// Clean old requests
+	// Clean old requests for this IP
 	cutoffTime := now.Add(-RateLimitWindow)
 	var validRequests []time.Time
 	for _, ts := range requestHistory[ip] {
@@ -200,7 +203,11 @@ func checkRateLimit(ip string) (bool, string) {
 			validRequests = append(validRequests, ts)
 		}
 	}
-	requestHistory[ip] = validRequests
+	if len(validRequests) == 0 {
+		delete(requestHistory, ip)
+	} else {
+		requestHistory[ip] = validRequests
+	}
 
 	// Check IP-specific limit
 	if len(requestHistory[ip]) >= RateLimitPerIP {
@@ -215,6 +222,28 @@ func checkRateLimit(ip string) (bool, string) {
 	dailyCost.cost += CostPerRequest
 
 	return true, ""
+}
+
+// cleanupStaleIPs removes IPs from requestHistory that have no requests left
+// within the rate limit window, so IPs that never come back don't
+// accumulate in memory forever.
+func cleanupStaleIPs() {
+	rateLimitLock.Lock()
+	defer rateLimitLock.Unlock()
+
+	cutoffTime := time.Now().Add(-RateLimitWindow)
+	for ip, timestamps := range requestHistory {
+		hasRecent := false
+		for _, ts := range timestamps {
+			if ts.After(cutoffTime) {
+				hasRecent = true
+				break
+			}
+		}
+		if !hasRecent {
+			delete(requestHistory, ip)
+		}
+	}
 }
 
 func main() {
@@ -252,6 +281,14 @@ func main() {
 	r.GET("/api/stats", handleStats)
 	r.POST("/api/generate-story", handleGenerateStory)
 
+	go func() {
+		ticker := time.NewTicker(RateLimitWindow)
+		defer ticker.Stop()
+		for range ticker.C {
+			cleanupStaleIPs()
+		}
+	}()
+
 	port := getEnv("PORT", "8000")
 	log.Printf("Server starting on port %s", port)
 	if err := r.Run(":" + port); err != nil {
@@ -284,6 +321,40 @@ func handleStats(c *gin.Context) {
 	})
 }
 
+// validateStoryRequest checks required fields, field lengths and story
+// length against the documented limits. Returns an empty string if the
+// request is valid, otherwise a user-facing error message.
+func validateStoryRequest(req prompt.StoryRequest) string {
+	if strings.TrimSpace(req.Thema) == "" ||
+		strings.TrimSpace(req.PersonenTiere) == "" ||
+		strings.TrimSpace(req.Ort) == "" ||
+		strings.TrimSpace(req.Stimmung) == "" {
+		return "Thema, Personen/Tiere, Ort und Stimmung sind Pflichtfelder"
+	}
+
+	fields := map[string]string{
+		"thema":          req.Thema,
+		"personen_tiere": req.PersonenTiere,
+		"ort":            req.Ort,
+		"stimmung":       req.Stimmung,
+		"stil":           req.Stil,
+	}
+	for name, value := range fields {
+		if utf8.RuneCountInString(value) > MaxFieldLength {
+			return fmt.Sprintf("Feld '%s' darf maximal %d Zeichen lang sein", name, MaxFieldLength)
+		}
+	}
+
+	if req.Laenge < 1 {
+		return "Länge muss mindestens 1 Minute sein"
+	}
+	if req.Laenge > MaxStoryLength {
+		return fmt.Sprintf("Länge darf maximal %d Minuten sein", MaxStoryLength)
+	}
+
+	return ""
+}
+
 func handleGenerateStory(c *gin.Context) {
 	var req prompt.StoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -292,8 +363,8 @@ func handleGenerateStory(c *gin.Context) {
 	}
 
 	// Validate
-	if req.Laenge > MaxStoryLength {
-		c.JSON(http.StatusBadRequest, gin.H{"detail": fmt.Sprintf("Länge darf maximal %d Minuten sein", MaxStoryLength)})
+	if errMsg := validateStoryRequest(req); errMsg != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"detail": errMsg})
 		return
 	}
 
@@ -331,8 +402,12 @@ func handleGenerateStory(c *gin.Context) {
 		actualCost = float64(generatedStory.TokensUsed) / 1000 * 0.001
 	}
 
+	// checkRateLimit already reserved a flat CostPerRequest estimate when the
+	// request was admitted (to guard the budget against bursts of concurrent
+	// in-flight requests). Replace that reservation with the real cost now
+	// that it's known, instead of adding on top of it.
 	rateLimitLock.Lock()
-	dailyCost.cost += actualCost
+	dailyCost.cost += actualCost - CostPerRequest
 	rateLimitLock.Unlock()
 
 	c.JSON(http.StatusOK, StoryResponse{
