@@ -13,6 +13,7 @@ const stimmungInput = document.getElementById('stimmung');
 const stilInput = document.getElementById('stil');
 const lengthButtons = document.querySelectorAll('.length-btn');
 const gradeButtons = document.querySelectorAll('.grade-btn');
+const moodChips = document.querySelectorAll('.mood-chip');
 let selectedLength = 10; // Standard: 10 Minuten
 let selectedGrade = '34'; // Standard: 3/4 Klasse
 
@@ -34,21 +35,57 @@ gradeButtons.forEach(btn => {
     });
 });
 
+// Stimmungs-Chips: schreiben ihren Wert ins Textfeld, das weiterhin frei
+// editierbar bleibt (z.B. für Kombinationen wie "fröhlich und spannend")
+moodChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+        const alreadyActive = chip.classList.contains('active');
+        moodChips.forEach(c => c.classList.remove('active'));
+        if (alreadyActive) {
+            stimmungInput.value = '';
+        } else {
+            chip.classList.add('active');
+            stimmungInput.value = chip.dataset.mood;
+        }
+    });
+});
+
+// Manuelle Eingabe hebt die Chip-Auswahl auf, wenn sie nicht mehr passt
+stimmungInput.addEventListener('input', () => {
+    moodChips.forEach(c => {
+        c.classList.toggle('active', c.dataset.mood === stimmungInput.value);
+    });
+});
+
 const randomBtn = document.getElementById('random-btn');
 const generateBtn = document.getElementById('generate-btn');
 const backBtn = document.getElementById('back-btn');
+const shareBtn = document.getElementById('share-btn');
+const newStoryBtn = document.getElementById('new-story-btn');
 
 const storyContent = document.getElementById('story-content');
+const badgeGrade = document.getElementById('badge-grade');
+const badgeLength = document.getElementById('badge-length');
+const storyDetails = document.getElementById('story-details');
+const storyDetailsToggle = document.getElementById('story-details-toggle');
+const stilRow = document.getElementById('stil-row');
 const infoThema = document.getElementById('info-thema');
 const infoPersonen = document.getElementById('info-personen');
 const infoOrt = document.getElementById('info-ort');
 const infoStimmung = document.getElementById('info-stimmung');
 const infoStil = document.getElementById('info-stil');
 
+// Details-Panel auf-/zuklappen (standardmäßig zugeklappt)
+storyDetailsToggle.addEventListener('click', () => {
+    storyDetails.classList.toggle('open');
+});
+
 // Event Listeners
 randomBtn.addEventListener('click', getRandomSuggestions);
 generateBtn.addEventListener('click', generateStory);
 backBtn.addEventListener('click', showInputForm);
+newStoryBtn.addEventListener('click', showInputForm);
+shareBtn.addEventListener('click', downloadStory);
 
 // Zufällige Vorschläge laden
 async function getRandomSuggestions() {
@@ -62,10 +99,14 @@ async function getRandomSuggestions() {
         ortInput.value = data.ort;
         stimmungInput.value = data.stimmung;
         stilInput.value = data.stil;
-        
+
+        moodChips.forEach(c => {
+            c.classList.toggle('active', c.dataset.mood === data.stimmung);
+        });
+
         // Animation für visuelle Rückmeldung
         [themaInput, personenInput, ortInput, stimmungInput, stilInput].forEach(input => {
-            input.style.background = '#e0e7ff';
+            input.style.background = 'oklch(0.94 0.03 40)';
             setTimeout(() => {
                 input.style.background = '';
             }, 500);
@@ -98,6 +139,7 @@ let streamComplete = false;
 let currentParagraphEl = null;
 let currentWordEl = null;
 let currentAbortController = null;
+let isFirstStoryChar = true;
 
 // Geschichte generieren
 async function generateStory() {
@@ -119,7 +161,9 @@ async function generateStory() {
     try {
         // UI Update
         generateBtn.disabled = true;
-        loading.style.display = 'block';
+        loading.style.display = 'flex';
+        document.body.classList.add('no-scroll');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         const response = await fetch(`${API_URL}/api/generate-story`, {
             method: 'POST',
@@ -155,6 +199,7 @@ async function generateStory() {
     } finally {
         generateBtn.disabled = false;
         loading.style.display = 'none';
+        document.body.classList.remove('no-scroll');
     }
 }
 
@@ -219,19 +264,30 @@ function dispatchStreamEvent(event) {
     }
 }
 
+// Zuletzt generierte Geschichte, für den Download-als-Datei-Button
+let currentStory = null;
+
 // Titel ist da: Buch aufschlagen und mit dem Reveal beginnen
 function onStoryTitle(title) {
     const storyTitle = document.getElementById('story-title');
     storyTitle.textContent = title || 'Eine Geschichte';
 
+    currentStory = { title: title || 'Eine Geschichte', text: '', parameters: null, grundwortschatz: [] };
+
     storyContent.innerHTML = '';
     revealQueue = '';
     currentParagraphEl = null;
     currentWordEl = null;
+    isFirstStoryChar = true;
     delete storyDisplay.dataset.streamComplete;
+
+    badgeGrade.textContent = selectedGrade === '12' ? '1./2. Klasse' : '3./4. Klasse';
+    badgeLength.textContent = `${selectedLength} Min`;
+    storyDetails.classList.remove('open');
 
     inputForm.style.display = 'none';
     loading.style.display = 'none';
+    document.body.classList.remove('no-scroll');
     storyDisplay.style.display = 'block';
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -247,18 +303,25 @@ function onStoryTitle(title) {
 // Neuer Text-Chunk kommt in die Warteschlange, nicht direkt ins DOM
 function onStoryChunk(text) {
     revealQueue += text;
+    if (currentStory) {
+        currentStory.text += text;
+    }
 }
 
 // Stream fertig: Info-Panel befüllen, Reveal-Loop läuft weiter bis die
 // Warteschlange leer ist
 function onStoryDone(grundwortschatz, parameters) {
+    if (currentStory) {
+        currentStory.parameters = parameters;
+        currentStory.grundwortschatz = grundwortschatz || [];
+    }
+
     infoThema.textContent = parameters.thema;
     infoPersonen.textContent = parameters.personen_tiere;
     infoOrt.textContent = parameters.ort;
     infoStimmung.textContent = parameters.stimmung;
 
     // Stil/Genre: nur anzeigen, wenn vorhanden
-    const stilRow = infoStil.parentElement;
     if (parameters.stil && parameters.stil.trim() !== '') {
         infoStil.textContent = parameters.stil;
         stilRow.style.display = '';
@@ -335,18 +398,119 @@ function appendRevealedText(fragment) {
             currentParagraphEl = document.createElement('p');
             storyContent.appendChild(currentParagraphEl);
         }
+        const isInitial = isFirstStoryChar && /\S/.test(ch);
+
         if (/\s/.test(ch)) {
             currentWordEl = null;
-        } else if (!currentWordEl) {
+        } else if (!currentWordEl && !isInitial) {
             currentWordEl = document.createElement('span');
             currentWordEl.className = 'ink-word';
             currentParagraphEl.appendChild(currentWordEl);
         }
         const charEl = document.createElement('span');
         charEl.className = 'ink-char';
+        if (isInitial) {
+            // Die Initiale bekommt keinen .ink-word-Wrapper: float:left auf
+            // einem inline-block-Elternteil würde sie aus dem Textfluss
+            // reißen und isoliert in einer eigenen Zeile landen.
+            charEl.classList.add('story-initial');
+            isFirstStoryChar = false;
+        }
         charEl.textContent = ch;
-        (currentWordEl || currentParagraphEl).appendChild(charEl);
+        (isInitial ? currentParagraphEl : (currentWordEl || currentParagraphEl)).appendChild(charEl);
     }
+}
+
+// Escaped Text für die Einbettung in HTML
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+// Baut aus der aktuellen Geschichte eine eigenständige HTML-Datei im
+// mAIrchen-Design und lädt sie herunter - kein Backend-Endpoint und keine
+// öffentlichen Links nötig, die App bleibt intern.
+function downloadStory() {
+    if (!currentStory || !currentStory.parameters) {
+        return;
+    }
+
+    const paragraphs = currentStory.text
+        .split('\n')
+        .map(p => p.trim())
+        .filter(Boolean)
+        .map(p => `<p>${escapeHtml(p)}</p>`)
+        .join('\n');
+
+    const p = currentStory.parameters;
+    const gradeLabel = p.klassenstufe === '12' ? '1./2. Klasse' : '3./4. Klasse';
+    const stilRowHtml = p.stil && p.stil.trim() !== ''
+        ? `<div class="story-details-item"><div class="label">Stil/Genre</div><div class="value">${escapeHtml(p.stil)}</div></div>`
+        : '';
+    const gwsText = currentStory.grundwortschatz.length > 0
+        ? currentStory.grundwortschatz.join(', ')
+        : 'Keine gefunden';
+
+    const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>${escapeHtml(currentStory.title)} - mAIrchen</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Karla:wght@400;600&display=swap');
+body{margin:0;background:oklch(0.97 0.012 68);color:oklch(0.26 0.02 50);font-family:'Karla',sans-serif;padding:40px 20px;}
+.wrap{max-width:640px;margin:0 auto;}
+.badges{display:flex;gap:8px;margin-bottom:16px;}
+.badge{font-family:'Karla',sans-serif;font-weight:600;font-size:0.75rem;padding:4px 12px;border-radius:999px;}
+.badge.grade{color:oklch(0.5 0.14 35);background:oklch(0.94 0.03 40);}
+.badge.length{color:oklch(0.42 0.09 322);background:oklch(0.93 0.03 322);}
+h1{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.8rem;margin:0 0 20px;padding-bottom:16px;border-bottom:1px solid oklch(0.89 0.016 60);}
+.story-text{font-size:1.1rem;line-height:1.8;}
+.story-text p{margin:0 0 20px;}
+.details{margin-top:32px;padding-top:16px;border-top:1px solid oklch(0.89 0.016 60);display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;}
+.story-details-item .label{font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.72rem;color:oklch(0.62 0.02 50);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+.story-details-item .value{font-size:0.9rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="badges">
+<span class="badge grade">${escapeHtml(gradeLabel)}</span>
+<span class="badge length">${escapeHtml(String(p.laenge))} Min</span>
+</div>
+<h1>${escapeHtml(currentStory.title)}</h1>
+<div class="story-text">
+${paragraphs}
+</div>
+<div class="details">
+<div class="story-details-item"><div class="label">Thema</div><div class="value">${escapeHtml(p.thema)}</div></div>
+<div class="story-details-item"><div class="label">Personen/Tiere</div><div class="value">${escapeHtml(p.personen_tiere)}</div></div>
+<div class="story-details-item"><div class="label">Ort</div><div class="value">${escapeHtml(p.ort)}</div></div>
+<div class="story-details-item"><div class="label">Stimmung</div><div class="value">${escapeHtml(p.stimmung)}</div></div>
+${stilRowHtml}
+<div class="story-details-item"><div class="label">Grundwortschatz-Wörter</div><div class="value">${escapeHtml(gwsText)}</div></div>
+</div>
+</div>
+</body>
+</html>
+`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const filename = currentStory.title
+        .toLowerCase()
+        .replace(/[^a-z0-9äöüß]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'geschichte';
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
 }
 
 // Zurück zum Formular
