@@ -1,7 +1,9 @@
 package story
 
 import (
+	"strings"
 	"testing"
+
 	"github.com/sebastiansucker/mAIrchen/backend/pkg/config"
 )
 
@@ -114,6 +116,77 @@ func TestRemoveMarkdownFormatting(t *testing.T) {
 				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
 			}
 		})
+	}
+}
+
+// feedFragments splits input into single-rune fragments to exercise the
+// worst case for streamParser: a title/ENDE marker split across many chunks.
+func feedFragments(p *streamParser, input string) {
+	for _, r := range input {
+		p.feed(string(r))
+	}
+	p.finish()
+}
+
+func TestStreamParser_TitleAndBody(t *testing.T) {
+	var title string
+	var chunks []string
+	p := newStreamParser(StreamCallbacks{
+		OnTitle: func(t string) { title = t },
+		OnChunk: func(c string) { chunks = append(chunks, c) },
+	})
+
+	feedFragments(p, "TITEL: Der kleine Hase\nEs war einmal ein kleiner Hase.\nENDE")
+
+	if title != "Der kleine Hase" {
+		t.Errorf("expected title 'Der kleine Hase', got %q", title)
+	}
+	got := strings.Join(chunks, "")
+	if !strings.Contains(got, "Es war einmal ein kleiner Hase.") {
+		t.Errorf("expected body to contain the story text, got %q", got)
+	}
+	if strings.Contains(got, "ENDE") {
+		t.Errorf("raw ENDE marker must never be emitted as a chunk, got %q", got)
+	}
+	if !strings.Contains(p.fullStory.String(), "★ ENDE ★") {
+		t.Errorf("expected decorative ENDE footer in full story, got %q", p.fullStory.String())
+	}
+}
+
+func TestStreamParser_MissingTitel(t *testing.T) {
+	var title string
+	var chunks []string
+	p := newStreamParser(StreamCallbacks{
+		OnTitle: func(t string) { title = t },
+		OnChunk: func(c string) { chunks = append(chunks, c) },
+	})
+
+	feedFragments(p, "Eine Geschichte ganz ohne Titelmarker.")
+
+	if title != "Ohne Titel" {
+		t.Errorf("expected fallback title 'Ohne Titel', got %q", title)
+	}
+	got := strings.Join(chunks, "")
+	if !strings.Contains(got, "Eine Geschichte ganz ohne Titelmarker.") {
+		t.Errorf("expected full text to be treated as body, got %q", got)
+	}
+}
+
+func TestStreamParser_MarkdownStrippedPerLine(t *testing.T) {
+	var chunks []string
+	p := newStreamParser(StreamCallbacks{
+		OnTitle: func(string) {},
+		OnChunk: func(c string) { chunks = append(chunks, c) },
+	})
+
+	feedFragments(p, "TITEL: Titel\n**Fett** und *kursiv* Text.\nENDE")
+
+	got := strings.Join(chunks, "")
+	if strings.Contains(got, "*") {
+		t.Errorf("expected markdown markers to be stripped, got %q", got)
+	}
+	if !strings.Contains(got, "Fett und kursiv Text.") {
+		t.Errorf("expected cleaned text, got %q", got)
 	}
 }
 

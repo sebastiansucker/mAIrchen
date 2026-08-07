@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
@@ -47,13 +48,28 @@ var (
 	rateLimitLock sync.Mutex
 )
 
-// Models
-type StoryResponse struct {
-	Success         bool                   `json:"success"`
-	Title           string                 `json:"title"`
-	Story           string                 `json:"story"`
+// Streaming response events, written as newline-delimited JSON while the
+// story is generated.
+type streamTitleEvent struct {
+	Type  string `json:"type"`
+	Title string `json:"title"`
+}
+
+type streamChunkEvent struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type streamDoneEvent struct {
+	Type            string                 `json:"type"`
 	Grundwortschatz []string               `json:"grundwortschatz"`
+	TokensUsed      int                    `json:"tokens_used"`
 	Parameters      map[string]interface{} `json:"parameters"`
+}
+
+type streamErrorEvent struct {
+	Type   string `json:"type"`
+	Detail string `json:"detail"`
 }
 
 type RandomSuggestionsResponse struct {
@@ -379,12 +395,48 @@ func handleGenerateStory(c *gin.Context) {
 
 	log.Printf("Story-Generierung gestartet - IP: %s", clientIP)
 
+	// Ab hier wird die Antwort als NDJSON gestreamt. Der HTTP-Status 200 wird
+	// jetzt sofort committed und geflusht - ein späterer Fehler kann also
+	// keinen neuen HTTP-Statuscode mehr senden (Header sind bereits raus).
+	// Fehler nach diesem Punkt werden stattdessen als In-Band "error"-Event
+	// übertragen; der Client muss dieses Event unabhängig vom (bereits
+	// erfolgreichen) HTTP-Status als Fehlschlag behandeln.
+	c.Writer.Header().Set("Content-Type", "application/x-ndjson")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("X-Accel-Buffering", "no")
+	c.Writer.WriteHeader(http.StatusOK)
+	c.Writer.Flush()
+
+	writeEvent := func(v interface{}) {
+		b, err := json.Marshal(v)
+		if err != nil {
+			log.Printf("Fehler beim Marshalling des Stream-Events: %v", err)
+			return
+		}
+		if _, err := c.Writer.Write(b); err != nil {
+			log.Printf("Fehler beim Schreiben des Stream-Events: %v", err)
+			return
+		}
+		if _, err := c.Writer.Write([]byte("\n")); err != nil {
+			log.Printf("Fehler beim Schreiben des Stream-Events: %v", err)
+			return
+		}
+		c.Writer.Flush()
+	}
+
 	// Generate story using the story generator
 	ctx := c.Request.Context()
-	generatedStory, err := storyGenerator.Generate(ctx, req)
+	generatedStory, err := storyGenerator.Generate(ctx, req, story.StreamCallbacks{
+		OnTitle: func(title string) {
+			writeEvent(streamTitleEvent{Type: "title", Title: title})
+		},
+		OnChunk: func(text string) {
+			writeEvent(streamChunkEvent{Type: "chunk", Text: text})
+		},
+	})
 	if err != nil {
 		log.Printf("Fehler beim Generieren der Geschichte: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"detail": fmt.Sprintf("Fehler beim Generieren der Geschichte: %v", err)})
+		writeEvent(streamErrorEvent{Type: "error", Detail: fmt.Sprintf("Fehler beim Generieren der Geschichte: %v", err)})
 		return
 	}
 
@@ -410,11 +462,10 @@ func handleGenerateStory(c *gin.Context) {
 	dailyCost.cost += actualCost - CostPerRequest
 	rateLimitLock.Unlock()
 
-	c.JSON(http.StatusOK, StoryResponse{
-		Success:         true,
-		Title:           generatedStory.Title,
-		Story:           generatedStory.Content,
+	writeEvent(streamDoneEvent{
+		Type:            "done",
 		Grundwortschatz: generatedStory.Grundwortschatz,
+		TokensUsed:      generatedStory.TokensUsed,
 		Parameters: map[string]interface{}{
 			"thema":          req.Thema,
 			"personen_tiere": req.PersonenTiere,

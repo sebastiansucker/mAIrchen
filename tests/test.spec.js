@@ -26,7 +26,12 @@ test.describe('mAIrchen Story Generation', () => {
     
     // Wait for the story display to be visible (max 90 seconds for longer story)
     await page.waitForSelector('#story-display', { state: 'visible', timeout: 90000 });
-    
+
+    // Story text streams in progressively (pen-reveal animation) - wait for
+    // the stream to fully drain before reading title/content, otherwise we
+    // might only capture partial text
+    await page.waitForSelector('#story-display[data-stream-complete="true"]', { timeout: 90000 });
+
     // Verify story title is present
     const storyTitle = await page.locator('#story-title').textContent();
     expect(storyTitle.length).toBeGreaterThan(0);
@@ -64,7 +69,11 @@ test.describe('mAIrchen Story Generation', () => {
     
     // Wait for story to be generated
     await page.waitForSelector('#story-display', { state: 'visible', timeout: 90000 });
-    
+
+    // Story text streams in progressively - wait for the stream to fully
+    // drain before reading title/content
+    await page.waitForSelector('#story-display[data-stream-complete="true"]', { timeout: 90000 });
+
     // Verify story was created
     const storyTitle = await page.locator('#story-title').textContent();
     expect(storyTitle.length).toBeGreaterThan(0);

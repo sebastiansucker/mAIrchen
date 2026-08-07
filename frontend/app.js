@@ -78,6 +78,26 @@ async function getRandomSuggestions() {
     }
 }
 
+// Stift-Reveal-Animation: Zeichen aus der Warteschlange werden portionsweise
+// unabhängig vom Netzwerk-Timing angezeigt, damit der Text gleichmäßig
+// "geschrieben" wirkt statt in Netzwerk-Bursts zu erscheinen.
+// Solange der Stream noch läuft, wird mit einer sanften Grundrate enthüllt.
+// Sobald der Stream fertig ist (streamComplete), wird die Portionsgröße so
+// berechnet, dass der GESAMTE Rest garantiert innerhalb von
+// REVEAL_MAX_CATCHUP_MS fertig angezeigt ist - unabhängig davon, wie viel
+// noch übrig ist. Ohne das würde eine feste oder nur asymptotisch wachsende
+// Rate bei langen Geschichten (mehrere tausend Zeichen) die Animation
+// minutenlang hinter dem bereits fertigen Text herhinken lassen.
+const REVEAL_BASE_CHARS_PER_TICK = 2;
+const REVEAL_INTERVAL_MS = 25;
+const REVEAL_MAX_CATCHUP_MS = 8000;
+
+let revealQueue = '';
+let revealTimer = null;
+let streamComplete = false;
+let currentParagraphEl = null;
+let currentAbortController = null;
+
 // Geschichte generieren
 async function generateStory() {
     const thema = themaInput.value.trim();
@@ -86,18 +106,20 @@ async function generateStory() {
     const stimmung = stimmungInput.value.trim();
     const stil = stilInput.value.trim();
     const laenge = selectedLength;
-    
+
     // Validierung
     if (!thema || !personen || !ort || !stimmung) {
         alert('Bitte fülle alle Pflichtfelder aus!');
         return;
     }
-    
+
+    currentAbortController = new AbortController();
+
     try {
         // UI Update
         generateBtn.disabled = true;
         loading.style.display = 'block';
-        
+
         const response = await fetch(`${API_URL}/api/generate-story`, {
             method: 'POST',
             headers: {
@@ -111,46 +133,128 @@ async function generateStory() {
                 stil: stil,
                 laenge: laenge,
                 klassenstufe: selectedGrade
-            })
+            }),
+            signal: currentAbortController.signal
         });
-        
-        const data = await response.json();
-        
+
         if (!response.ok) {
-            // Zeige spezifische Fehlermeldung vom Server
-            const errorMsg = data.detail || 'Fehler beim Generieren der Geschichte';
-            throw new Error(errorMsg);
+            // Fehler vor Streaming-Start (z.B. Rate-Limit, Validierung) -
+            // hier liefert der Server noch eine normale JSON-Fehlerantwort
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.detail || 'Fehler beim Generieren der Geschichte');
         }
-        
-        if (data.success) {
-            displayStory(data.story, data.title, data.parameters, data.grundwortschatz);
-        } else {
-            throw new Error('Keine Geschichte erhalten');
-        }
+
+        await consumeStoryStream(response);
     } catch (error) {
+        if (error.name === 'AbortError') {
+            return;
+        }
         console.error('Fehler:', error);
-        alert('Fehler beim Erstellen der Geschichte. Bitte versuche es erneut.');
+        handleStreamError(error.message || 'Fehler beim Erstellen der Geschichte. Bitte versuche es erneut.');
     } finally {
         generateBtn.disabled = false;
         loading.style.display = 'none';
     }
 }
 
-// Geschichte anzeigen
-function displayStory(story, title, parameters, grundwortschatz = []) {
-    // Formatiere die Geschichte mit Absätzen
-    const formattedStory = formatStoryText(story);
-    
-    // Setze Titel
+// Liest die NDJSON-Stream-Antwort und dispatcht jedes Event
+async function consumeStoryStream(response) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let sawTerminalEvent = false;
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                const event = JSON.parse(line);
+                if (dispatchStreamEvent(event)) {
+                    sawTerminalEvent = true;
+                }
+            }
+        }
+
+        if (buffer.trim()) {
+            const event = JSON.parse(buffer);
+            if (dispatchStreamEvent(event)) {
+                sawTerminalEvent = true;
+            }
+        }
+
+        if (!sawTerminalEvent) {
+            throw new Error('Verbindung wurde unterbrochen, bevor die Geschichte fertig war.');
+        }
+    } finally {
+        reader.releaseLock();
+    }
+}
+
+// Verarbeitet ein einzelnes Stream-Event. Gibt true zurück, wenn es den
+// Stream beendet (done oder error).
+function dispatchStreamEvent(event) {
+    switch (event.type) {
+        case 'title':
+            onStoryTitle(event.title);
+            return false;
+        case 'chunk':
+            onStoryChunk(event.text);
+            return false;
+        case 'done':
+            onStoryDone(event.grundwortschatz, event.parameters);
+            return true;
+        case 'error':
+            throw new Error(event.detail || 'Fehler beim Erstellen der Geschichte.');
+        default:
+            console.warn('Unbekanntes Stream-Event:', event);
+            return false;
+    }
+}
+
+// Titel ist da: Buch aufschlagen und mit dem Reveal beginnen
+function onStoryTitle(title) {
     const storyTitle = document.getElementById('story-title');
     storyTitle.textContent = title || 'Eine Geschichte';
-    
-    storyContent.innerHTML = formattedStory;
+
+    storyContent.innerHTML = '';
+    revealQueue = '';
+    currentParagraphEl = null;
+    delete storyDisplay.dataset.streamComplete;
+
+    inputForm.style.display = 'none';
+    loading.style.display = 'none';
+    storyDisplay.style.display = 'block';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    setTimeout(() => {
+        storyDisplay.classList.remove('book-closed');
+        storyDisplay.classList.add('book-opening');
+    }, 100);
+
+    startRevealLoop();
+}
+
+// Neuer Text-Chunk kommt in die Warteschlange, nicht direkt ins DOM
+function onStoryChunk(text) {
+    revealQueue += text;
+}
+
+// Stream fertig: Info-Panel befüllen, Reveal-Loop läuft weiter bis die
+// Warteschlange leer ist
+function onStoryDone(grundwortschatz, parameters) {
     infoThema.textContent = parameters.thema;
     infoPersonen.textContent = parameters.personen_tiere;
     infoOrt.textContent = parameters.ort;
     infoStimmung.textContent = parameters.stimmung;
-    
+
     // Stil/Genre: nur anzeigen, wenn vorhanden
     const stilRow = infoStil.parentElement;
     if (parameters.stil && parameters.stil.trim() !== '') {
@@ -159,7 +263,7 @@ function displayStory(story, title, parameters, grundwortschatz = []) {
     } else {
         stilRow.style.display = 'none';
     }
-    
+
     // Zeige Grundwortschatz-Wörter an
     const infoGrundwortschatz = document.getElementById('info-grundwortschatz');
     if (grundwortschatz && grundwortschatz.length > 0) {
@@ -167,43 +271,77 @@ function displayStory(story, title, parameters, grundwortschatz = []) {
     } else {
         infoGrundwortschatz.textContent = 'Keine gefunden';
     }
-    
-    // Ansicht wechseln
-    inputForm.style.display = 'none';
-    storyDisplay.style.display = 'block';
-    
-    // Scrolle nach oben
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Trigger Buch-Öffnungs-Animation
-    setTimeout(() => {
-        storyDisplay.classList.remove('book-closed');
-        storyDisplay.classList.add('book-opening');
-    }, 100);
+
+    streamComplete = true;
 }
 
-// HTML escapen, damit vom Modell zurückgegebener Text nicht als Markup interpretiert wird
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+function handleStreamError(message) {
+    stopRevealLoop();
+    alert(message);
 }
 
-// Text formatieren
-function formatStoryText(text) {
-    // Teile den Text in Absätze
-    const paragraphs = text.split('\n').filter(p => p.trim().length > 0);
+function startRevealLoop() {
+    stopRevealLoop();
+    streamComplete = false;
+    revealTimer = setInterval(tickReveal, REVEAL_INTERVAL_MS);
+}
 
-    // Erstelle HTML mit Absätzen und formatiere Markdown-Fettdruck
-    return paragraphs.map(p => {
-        // Erst escapen, dann **text** durch <strong>text</strong> ersetzen
-        const formatted = escapeHtml(p.trim()).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        return `<p>${formatted}</p>`;
-    }).join('');
+function stopRevealLoop() {
+    if (revealTimer) {
+        clearInterval(revealTimer);
+        revealTimer = null;
+    }
+}
+
+function tickReveal() {
+    if (revealQueue.length === 0) {
+        if (streamComplete) {
+            stopRevealLoop();
+            storyDisplay.dataset.streamComplete = 'true';
+        }
+        return;
+    }
+
+    let charsPerTick = REVEAL_BASE_CHARS_PER_TICK;
+    if (streamComplete) {
+        // Kein weiterer Nachschub mehr zu erwarten - den bekannten Rest in
+        // einer festen Zeitspanne abbauen, egal wie groß er ist.
+        const remainingTicks = Math.max(1, Math.ceil(REVEAL_MAX_CATCHUP_MS / REVEAL_INTERVAL_MS));
+        charsPerTick = Math.max(charsPerTick, Math.ceil(revealQueue.length / remainingTicks));
+    }
+
+    const take = revealQueue.slice(0, charsPerTick);
+    revealQueue = revealQueue.slice(charsPerTick);
+    appendRevealedText(take);
+}
+
+// Hängt ein paar Zeichen an den aktuellen Absatz an; \n schließt den
+// aktuellen Absatz und öffnet beim nächsten Zeichen einen neuen. Jedes
+// Zeichen bekommt einen eigenen <span> mit "Tinten-Tupfer"-Animation
+// (siehe .ink-char in styles.css).
+function appendRevealedText(fragment) {
+    for (const ch of fragment) {
+        if (ch === '\n') {
+            currentParagraphEl = null;
+            continue;
+        }
+        if (!currentParagraphEl) {
+            currentParagraphEl = document.createElement('p');
+            storyContent.appendChild(currentParagraphEl);
+        }
+        const charEl = document.createElement('span');
+        charEl.className = 'ink-char';
+        charEl.textContent = ch;
+        currentParagraphEl.appendChild(charEl);
+    }
 }
 
 // Zurück zum Formular
 function showInputForm() {
+    if (currentAbortController) {
+        currentAbortController.abort();
+    }
+    stopRevealLoop();
     storyDisplay.style.display = 'none';
     storyDisplay.classList.remove('book-opening');
     storyDisplay.classList.add('book-closed');
