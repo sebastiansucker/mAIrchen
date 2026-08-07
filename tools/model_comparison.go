@@ -300,7 +300,10 @@ func runTest(gen *story.Generator, testCase TestCase, modelConfig ModelConfig, g
 	defer cancel()
 
 	startTime := time.Now()
-	generatedStory, err := gen.Generate(ctx, req)
+	generatedStory, err := gen.Generate(ctx, req, story.StreamCallbacks{
+		OnTitle: func(string) {},
+		OnChunk: func(string) {},
+	})
 	generationTime := time.Since(startTime).Seconds()
 
 	if err != nil {
