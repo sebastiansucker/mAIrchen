@@ -20,8 +20,12 @@ let selectedGrade = '34'; // Standard: 3/4 Klasse
 // Length Button Event Listeners
 lengthButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-        lengthButtons.forEach(b => b.classList.remove('active'));
+        lengthButtons.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-checked', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-checked', 'true');
         selectedLength = parseInt(btn.dataset.length);
     });
 });
@@ -29,8 +33,12 @@ lengthButtons.forEach(btn => {
 // Grade Button Event Listeners
 gradeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-        gradeButtons.forEach(b => b.classList.remove('active'));
+        gradeButtons.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-checked', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-checked', 'true');
         selectedGrade = btn.dataset.grade;
     });
 });

@@ -123,3 +123,41 @@ test.describe('mAIrchen Story Generation', () => {
     await expect(thema).not.toHaveAttribute('aria-invalid', 'true');
   });
 });
+
+test.describe('mAIrchen Accessibility', () => {
+  test('grade and length buttons expose their selection state to assistive tech', async ({ page }) => {
+    // Navigate to the app
+    await page.goto('http://localhost:80');
+
+    // Groups are marked as radiogroups, labelled by their existing text label
+    await expect(page.locator('.grade-buttons')).toHaveAttribute('role', 'radiogroup');
+    await expect(page.locator('.length-buttons')).toHaveAttribute('role', 'radiogroup');
+
+    const gradeButtons = page.locator('.grade-btn');
+    const lengthButtons = page.locator('.length-btn');
+
+    // Every button is a radio and exposes aria-checked
+    for (const buttons of [gradeButtons, lengthButtons]) {
+      const count = await buttons.count();
+      for (let i = 0; i < count; i++) {
+        await expect(buttons.nth(i)).toHaveAttribute('role', 'radio');
+      }
+    }
+
+    // Default selection (3./4. Klasse, 10 Min) is reflected in aria-checked
+    await expect(page.locator('.grade-btn[data-grade="34"]')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('.grade-btn[data-grade="12"]')).toHaveAttribute('aria-checked', 'false');
+    await expect(page.locator('.length-btn[data-length="10"]')).toHaveAttribute('aria-checked', 'true');
+
+    // Clicking a different grade button updates aria-checked on both buttons
+    await page.click('.grade-btn[data-grade="12"]');
+    await expect(page.locator('.grade-btn[data-grade="12"]')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('.grade-btn[data-grade="34"]')).toHaveAttribute('aria-checked', 'false');
+
+    // Clicking a different length button updates aria-checked on all three buttons
+    await page.click('.length-btn[data-length="15"]');
+    await expect(page.locator('.length-btn[data-length="15"]')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.locator('.length-btn[data-length="10"]')).toHaveAttribute('aria-checked', 'false');
+    await expect(page.locator('.length-btn[data-length="5"]')).toHaveAttribute('aria-checked', 'false');
+  });
+});

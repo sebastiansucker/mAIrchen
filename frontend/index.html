@@ -33,10 +33,10 @@
 
             <main class="app-panel-body">
                 <div class="form-group">
-                    <label>Klassenstufe:</label>
-                    <div class="grade-buttons">
-                        <button type="button" class="grade-btn" data-grade="12">1./2. Klasse</button>
-                        <button type="button" class="grade-btn active" data-grade="34">3./4. Klasse</button>
+                    <label id="grade-label">Klassenstufe:</label>
+                    <div class="grade-buttons" role="radiogroup" aria-labelledby="grade-label">
+                        <button type="button" class="grade-btn" data-grade="12" role="radio" aria-checked="false">1./2. Klasse</button>
+                        <button type="button" class="grade-btn active" data-grade="34" role="radio" aria-checked="true">3./4. Klasse</button>
                     </div>
                 </div>
 
@@ -77,11 +77,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Länge der Geschichte:</label>
-                    <div class="length-buttons">
-                        <button type="button" class="length-btn" data-length="5">5 Min</button>
-                        <button type="button" class="length-btn active" data-length="10">10 Min</button>
-                        <button type="button" class="length-btn" data-length="15">15 Min</button>
+                    <label id="length-label">Länge der Geschichte:</label>
+                    <div class="length-buttons" role="radiogroup" aria-labelledby="length-label">
+                        <button type="button" class="length-btn" data-length="5" role="radio" aria-checked="false">5 Min</button>
+                        <button type="button" class="length-btn active" data-length="10" role="radio" aria-checked="true">10 Min</button>
+                        <button type="button" class="length-btn" data-length="15" role="radio" aria-checked="false">15 Min</button>
                     </div>
                 </div>
 
