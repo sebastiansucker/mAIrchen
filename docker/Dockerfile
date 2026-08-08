@@ -30,6 +30,7 @@ COPY frontend/ /usr/share/nginx/html/
 
 # Copy nginx configuration
 COPY docker/nginx-combined.conf /etc/nginx/conf.d/default.conf
+COPY docker/security-headers.conf /etc/nginx/security-headers.conf
 
 # Copy startup script
 COPY docker/start-go.sh /start.sh
