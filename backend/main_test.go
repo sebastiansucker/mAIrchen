@@ -875,6 +875,19 @@ func TestHandleGenerateStory_ReportsProviderFailureAsInBandErrorEvent(t *testing
 	if detail, _ := events[0]["detail"].(string); !strings.Contains(detail, "Fehler beim Generieren") {
 		t.Errorf("expected a generation error detail, got %q", detail)
 	}
+
+	// checkRateLimit reserved CostPerRequest when the request was admitted.
+	// Since generation failed, nothing was actually spent, so that
+	// reservation must be refunded rather than left standing - otherwise a
+	// misconfigured provider or an upstream outage inflates dailyCost.cost on
+	// every failed attempt until the daily budget trips and the service
+	// pauses itself despite having spent nothing.
+	rateLimitLock.Lock()
+	got := dailyCost.cost
+	rateLimitLock.Unlock()
+	if got != 0 {
+		t.Errorf("a failed generation must refund the reserved cost, got dailyCost.cost = %f", got)
+	}
 }
 
 // ---------------------------------------------------------------------------
