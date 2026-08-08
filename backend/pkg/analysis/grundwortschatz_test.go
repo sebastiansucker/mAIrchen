@@ -101,6 +101,48 @@ func TestFindGrundwortschatzInText_Sorting(t *testing.T) {
 	}
 }
 
+func TestFindGrundwortschatzInText_UmlautWordStart(t *testing.T) {
+	// Setup - words starting with an umlaut, as found in the embedded
+	// Grundwortschatz (e.g. "über", "ähnlich", "ändern", "ärgern").
+	gwsDict := map[string]string{
+		"über":    "Über",
+		"ähnlich": "Ähnlich",
+		"ändern":  "Ändern",
+		"ärgern":  "Ärgern",
+	}
+
+	tests := []struct {
+		name     string
+		text     string
+		expected []string
+	}{
+		{
+			name:     "umlaut word after whitespace",
+			text:     "Der Hase sprang über den Zaun.",
+			expected: []string{"Über"},
+		},
+		{
+			name:     "umlaut word at sentence start",
+			text:     "Ähnlich sah es gestern schon aus.",
+			expected: []string{"Ähnlich"},
+		},
+		{
+			name:     "multiple umlaut words",
+			text:     "Er wollte nichts ändern, doch das würde ihn nur ärgern.",
+			expected: []string{"Ändern", "Ärgern"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := FindGrundwortschatzInText(tt.text, gwsDict)
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("Expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
+
 func TestFindGrundwortschatzInText_NoDuplicates(t *testing.T) {
 	// Setup
 	gwsDict := map[string]string{
