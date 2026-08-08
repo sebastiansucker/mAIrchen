@@ -77,7 +77,7 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest, cb St
 	}
 	client := openai.NewClientWithConfig(clientConfig)
 
-	stream, err := client.CreateChatCompletionStream(ctx, openai.ChatCompletionRequest{
+	stream, err := createChatCompletionStreamWithRetry(ctx, client, openai.ChatCompletionRequest{
 		Model: model,
 		Messages: []openai.ChatCompletionMessage{
 			{Role: openai.ChatMessageRoleSystem, Content: systemPrompt},
@@ -139,6 +139,37 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest, cb St
 		TokensUsed:      tokensUsed,
 		GenerationTime:  generationTime,
 	}, nil
+}
+
+// streamRetryAttempts is how many extra tries are made to open the stream
+// (i.e. up to this many retries after the first attempt) if the initial
+// connection fails - e.g. a transient DNS lookup failure against a local
+// Ollama host. Only the connection setup is retried, never anything after
+// the first chunk has already reached the client, since re-sending from
+// scratch at that point would show duplicated/inconsistent text.
+const streamRetryAttempts = 2
+
+var streamRetryDelay = 500 * time.Millisecond
+
+func createChatCompletionStreamWithRetry(ctx context.Context, client *openai.Client, req openai.ChatCompletionRequest) (*openai.ChatCompletionStream, error) {
+	var lastErr error
+	for attempt := 0; attempt <= streamRetryAttempts; attempt++ {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(streamRetryDelay):
+			}
+			fmt.Printf("⚠️  Verbindungsaufbau fehlgeschlagen, Versuch %d/%d: %v\n", attempt+1, streamRetryAttempts+1, lastErr)
+		}
+
+		stream, err := client.CreateChatCompletionStream(ctx, req)
+		if err == nil {
+			return stream, nil
+		}
+		lastErr = err
+	}
+	return nil, lastErr
 }
 
 // streamParser consumes incremental Delta.Content fragments from the LLM
