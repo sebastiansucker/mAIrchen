@@ -44,7 +44,17 @@ test.describe('mAIrchen Story Generation', () => {
     // Verify Grundwortschatz words are displayed
     const gwsInfo = await page.locator('#info-grundwortschatz').textContent();
     expect(gwsInfo.length).toBeGreaterThan(0);
-    
+
+    // Story text should be left-aligned (not justified) and hyphenate/wrap
+    // long German compound words instead of overflowing narrow columns
+    const storyTextStyle = await page.locator('#story-content').evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { textAlign: cs.textAlign, hyphens: cs.hyphens, overflowWrap: cs.overflowWrap };
+    });
+    expect(storyTextStyle.textAlign).toBe('left');
+    expect(storyTextStyle.hyphens).toBe('auto');
+    expect(storyTextStyle.overflowWrap).toBe('break-word');
+
     console.log(`Story generated successfully with title: "${storyTitle}"`);
     console.log(`Story length: ${storyContent.length} characters`);
     console.log(`Grundwortschatz info: ${gwsInfo}`);
