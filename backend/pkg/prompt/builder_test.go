@@ -3,6 +3,8 @@ package prompt
 import (
 	"strings"
 	"testing"
+
+	"github.com/sebastiansucker/mAIrchen/backend/pkg/data"
 )
 
 func TestBuildPrompt_Klasse12(t *testing.T) {
@@ -51,6 +53,10 @@ func TestBuildPrompt_Klasse12(t *testing.T) {
 
 	if !strings.Contains(userPrompt, "TITEL:") {
 		t.Error("User prompt should contain format instructions with TITEL:")
+	}
+
+	if strings.Contains(userPrompt, "Grundwortschatz für Jahrgangsstufen 3 und 4") {
+		t.Error("User prompt for Klasse 1-2 should not contain the Klasse 3-4 Grundwortschatz section")
 	}
 }
 
@@ -139,20 +145,26 @@ func TestGetGWSContent(t *testing.T) {
 	}
 }
 
-func TestSplitGWSContent(t *testing.T) {
+func TestKlasse12Grundwortschatz(t *testing.T) {
 	// Execute
-	parts := splitGWSContent()
+	content := klasse12Grundwortschatz()
 
 	// Assert
-	if len(parts) == 0 {
-		t.Error("Expected at least one part from split")
+	if len(content) == 0 {
+		t.Error("Expected Klasse 1-2 Grundwortschatz content to be non-empty")
 	}
 
-	// If separator exists, should have 2 parts
-	if len(parts) == 2 {
-		if !strings.Contains(parts[1], "Grundwortschatz für Jahrgangsstufen 3 und 4") {
-			t.Error("Second part should contain Klasse 3-4 section")
-		}
+	if strings.Contains(content, "Grundwortschatz für Jahrgangsstufen 3 und 4") {
+		t.Error("Klasse 1-2 content should not contain the Klasse 3-4 section")
+	}
+
+	if len(content) >= len(data.GrundwortschatzContent) {
+		t.Error("Klasse 1-2 content should be a strict subset of the full Grundwortschatz content")
+	}
+
+	// Calling again must return the identical cached value.
+	if again := klasse12Grundwortschatz(); again != content {
+		t.Error("Expected klasse12Grundwortschatz to return the cached value on repeated calls")
 	}
 }
 
