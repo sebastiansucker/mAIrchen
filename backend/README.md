@@ -5,13 +5,13 @@ Go-Implementierung des mAIrchen Backends.
 ## Entwicklung
 
 ### Voraussetzungen
-- Go 1.21 oder höher
+- Go 1.25 oder höher (CI/Docker-Build nutzen 1.26)
 - Docker und Docker Compose (optional)
 
 ### Lokal ausführen
 
 ```bash
-cd backend-go
+cd backend
 
 # Dependencies installieren
 go mod download
@@ -25,15 +25,17 @@ go run main.go
 
 ### Mit Docker
 
+Vom Repository-Root aus (nicht aus `backend/`):
+
 ```bash
 # Build und Start
-docker-compose -f docker/docker-compose-go.yml --env-file .env up -d
+docker-compose up --build -d
 
 # Logs anzeigen
-docker-compose -f docker/docker-compose-go.yml logs -f
+docker-compose logs -f
 
 # Stoppen
-docker-compose -f docker/docker-compose-go.yml down
+docker-compose down
 ```
 
 ## Umgebungsvariablen
@@ -61,8 +63,6 @@ Siehe `.env.example` für alle verfügbaren Konfigurationsoptionen.
 
 ## Performance
 
-Das Go-Backend ist deutlich performanter als die Python-Version:
-- Schnellerer Start (~0.1s vs ~2s)
-- Geringerer Memory-Footprint (~10MB vs ~50MB)
-- Bessere Concurrency durch Goroutines
-- Kein GIL (Global Interpreter Lock)
+- Schneller Start (~0.1s)
+- Geringer Memory-Footprint (~10MB)
+- Gute Concurrency durch Goroutines
