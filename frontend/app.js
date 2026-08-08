@@ -453,6 +453,7 @@ function tickReveal() {
     if (revealQueue.length === 0) {
         if (streamComplete) {
             stopRevealLoop();
+            finalizeStoryContent();
             storyDisplay.dataset.streamComplete = 'true';
         }
         return;
@@ -518,6 +519,74 @@ function escapeHtml(value) {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+// Erkennt zusammenhängende Buchstabenfolgen (inkl. Umlaute/ß dank \p{L}),
+// um sie einzeln gegen die erkannten Grundwortschatz-Wörter zu prüfen.
+const GWS_WORD_TOKEN_REGEX = /\p{L}+/gu;
+
+// Das Backend erkennt ein Grundwortschatz-Wort auch als Präfix eines
+// längeren Worts (Regex `\bwort\w*\b`, siehe backend/pkg/analysis), z.B.
+// zählt "ab" schon als Treffer, wenn nur "abends" im Text vorkommt. Damit
+// wirklich jedes vom Backend gemeldete Wort auch im Fließtext sichtbar
+// hervorgehoben wird, hebt die Prüfung hier ebenso Wörter hervor, die mit
+// einem der gemeldeten Grundwortschatz-Wörter beginnen.
+function buildGwsMatcher(words) {
+    const lowerWords = (words || []).map(w => w.toLowerCase());
+    if (lowerWords.length === 0) {
+        return null;
+    }
+    return (word) => {
+        const lower = word.toLowerCase();
+        return lowerWords.some(w => lower.startsWith(w));
+    };
+}
+
+// Ersetzt Grundwortschatz-Treffer in rohem (noch nicht escapetem) Text durch
+// <mark>-Elemente. Escaping passiert stückweise für Treffer und Lücken
+// dazwischen, damit &/</> im Story-Text nie ungeescaped ins Markup gelangen.
+function highlightGrundwortschatzWords(text, isGwsMatch) {
+    if (!isGwsMatch) {
+        return escapeHtml(text);
+    }
+    let html = '';
+    let lastIndex = 0;
+    for (const match of text.matchAll(GWS_WORD_TOKEN_REGEX)) {
+        const word = match[0];
+        html += escapeHtml(text.slice(lastIndex, match.index));
+        html += isGwsMatch(word)
+            ? `<mark class="gws-highlight">${escapeHtml(word)}</mark>`
+            : escapeHtml(word);
+        lastIndex = match.index + word.length;
+    }
+    html += escapeHtml(text.slice(lastIndex));
+    return html;
+}
+
+// Baut das finale (nicht mehr animierte) Story-Markup: Absätze mit
+// hervorgehobenen Grundwortschatz-Wörtern, plus der große Initialbuchstabe
+// auf dem ersten Absatz - wie zuvor durch die Zeichen-Reveal-Animation.
+function buildStoryContentHtml(text, grundwortschatzWords) {
+    const isGwsMatch = buildGwsMatcher(grundwortschatzWords);
+    const paragraphs = text.split('\n').map(p => p.trim()).filter(Boolean);
+    return paragraphs.map((paragraph, index) => {
+        if (index === 0) {
+            const firstChar = paragraph.slice(0, 1);
+            const rest = paragraph.slice(1);
+            return `<p><span class="story-initial">${escapeHtml(firstChar)}</span>${highlightGrundwortschatzWords(rest, isGwsMatch)}</p>`;
+        }
+        return `<p>${highlightGrundwortschatzWords(paragraph, isGwsMatch)}</p>`;
+    }).join('');
+}
+
+// Ersetzt die Zeichen-für-Zeichen animierten Spans durch das finale,
+// hervorgehobene Markup, sobald der Reveal fertig ist - die Tinten-Tupfer-
+// Animation ist zu diesem Zeitpunkt für jedes Zeichen bereits abgespielt.
+function finalizeStoryContent() {
+    if (!currentStory) {
+        return;
+    }
+    storyContent.innerHTML = buildStoryContentHtml(currentStory.text, currentStory.grundwortschatz);
 }
 
 // Icon-Markup des Kopieren-Buttons, um nach dem Kopieren kurz auf ein
