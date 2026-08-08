@@ -124,6 +124,65 @@ test.describe('mAIrchen Story Generation', () => {
   });
 });
 
+test.describe('mAIrchen Story Actions', () => {
+  test('copy and print buttons let you copy/print the finished story', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+    // window.print() would otherwise pop up an OS print dialog that blocks
+    // the test; replace it with a spy so we can assert it was invoked
+    await page.addInitScript(() => {
+      window.__printCalled = false;
+      window.print = () => { window.__printCalled = true; };
+    });
+
+    await page.goto('http://localhost:80');
+
+    await page.fill('#thema', 'Freundschaft');
+    await page.fill('#personen', 'Ein kleiner Hase');
+    await page.fill('#ort', 'im Wald');
+    await page.fill('#stimmung', 'fröhlich');
+    await page.click('button.length-btn[data-length="5"]');
+    await page.click('#generate-btn');
+
+    await page.waitForSelector('#story-display', { state: 'visible', timeout: 90000 });
+    await page.waitForSelector('#story-display[data-stream-complete="true"]', { timeout: 90000 });
+
+    const storyTitle = await page.locator('#story-title').textContent();
+    const storyContent = await page.locator('#story-content').textContent();
+
+    // Copying puts title + text on the clipboard and shows brief feedback
+    const copyBtn = page.locator('#copy-btn');
+    await expect(copyBtn).toHaveAttribute('aria-label', 'Geschichte in die Zwischenablage kopieren');
+    await copyBtn.click();
+    await expect(copyBtn).toHaveClass(/copied/);
+    await expect(copyBtn).toHaveAttribute('aria-label', 'In die Zwischenablage kopiert');
+
+    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardText).toContain(storyTitle);
+    expect(clipboardText).toContain(storyContent.trim().slice(0, 50));
+
+    // Feedback reverts back to the normal copy icon/label after a moment
+    await expect(copyBtn).not.toHaveClass(/copied/, { timeout: 5000 });
+    await expect(copyBtn).toHaveAttribute('aria-label', 'Geschichte in die Zwischenablage kopieren');
+
+    // Printing calls window.print()
+    await page.click('#print-btn');
+    expect(await page.evaluate(() => window.__printCalled)).toBe(true);
+
+    // The print stylesheet hides chrome (header buttons, cover, footer) and
+    // force-expands the details grid, even though it was never opened
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.locator('.book-header')).toBeHidden();
+    await expect(page.locator('#story-cover')).toBeHidden();
+    await expect(page.locator('footer')).toBeHidden();
+    await expect(page.locator('#story-display .form-footer')).toBeHidden();
+    await expect(page.locator('#story-title')).toBeVisible();
+    await expect(page.locator('#story-content')).toBeVisible();
+    await expect(page.locator('.story-details-body')).toBeVisible();
+    await page.emulateMedia({ media: 'screen' });
+  });
+});
+
 test.describe('mAIrchen Accessibility', () => {
   test('grade and length buttons expose their selection state to assistive tech', async ({ page }) => {
     // Navigate to the app
