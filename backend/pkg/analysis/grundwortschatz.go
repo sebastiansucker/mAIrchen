@@ -12,8 +12,8 @@ import (
 // Returns a map where keys are lowercase words and values are the correctly capitalized versions
 func ExtractGrundwortschatzWords() map[string]string {
 	gwsDict := make(map[string]string)
-	re := regexp.MustCompile(`(?m)^\s*-\s+(\S+)`)
-	
+	re := regexp.MustCompile(`(?m)^\s*-\s+(?:(?:der|die|das)\s+)?(\S+)`)
+
 	lines := strings.Split(data.GrundwortschatzContent, "\n")
 	for _, line := range lines {
 		matches := re.FindStringSubmatch(line)

@@ -14,10 +14,33 @@ func TestExtractGrundwortschatzWords(t *testing.T) {
 		t.Error("Expected words to be extracted, got empty map")
 	}
 
-	// Check that lowercase keys map to correctly capitalized values
-	if word, exists := words["hund"]; exists {
-		if word != "Hund" {
-			t.Errorf("Expected 'Hund', got '%s'", word)
+	// The Grundwortschatz file has ~599 entries; article-prefixed lines
+	// (e.g. "- der Hund (Hunde)") must not collapse into a single "der"/"die"/"das" key.
+	if len(words) < 500 {
+		t.Errorf("Expected close to 599 extracted words, got %d (article-prefixed nouns may be lost)", len(words))
+	}
+
+	// Nouns with an article prefix must resolve to the noun, not the article.
+	nounCases := map[string]string{
+		"hund":  "Hund",
+		"katze": "Katze",
+		"auto":  "Auto",
+	}
+	for lower, expected := range nounCases {
+		word, exists := words[lower]
+		if !exists {
+			t.Errorf("Expected key %q to exist in extracted words", lower)
+			continue
+		}
+		if word != expected {
+			t.Errorf("Expected %q, got %q", expected, word)
+		}
+	}
+
+	// "der"/"die"/"das" themselves must not appear as extracted words.
+	for _, article := range []string{"der", "die", "das"} {
+		if word, exists := words[article]; exists {
+			t.Errorf("Did not expect article %q to be extracted as a word, got %q", article, word)
 		}
 	}
 }
