@@ -27,15 +27,27 @@ func ExtractGrundwortschatzWords() map[string]string {
 	return gwsDict
 }
 
-// FindGrundwortschatzInText finds Grundwortschatz words in the given text
+// FindGrundwortschatzInText finds Grundwortschatz words in the given text.
+// A text word counts as a match if it starts with a Grundwortschatz word
+// (e.g. "Hunde" matches the dictionary entry "hund"). For each token, this
+// looks up successive prefixes directly in gwsDict instead of comparing the
+// token against every dictionary entry, so cost scales with token length
+// rather than dictionary size.
 // Returns a sorted list of words with correct capitalization
 func FindGrundwortschatzInText(text string, gwsDict map[string]string) []string {
 	foundWords := make(map[string]bool)
 
+	checked := make(map[string]bool)
 	for _, token := range extractWordTokens(text) {
 		lowerToken := strings.ToLower(token)
-		for lowerWord, correctWord := range gwsDict {
-			if strings.HasPrefix(lowerToken, lowerWord) {
+		if checked[lowerToken] {
+			continue
+		}
+		checked[lowerToken] = true
+
+		runes := []rune(lowerToken)
+		for i := 1; i <= len(runes); i++ {
+			if correctWord, ok := gwsDict[string(runes[:i])]; ok {
 				foundWords[correctWord] = true
 			}
 		}
