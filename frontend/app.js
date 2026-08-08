@@ -212,6 +212,7 @@ async function generateStory() {
         return;
     }
 
+    lastRequestParams = { thema, personen_tiere: personen, ort, stimmung };
     currentAbortController = new AbortController();
 
     try {
@@ -323,12 +324,34 @@ function dispatchStreamEvent(event) {
 // Zuletzt generierte Geschichte, für den Download-als-Datei-Button
 let currentStory = null;
 
+// Eingaben der laufenden Anfrage, als Zutaten für die Cover-Illustration
+let lastRequestParams = null;
+
+// Baut die prozedurale Titelillustration aus den Eingabefeldern und dem
+// Titel (als Seed) - rein clientseitig, siehe illustration.js
+function renderStoryCover(title) {
+    const cover = document.getElementById('story-cover');
+    if (!cover || !window.mairchenIllustration) {
+        return '';
+    }
+    const svg = window.mairchenIllustration.buildStoryIllustration({
+        titel: title,
+        thema: lastRequestParams ? lastRequestParams.thema : '',
+        personenTiere: lastRequestParams ? lastRequestParams.personen_tiere : '',
+        ort: lastRequestParams ? lastRequestParams.ort : '',
+        stimmung: lastRequestParams ? lastRequestParams.stimmung : ''
+    });
+    cover.innerHTML = svg;
+    return svg;
+}
+
 // Titel ist da: Buch aufschlagen und mit dem Reveal beginnen
 function onStoryTitle(title) {
     const storyTitle = document.getElementById('story-title');
     storyTitle.textContent = title || 'Eine Geschichte';
 
     currentStory = { title: title || 'Eine Geschichte', text: '', parameters: null, grundwortschatz: [] };
+    currentStory.coverSvg = renderStoryCover(currentStory.title);
 
     storyContent.innerHTML = '';
     revealQueue = '';
@@ -509,6 +532,12 @@ function downloadStory() {
         ? currentStory.grundwortschatz.join(', ')
         : 'Keine gefunden';
 
+    // Cover-SVG ist selbst erzeugtes Markup (keine Nutzereingaben), kann
+    // also direkt eingebettet werden
+    const coverHtml = currentStory.coverSvg
+        ? `<div class="cover">${currentStory.coverSvg}</div>`
+        : '';
+
     const html = `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -528,6 +557,8 @@ h1{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.8rem;margin:0 
 .details{margin-top:32px;padding-top:16px;border-top:1px solid oklch(0.89 0.016 60);display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;}
 .story-details-item .label{font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.72rem;color:oklch(0.62 0.02 50);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
 .story-details-item .value{font-size:0.9rem;}
+.cover{height:170px;border-radius:18px;overflow:hidden;margin-bottom:20px;}
+.cover svg{width:100%;height:100%;display:block;}
 </style>
 </head>
 <body>
@@ -536,6 +567,7 @@ h1{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.8rem;margin:0 
 <span class="badge grade">${escapeHtml(gradeLabel)}</span>
 <span class="badge length">${escapeHtml(String(p.laenge))} Min</span>
 </div>
+${coverHtml}
 <h1>${escapeHtml(currentStory.title)}</h1>
 <div class="story-text">
 ${paragraphs}
