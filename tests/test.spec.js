@@ -183,6 +183,50 @@ test.describe('mAIrchen Story Actions', () => {
   });
 });
 
+test.describe('mAIrchen Grundwortschatz Highlighting', () => {
+  test('recognized Grundwortschatz words are highlighted in the story text', async ({ page }) => {
+    await page.goto('http://localhost:80');
+
+    await page.fill('#thema', 'Freundschaft');
+    await page.fill('#personen', 'Ein kleiner Hase');
+    await page.fill('#ort', 'im Wald');
+    await page.fill('#stimmung', 'fröhlich');
+    await page.click('button.length-btn[data-length="5"]');
+    await page.click('#generate-btn');
+
+    await page.waitForSelector('#story-display', { state: 'visible', timeout: 90000 });
+    await page.waitForSelector('#story-display[data-stream-complete="true"]', { timeout: 90000 });
+
+    const gwsInfo = await page.locator('#info-grundwortschatz').textContent();
+    const gwsWords = gwsInfo.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+    expect(gwsWords.length).toBeGreaterThan(0);
+
+    // Every word the backend reports as found must show up as a highlighted
+    // <mark> in the story text - not just listed separately below it. The
+    // backend also counts a word as found when it's a prefix of a longer
+    // word in the text (regex `\bwort\w*\b`), so a highlight may be a
+    // longer word than the reported one (e.g. "ab" found via "abends").
+    const highlightedWords = (await page.locator('#story-content mark.gws-highlight').allTextContents())
+      .map(w => w.toLowerCase());
+    for (const word of gwsWords) {
+      expect(
+        highlightedWords.some(h => h.startsWith(word)),
+        `"${word}" should be highlighted in the story text (found: ${JSON.stringify(highlightedWords)})`
+      ).toBe(true);
+    }
+
+    // Highlighting must not leak <mark> markup into the copied plain text
+    const storyTitle = await page.locator('#story-title').textContent();
+    const copyBtn = page.locator('#copy-btn');
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await copyBtn.click();
+    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardText).toContain(storyTitle);
+    expect(clipboardText).not.toContain('<mark');
+    expect(clipboardText).not.toContain('gws-highlight');
+  });
+});
+
 test.describe('mAIrchen Accessibility', () => {
   test('grade and length buttons expose their selection state to assistive tech', async ({ page }) => {
     // Navigate to the app

@@ -706,6 +706,17 @@ header h1 {
     margin-bottom: 20px;
 }
 
+/* Hervorhebung erkannter Grundwortschatz-Wörter im Fließtext */
+.gws-highlight {
+    background: oklch(0.9 0.06 85);
+    color: var(--text-color);
+    border-radius: 4px;
+    padding: 0 1px;
+    font-weight: 600;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
 /* Großer farbiger Initialbuchstabe zu Beginn der Geschichte */
 .story-initial {
     font-family: 'Quicksand', sans-serif;
