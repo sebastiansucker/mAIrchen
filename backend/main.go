@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"os"
@@ -270,15 +271,44 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	r := setupRouter()
+
+	go func() {
+		ticker := time.NewTicker(RateLimitWindow)
+		defer ticker.Stop()
+		for range ticker.C {
+			cleanupStaleIPs()
+		}
+	}()
+
+	port := getEnv("PORT", "8000")
+	log.Printf("Server starting on port %s", port)
+	if err := r.Run(":" + port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+}
+
+// setupRouter builds the fully configured engine. main() and the tests share
+// it so the tests exercise the same middleware and proxy settings as
+// production.
+func setupRouter() *gin.Engine {
 	r := gin.Default()
 
+	// Gin trusts X-Forwarded-For from private-range peers by default, and
+	// nginx appends the client-supplied header to it. Trusting no proxies
+	// makes c.ClientIP() report the real peer address, so the fallback in
+	// getClientIP stays sound even if X-Real-IP ever goes missing.
+	if err := r.SetTrustedProxies(nil); err != nil {
+		log.Fatalf("Failed to configure trusted proxies: %v", err)
+	}
+
 	// CORS middleware
-	config := cors.DefaultConfig()
-	config.AllowOrigins = AllowedOrigins
-	config.AllowCredentials = true
-	config.AllowMethods = []string{"GET", "POST"}
-	config.AllowHeaders = []string{"Content-Type"}
-	r.Use(cors.New(config))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = AllowedOrigins
+	corsConfig.AllowCredentials = true
+	corsConfig.AllowMethods = []string{"GET", "POST"}
+	corsConfig.AllowHeaders = []string{"Content-Type"}
+	r.Use(cors.New(corsConfig))
 
 	// Routes
 	r.GET("/", func(c *gin.Context) {
@@ -297,19 +327,7 @@ func main() {
 	r.GET("/api/stats", handleStats)
 	r.POST("/api/generate-story", handleGenerateStory)
 
-	go func() {
-		ticker := time.NewTicker(RateLimitWindow)
-		defer ticker.Stop()
-		for range ticker.C {
-			cleanupStaleIPs()
-		}
-	}()
-
-	port := getEnv("PORT", "8000")
-	log.Printf("Server starting on port %s", port)
-	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	return r
 }
 
 func handleRandomSuggestions(c *gin.Context) {
@@ -482,10 +500,11 @@ func randomInt(max int) int {
 	return rand.Intn(max)
 }
 
+// roundFloat rounds val to the given number of decimal places, half away from
+// zero. BudgetRemaining goes negative once the real token cost overshoots the
+// reserved estimate, so negative values have to round correctly too - the
+// previous "+0.5 then truncate" trick rounded those towards zero instead.
 func roundFloat(val float64, precision int) float64 {
-	ratio := float64(1)
-	for i := 0; i < precision; i++ {
-		ratio *= 10
-	}
-	return float64(int(val*ratio+0.5)) / ratio
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
 }
