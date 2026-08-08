@@ -90,4 +90,36 @@ test.describe('mAIrchen Story Generation', () => {
     
     console.log(`Manual form test passed with story: "${storyTitle}"`);
   });
+
+  test('should show inline validation errors for empty required fields', async ({ page }) => {
+    // Navigate to the app
+    await page.goto('http://localhost:80');
+
+    // Click generate without filling in any fields
+    await page.click('#generate-btn');
+
+    // No native dialog should appear; inline errors should be shown instead
+    const themaError = page.locator('#thema-error');
+    await expect(themaError).toBeVisible();
+    await expect(themaError).not.toBeEmpty();
+
+    // The first invalid field should be marked and focused
+    const thema = page.locator('#thema');
+    await expect(thema).toHaveAttribute('aria-invalid', 'true');
+    await expect(thema).toBeFocused();
+
+    // All other required fields should also be marked invalid
+    for (const id of ['#personen-error', '#ort-error', '#stimmung-error']) {
+      await expect(page.locator(id)).toBeVisible();
+    }
+
+    // The story form should still be visible (no navigation happened)
+    await expect(page.locator('#input-form')).toBeVisible();
+    await expect(page.locator('#story-display')).toBeHidden();
+
+    // Filling in a field should clear its own error again
+    await page.fill('#thema', 'Freundschaft');
+    await expect(themaError).toBeHidden();
+    await expect(thema).not.toHaveAttribute('aria-invalid', 'true');
+  });
 });

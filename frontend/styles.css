@@ -14,6 +14,7 @@
     --border-color: oklch(0.89 0.016 60);
     --shadow: 0 8px 24px oklch(0.4 0.02 50 / 0.1);
     --border-radius: 20px;
+    --error-color: oklch(0.55 0.19 25);
 }
 
 * {
@@ -147,6 +148,25 @@ header h1 {
 .form-group input:focus {
     outline: none;
     border-color: var(--primary-color);
+}
+
+.form-group input.invalid {
+    border-color: var(--error-color);
+}
+
+.form-group input.invalid:focus {
+    border-color: var(--error-color);
+}
+
+.field-error {
+    display: none;
+    margin-top: 6px;
+    color: var(--error-color);
+    font-size: 0.875rem;
+}
+
+.field-error.visible {
+    display: block;
 }
 
 /* Segment-Controls (Klassenstufe, Länge) */

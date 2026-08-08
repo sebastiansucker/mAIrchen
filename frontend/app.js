@@ -63,6 +63,59 @@ const backBtn = document.getElementById('back-btn');
 const shareBtn = document.getElementById('share-btn');
 const newStoryBtn = document.getElementById('new-story-btn');
 
+// Pflichtfelder für die Inline-Validierung (Stil/Genre ist optional)
+const requiredFields = [
+    { input: themaInput, errorId: 'thema-error', message: 'Bitte gib ein Thema ein.' },
+    { input: personenInput, errorId: 'personen-error', message: 'Bitte gib Personen oder Tiere ein.' },
+    { input: ortInput, errorId: 'ort-error', message: 'Bitte gib einen Ort ein.' },
+    { input: stimmungInput, errorId: 'stimmung-error', message: 'Bitte gib eine Stimmung ein.' }
+];
+
+function clearFieldError(field) {
+    field.input.classList.remove('invalid');
+    field.input.removeAttribute('aria-invalid');
+    const errorEl = document.getElementById(field.errorId);
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.classList.remove('visible');
+    }
+}
+
+function setFieldError(field) {
+    field.input.classList.add('invalid');
+    field.input.setAttribute('aria-invalid', 'true');
+    const errorEl = document.getElementById(field.errorId);
+    if (errorEl) {
+        errorEl.textContent = field.message;
+        errorEl.classList.add('visible');
+    }
+}
+
+// Prüft alle Pflichtfelder, markiert leere inline und gibt das erste
+// ungültige Eingabefeld zurück (oder null, wenn alles ausgefüllt ist).
+function validateRequiredFields() {
+    let firstInvalid = null;
+    requiredFields.forEach(field => {
+        clearFieldError(field);
+        if (!field.input.value.trim()) {
+            setFieldError(field);
+            if (!firstInvalid) {
+                firstInvalid = field.input;
+            }
+        }
+    });
+    return firstInvalid;
+}
+
+// Fehler verschwindet, sobald das Feld ausgefüllt wird
+requiredFields.forEach(field => {
+    field.input.addEventListener('input', () => {
+        if (field.input.value.trim()) {
+            clearFieldError(field);
+        }
+    });
+});
+
 const storyContent = document.getElementById('story-content');
 const badgeGrade = document.getElementById('badge-grade');
 const badgeLength = document.getElementById('badge-length');
@@ -103,6 +156,7 @@ async function getRandomSuggestions() {
         moodChips.forEach(c => {
             c.classList.toggle('active', c.dataset.mood === data.stimmung);
         });
+        requiredFields.forEach(clearFieldError);
 
         // Animation für visuelle Rückmeldung
         [themaInput, personenInput, ortInput, stimmungInput, stilInput].forEach(input => {
@@ -150,9 +204,11 @@ async function generateStory() {
     const stil = stilInput.value.trim();
     const laenge = selectedLength;
 
-    // Validierung
-    if (!thema || !personen || !ort || !stimmung) {
-        alert('Bitte fülle alle Pflichtfelder aus!');
+    // Validierung: leere Pflichtfelder inline markieren und zum ersten
+    // ungültigen Feld springen statt eines blockierenden alert()
+    const firstInvalid = validateRequiredFields();
+    if (firstInvalid) {
+        firstInvalid.focus();
         return;
     }
 
