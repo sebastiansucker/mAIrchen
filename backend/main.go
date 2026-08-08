@@ -454,6 +454,17 @@ func handleGenerateStory(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("Fehler beim Generieren der Geschichte: %v", err)
+
+		// checkRateLimit reserved a flat CostPerRequest estimate when the
+		// request was admitted. Generation never produced a billable result,
+		// so that reservation must be refunded - otherwise a misconfigured
+		// provider or an upstream outage inflates dailyCost.cost on every
+		// failed attempt until the daily budget trips and pauses the service
+		// despite nothing having actually been spent.
+		rateLimitLock.Lock()
+		dailyCost.cost -= CostPerRequest
+		rateLimitLock.Unlock()
+
 		writeEvent(streamErrorEvent{Type: "error", Detail: fmt.Sprintf("Fehler beim Generieren der Geschichte: %v", err)})
 		return
 	}
