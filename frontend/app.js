@@ -68,6 +68,8 @@ stimmungInput.addEventListener('input', () => {
 const randomBtn = document.getElementById('random-btn');
 const generateBtn = document.getElementById('generate-btn');
 const backBtn = document.getElementById('back-btn');
+const copyBtn = document.getElementById('copy-btn');
+const printBtn = document.getElementById('print-btn');
 const shareBtn = document.getElementById('share-btn');
 const newStoryBtn = document.getElementById('new-story-btn');
 
@@ -146,6 +148,8 @@ randomBtn.addEventListener('click', getRandomSuggestions);
 generateBtn.addEventListener('click', generateStory);
 backBtn.addEventListener('click', showInputForm);
 newStoryBtn.addEventListener('click', showInputForm);
+copyBtn.addEventListener('click', copyStoryText);
+printBtn.addEventListener('click', () => window.print());
 shareBtn.addEventListener('click', downloadStory);
 
 // Zufällige Vorschläge laden
@@ -514,6 +518,55 @@ function escapeHtml(value) {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+// Icon-Markup des Kopieren-Buttons, um nach dem Kopieren kurz auf ein
+// Häkchen umzuschalten und danach wieder zurückzuwechseln
+const copyBtnIconHtml = copyBtn.innerHTML;
+const copyBtnCheckIconHtml = '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-6.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+let copyFeedbackTimeout = null;
+
+// Kopiert Titel und Text der Geschichte als Plain Text in die
+// Zwischenablage, mit Fallback für unsichere Kontexte ohne Clipboard-API
+async function copyStoryText() {
+    if (!currentStory || !currentStory.parameters) {
+        return;
+    }
+    const text = `${currentStory.title}\n\n${currentStory.text.trim()}`;
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            copyTextFallback(text);
+        }
+        showCopyFeedback();
+    } catch (err) {
+        console.error('Kopieren fehlgeschlagen:', err);
+    }
+}
+
+function copyTextFallback(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+}
+
+function showCopyFeedback() {
+    clearTimeout(copyFeedbackTimeout);
+    copyBtn.innerHTML = copyBtnCheckIconHtml;
+    copyBtn.classList.add('copied');
+    copyBtn.setAttribute('aria-label', 'In die Zwischenablage kopiert');
+    copyFeedbackTimeout = setTimeout(() => {
+        copyBtn.innerHTML = copyBtnIconHtml;
+        copyBtn.classList.remove('copied');
+        copyBtn.setAttribute('aria-label', 'Geschichte in die Zwischenablage kopieren');
+    }, 1600);
 }
 
 // Baut aus der aktuellen Geschichte eine eigenständige HTML-Datei im

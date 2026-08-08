@@ -613,6 +613,19 @@ header h1 {
     margin-bottom: 12px;
 }
 
+.book-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Kurzes Feedback auf dem Kopieren-Button, sobald der Text in der
+   Zwischenablage liegt */
+.icon-btn.copied {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
 /* Cover-Illustration: randlos bis zum Panel-Rand, wie im Mockup */
 .story-cover {
     margin: 0 20px 20px;
@@ -850,5 +863,47 @@ footer a:hover {
 
     .story-text {
         font-size: 1rem;
+    }
+}
+
+/* Druckansicht: nur Titel, Text und aufgeklappte Details der Geschichte,
+   kein Formular/Header/Buttons/Illustration */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #story-display,
+    #story-display * {
+        visibility: visible;
+    }
+
+    #story-display {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: block !important;
+    }
+
+    .book-header,
+    .story-cover,
+    .story-details-chevron,
+    #story-display .form-footer,
+    footer {
+        display: none !important;
+    }
+
+    .story-details-toggle {
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .story-details-body {
+        display: grid !important;
+    }
+
+    .story-text {
+        text-align: left;
     }
 }
