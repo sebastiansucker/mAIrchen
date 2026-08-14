@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -180,5 +181,24 @@ func TestFindGrundwortschatzInText_NoDuplicates(t *testing.T) {
 	expected := []string{"Hund"}
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+// BenchmarkFindGrundwortschatzInText measures FindGrundwortschatzInText against
+// the full embedded Grundwortschatz dictionary and a realistic story-sized text,
+// guarding against regressions like comparing every token against every
+// dictionary entry instead of looking up prefixes directly (see issue #46).
+func BenchmarkFindGrundwortschatzInText(b *testing.B) {
+	gwsDict := ExtractGrundwortschatzWords()
+	text := strings.Repeat(
+		"Der kleine Hund lief mit der Katze durch den Wald und über die Wiese zum Haus, "+
+			"wo die Sonne schien und ein Vogel fröhlich sang, während Mutter und Vater "+
+			"gemeinsam ein Buch über einen mutigen Bären lasen. ",
+		20,
+	)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		FindGrundwortschatzInText(text, gwsDict)
 	}
 }
