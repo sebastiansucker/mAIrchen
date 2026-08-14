@@ -2,6 +2,8 @@ package prompt
 
 import (
 	"fmt"
+	"strings"
+	"sync"
 
 	"github.com/sebastiansucker/mAIrchen/backend/pkg/data"
 )
@@ -30,8 +32,7 @@ func BuildPrompt(req StoryRequest) (string, string) {
 		schwierigkeit = "sehr einfach mit kurzen Sätzen und einfachen Wörtern"
 		
 		// Extract Klasse 1-2 section
-		parts := splitGWSContent()
-		grundwortschatz = parts[0]
+		grundwortschatz = klasse12Grundwortschatz()
 	} else {
 		minWords = req.Laenge * 80
 		maxWords = req.Laenge * 120
@@ -78,20 +79,25 @@ ENDE
 	return systemPrompt, userPrompt
 }
 
-func splitGWSContent() []string {
-	parts := []string{data.GrundwortschatzContent}
-	separator := "### **Grundwortschatz für Jahrgangsstufen 3 und 4**"
-	idx := 0
-	for i := range data.GrundwortschatzContent {
-		if i+len(separator) <= len(data.GrundwortschatzContent) && data.GrundwortschatzContent[i:i+len(separator)] == separator {
-			idx = i
-			break
+const klasse34Separator = "### **Grundwortschatz für Jahrgangsstufen 3 und 4**"
+
+var (
+	klasse12ContentOnce sync.Once
+	klasse12Content     string
+)
+
+// klasse12Grundwortschatz returns the Grundwortschatz section for
+// Klassenstufe 1/2. data.GrundwortschatzContent is embedded at compile
+// time and never changes at runtime, so the split is computed once and
+// cached instead of being redone on every request.
+func klasse12Grundwortschatz() string {
+	klasse12ContentOnce.Do(func() {
+		klasse12Content = data.GrundwortschatzContent
+		if idx := strings.Index(data.GrundwortschatzContent, klasse34Separator); idx > 0 {
+			klasse12Content = data.GrundwortschatzContent[:idx]
 		}
-	}
-	if idx > 0 {
-		parts = []string{data.GrundwortschatzContent[:idx], data.GrundwortschatzContent[idx:]}
-	}
-	return parts
+	})
+	return klasse12Content
 }
 
 // GetGWSContent returns the embedded Grundwortschatz content
