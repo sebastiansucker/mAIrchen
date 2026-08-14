@@ -100,6 +100,43 @@ jobs:
           curl -f http://localhost/health
           curl -f http://localhost/api
 
+      - name: Verify graceful shutdown and crash recovery
+        run: |
+          echo "Test 1: 'docker compose stop' must exit cleanly via SIGTERM, not time out into SIGKILL"
+          CONTAINER_ID=$(docker compose ps -q app)
+          START=$(date +%s)
+          docker compose stop -t 10 app
+          END=$(date +%s)
+          ELAPSED=$((END - START))
+          EXIT_CODE=$(docker inspect "$CONTAINER_ID" --format '{{.State.ExitCode}}')
+          echo "stop took ${ELAPSED}s, exit code $EXIT_CODE"
+          if [ "$ELAPSED" -ge 9 ]; then
+            echo "❌ Shutdown took too long (~10s stop grace period) - signal was likely not handled cleanly"
+            exit 1
+          fi
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo "❌ Container did not exit cleanly (exit code $EXIT_CODE)"
+            exit 1
+          fi
+          echo "✅ Graceful shutdown OK"
+
+          echo "Restarting app for the crash-recovery test..."
+          docker compose up -d app
+          timeout 60 bash -c 'until curl -f http://localhost/health > /dev/null 2>&1; do sleep 2; done'
+
+          echo "Test 2: killing the Go backend inside the container must bring the whole container down so it gets restarted"
+          CONTAINER_ID=$(docker compose ps -q app)
+          RESTARTS_BEFORE=$(docker inspect "$CONTAINER_ID" --format '{{.RestartCount}}')
+          GO_PID=$(docker exec "$CONTAINER_ID" pgrep main | head -1)
+          docker exec "$CONTAINER_ID" kill -KILL "$GO_PID"
+          timeout 60 bash -c 'until curl -f http://localhost/health > /dev/null 2>&1; do sleep 2; done'
+          RESTARTS_AFTER=$(docker inspect "$CONTAINER_ID" --format '{{.RestartCount}}')
+          if [ "$RESTARTS_AFTER" -le "$RESTARTS_BEFORE" ]; then
+            echo "❌ Container was not restarted after the backend crashed (restart count stayed at $RESTARTS_BEFORE)"
+            exit 1
+          fi
+          echo "✅ Crash recovery OK (restart count $RESTARTS_BEFORE -> $RESTARTS_AFTER)"
+
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
