@@ -461,13 +461,13 @@ func TestGenerate_ReturnsParsedStory(t *testing.T) {
 	// work if the streaming path accumulated the text correctly.
 	found := false
 	for _, w := range generated.Grundwortschatz {
-		if w == "der" {
+		if w == "Hase" {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected 'der' among the Grundwortschatz matches, got %v", generated.Grundwortschatz)
+		t.Errorf("expected 'Hase' among the Grundwortschatz matches, got %v", generated.Grundwortschatz)
 	}
 }
 
