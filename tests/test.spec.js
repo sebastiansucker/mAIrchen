@@ -274,3 +274,30 @@ test.describe('mAIrchen Accessibility', () => {
     await expect(page.locator('.length-btn[data-length="5"]')).toHaveAttribute('aria-checked', 'false');
   });
 });
+
+test.describe('mAIrchen About Page', () => {
+  test('reuses the shared design tokens instead of duplicated inline styles', async ({ page }) => {
+    // Navigate straight to the About page
+    await page.goto('http://localhost:80/about.html');
+
+    // Styling now lives in the shared stylesheet, not an inline <style> block
+    const inlineStyleCount = await page.locator('head style').count();
+    expect(inlineStyleCount).toBe(0);
+
+    // Section headings pick up the app's branded heading font/size instead
+    // of falling back to the browser default h2
+    const firstHeading = page.locator('.about-card h2').first();
+    await expect(firstHeading).toBeVisible();
+    const headingStyle = await firstHeading.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return { fontFamily: computed.fontFamily, fontSize: computed.fontSize };
+    });
+    expect(headingStyle.fontFamily).toContain('Quicksand');
+    expect(headingStyle.fontSize).not.toBe('');
+
+    // The back link returns to the main app
+    await page.click('.back-link');
+    await expect(page).toHaveURL(/index\.html$|\/$/);
+    await expect(page.locator('header h1')).toContainText('mAIrchen');
+  });
+});

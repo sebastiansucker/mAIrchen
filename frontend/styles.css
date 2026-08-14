@@ -881,6 +881,48 @@ footer a:hover {
     }
 }
 
+/* About-Seite (about.html): zentral hier gepflegt statt in einem
+   Inline-<style>-Block auf der Seite selbst dupliziert */
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.about-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.about-card h2 {
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.about-card p {
+    margin-bottom: 15px;
+    line-height: 1.8;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
 /* Druckansicht: nur Titel, Text und aufgeklappte Details der Geschichte,
    kein Formular/Header/Buttons/Illustration */
 @media print {
