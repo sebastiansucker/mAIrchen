@@ -700,6 +700,10 @@ header h1 {
     color: var(--text-color);
     white-space: pre-wrap;
     text-align: left;
+    overflow-wrap: break-word;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
 }
 
 .story-text p {
