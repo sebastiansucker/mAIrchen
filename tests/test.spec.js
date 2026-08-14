@@ -301,3 +301,30 @@ test.describe('mAIrchen About Page', () => {
     await expect(page.locator('header h1')).toContainText('mAIrchen');
   });
 });
+
+test.describe('mAIrchen Security Headers', () => {
+  test('the frontend response sets hardening headers', async ({ request }) => {
+    const response = await request.get('http://localhost:80/');
+    const headers = response.headers();
+
+    expect(headers['x-content-type-options']).toBe('nosniff');
+    expect(headers['x-frame-options']).toBe('DENY');
+    expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    expect(headers['permissions-policy']).toContain('camera=()');
+
+    const csp = headers['content-security-policy'];
+    expect(csp).toBeTruthy();
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).toContain("object-src 'none'");
+  });
+
+  test('the proxied API response also sets hardening headers', async ({ request }) => {
+    const response = await request.get('http://localhost:80/api/random');
+    const headers = response.headers();
+
+    expect(headers['x-content-type-options']).toBe('nosniff');
+    expect(headers['x-frame-options']).toBe('DENY');
+    expect(headers['content-security-policy']).toBeTruthy();
+  });
+});
