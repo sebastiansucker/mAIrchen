@@ -244,7 +244,7 @@ func (p *streamParser) feedBody(fragment string) {
 
 // flushLine processes one completed (or, on finish(), final incomplete)
 // line: strips markdown, checks for a standalone "ENDE" marker, and either
-// emits it via OnChunk or (for ENDE) appends the decorative footer instead.
+// emits it via OnChunk or (for ENDE) emits the decorative footer instead.
 func (p *streamParser) flushLine(hadNewline bool) {
 	if p.endeFound {
 		p.lineBuf.Reset()
@@ -256,7 +256,16 @@ func (p *streamParser) flushLine(hadNewline bool) {
 
 	if endeLineRegexp.MatchString(line) {
 		p.endeFound = true
-		p.fullStory.WriteString("\n\n" + strings.Repeat(" ", 25) + " ★ ENDE ★ " + strings.Repeat(" ", 25))
+		// The footer must go through the same path (fullStory + OnChunk) as
+		// regular body text: fullStory is what gets scanned for Grundwortschatz
+		// words, and OnChunk is what the frontend actually displays. Appending
+		// to fullStory alone without also emitting it as a chunk would let the
+		// backend report words (like "Ende" itself) that were never shown to
+		// the reader, so the "words you practiced" list would list words a
+		// reader never saw highlighted.
+		footer := "\n\n" + strings.Repeat(" ", 25) + " ★ ENDE ★ " + strings.Repeat(" ", 25)
+		p.fullStory.WriteString(footer)
+		p.cb.OnChunk(footer)
 		return
 	}
 

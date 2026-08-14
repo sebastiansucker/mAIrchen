@@ -154,11 +154,24 @@ func TestStreamParser_TitleAndBody(t *testing.T) {
 	if !strings.Contains(got, "Es war einmal ein kleiner Hase.") {
 		t.Errorf("expected body to contain the story text, got %q", got)
 	}
-	if strings.Contains(got, "ENDE") {
-		t.Errorf("raw ENDE marker must never be emitted as a chunk, got %q", got)
+	// The bare "ENDE" marker line itself must never reach the reader as a
+	// standalone chunk - only the decorative "★ ENDE ★" footer should.
+	for _, c := range chunks {
+		if strings.TrimSpace(c) == "ENDE" {
+			t.Errorf("raw ENDE marker must never be emitted as its own chunk, got chunks %q", chunks)
+		}
+	}
+	if !strings.Contains(got, "★ ENDE ★") {
+		t.Errorf("expected decorative ENDE footer to be emitted as a chunk, got %q", got)
 	}
 	if !strings.Contains(p.fullStory.String(), "★ ENDE ★") {
 		t.Errorf("expected decorative ENDE footer in full story, got %q", p.fullStory.String())
+	}
+	// The footer must reach the reader identically to what gets scanned for
+	// Grundwortschatz words, otherwise the backend can report a word (e.g.
+	// "Ende" itself) that the frontend never actually displays.
+	if got != p.fullStory.String() {
+		t.Errorf("chunks and fullStory diverged: chunks %q vs fullStory %q", got, p.fullStory.String())
 	}
 }
 
