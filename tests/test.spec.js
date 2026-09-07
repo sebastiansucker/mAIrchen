@@ -193,8 +193,8 @@ test.describe('mAIrchen Story Actions', () => {
   });
 });
 
-test.describe('mAIrchen Grundwortschatz Highlighting', () => {
-  test('recognized Grundwortschatz words are highlighted in the story text', async ({ page }) => {
+test.describe('mAIrchen Grundwortschatz Wortliste', () => {
+  test('recognized Grundwortschatz words are listed but not highlighted in the story text', async ({ page }) => {
     await page.goto('http://localhost:80');
 
     await page.fill('#thema', 'Freundschaft');
@@ -211,19 +211,9 @@ test.describe('mAIrchen Grundwortschatz Highlighting', () => {
     const gwsWords = gwsInfo.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
     expect(gwsWords.length).toBeGreaterThan(0);
 
-    // Every word the backend reports as found must show up as a highlighted
-    // <mark> in the story text - not just listed separately below it. The
-    // backend also counts a word as found when it's a prefix of a longer
-    // word in the text (regex `\bwort\w*\b`), so a highlight may be a
-    // longer word than the reported one (e.g. "ab" found via "abends").
-    const highlightedWords = (await page.locator('#story-content mark.gws-highlight').allTextContents())
-      .map(w => w.toLowerCase());
-    for (const word of gwsWords) {
-      expect(
-        highlightedWords.some(h => h.startsWith(word)),
-        `"${word}" should be highlighted in the story text (found: ${JSON.stringify(highlightedWords)})`
-      ).toBe(true);
-    }
+    // The story text itself must not highlight the Grundwortschatz words -
+    // they are only listed in the info panel above.
+    await expect(page.locator('#story-content mark')).toHaveCount(0);
 
     // Highlighting must not leak <mark> markup into the copied plain text
     const storyTitle = await page.locator('#story-title').textContent();
