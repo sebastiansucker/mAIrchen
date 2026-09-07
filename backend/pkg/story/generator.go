@@ -83,9 +83,9 @@ func (g *Generator) Generate(ctx context.Context, req prompt.StoryRequest, cb St
 			{Role: openai.ChatMessageRoleSystem, Content: systemPrompt},
 			{Role: openai.ChatMessageRoleUser, Content: userPrompt},
 		},
-		Temperature:   0.8,
-		MaxTokens:     8000,
-		StreamOptions: &openai.StreamOptions{IncludeUsage: true},
+		Temperature:         0.8,
+		MaxCompletionTokens: 8000,
+		StreamOptions:       &openai.StreamOptions{IncludeUsage: true},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("API request failed: %w", err)
