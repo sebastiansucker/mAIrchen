@@ -318,3 +318,57 @@ test.describe('mAIrchen Security Headers', () => {
     expect(headers['content-security-policy']).toBeTruthy();
   });
 });
+
+test.describe('mAIrchen PWA', () => {
+  test('manifest and service worker are served with the right headers', async ({ request }) => {
+    const manifestResponse = await request.get('http://localhost:80/manifest.webmanifest');
+    expect(manifestResponse.ok()).toBe(true);
+    expect(manifestResponse.headers()['content-type']).toContain('application/manifest+json');
+    const manifest = await manifestResponse.json();
+    expect(manifest.name).toBe('mAIrchen');
+    expect(manifest.display).toBe('standalone');
+
+    // Must never be served from a long-lived cache - otherwise clients only
+    // pick up a new deployment once a stale sw.js finally expires.
+    const swResponse = await request.get('http://localhost:80/sw.js');
+    expect(swResponse.ok()).toBe(true);
+    expect(swResponse.headers()['cache-control']).toContain('no-cache');
+  });
+
+  test('index.html and about.html link the manifest and theme color', async ({ page }) => {
+    for (const path of ['/', '/about.html']) {
+      await page.goto(`http://localhost:80${path}`);
+      await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', 'manifest.webmanifest');
+      await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', /^#/);
+    }
+  });
+
+  test('the app shell keeps working offline once installed', async ({ browser }) => {
+    // sw-register.js skips registration when navigator.webdriver is set, so
+    // that the rest of the E2E suite never runs against a cached app shell
+    // that could mask a real regression. This test opts back in explicitly
+    // to verify the offline path the Service Worker exists for.
+    const context = await browser.newContext();
+    await context.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    });
+    const page = await context.newPage();
+
+    await page.goto('http://localhost:80');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+
+    // The very first load isn't controlled yet - the Service Worker only
+    // starts controlling clients after 'activate'. Reload once so the app
+    // shell actually gets served through its cache-first fetch handler.
+    await page.reload();
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+
+    await context.setOffline(true);
+    await page.reload();
+
+    await expect(page.locator('header h1')).toContainText('mAIrchen');
+
+    await context.setOffline(false);
+    await context.close();
+  });
+});

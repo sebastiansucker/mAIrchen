@@ -63,6 +63,8 @@ python -m http.server 8080   # serve locally; expects backend reachable at :8000
 
 **`tools/model_comparison.go`** imports the same `backend/pkg/*` packages directly (not via HTTP) so benchmark runs exercise identical prompt-building and story-generation logic as production.
 
+**Frontend is a PWA:** `frontend/sw.js` cache-first-serves the static app shell (HTML/CSS/JS/icons) and always network-only-passes `/api/*` and `/health` — story generation itself still needs the backend, only the UI works offline. Registration (`frontend/sw-register.js`, loaded by both `index.html` and `about.html`) is skipped whenever `navigator.webdriver` is set, so the Playwright suite never runs against a cached app shell. **Bump `CACHE_VERSION` in `sw.js` whenever a cached file's content changes** — otherwise already-installed clients keep serving the stale cached version. `docker/nginx-combined.conf` (and the standalone `frontend/nginx.conf`) exempt `/sw.js` from the `immutable, 1y` static-asset caching applied to other `.js` files, and set the correct MIME type for `/manifest.webmanifest`.
+
 ## CI (`.github/workflows/default.yml`)
 
 Runs on every PR/push to `main`, in dependency order: `build` → (`test`, `lint`) → `e2e`. The `e2e` job builds the real Docker image, boots it with `AI_PROVIDER=ollama-cloud` (needs the `OLLAMA_API_KEY` repo secret), waits on `/health`, then runs the Playwright suite against the live container — so E2E failures can mean either a real bug or a missing/expired secret. `docker-build.yml` pushes the image to `ghcr.io` on push to `main`.
