@@ -12,6 +12,7 @@ Eine Märchen-Schreib-App für Grundschulkinder (Klasse 1-4), die personalisiert
 - **Flexible AI-Provider**: Unterstützt alle OpenAI-kompatiblen APIs (OpenAI, Mistral, Together AI, etc.) plus Ollama (Cloud & Local)
 - **Missbrauchsschutz**: Rate Limiting, Cost Control und Request-Validierung ohne Login
 - **Single-Container**: Frontend und Backend in einem Container für einfaches Deployment
+- **PWA mit Offline-Betrieb**: Installierbar auf dem Homescreen (iOS/Android), startet im Vollbild und funktioniert auch offline (siehe [PWA](#-pwa--offline-betrieb))
 
 ## 🚀 Installation
 
@@ -217,8 +218,12 @@ mAIrchen/
 │       └── analysis/    # Grundwortschatz-Analyse
 ├── frontend/
 │   ├── index.html      # Haupt-HTML
+│   ├── about.html      # Info-Seite
 │   ├── styles.css      # Styling & Animationen
 │   ├── app.js          # JavaScript Logik
+│   ├── sw-register.js  # Service-Worker-Registrierung (index.html & about.html)
+│   ├── sw.js           # Service Worker: App-Shell offline verfügbar machen
+│   ├── manifest.webmanifest  # PWA-Manifest (Name, Icons, Theme-Farbe)
 │   └── nginx.conf      # Frontend Nginx Config
 ├── tools/
 │   └── model_comparison.go  # Benchmark-Tool für Model-Vergleiche
@@ -351,6 +356,16 @@ Die App ist von anderen Geräten im Netzwerk erreichbar:
 2. Öffne auf einem anderen Gerät: `http://<deine-ip>`
 
 Das Frontend nutzt automatisch die richtige URL für API-Requests.
+
+## 📱 PWA / Offline-Betrieb
+
+mAIrchen ist eine Progressive Web App (PWA) und lässt sich auf dem Homescreen installieren. Danach startet sie im Vollbild (ohne Browserleiste). Die App-Oberfläche (HTML/CSS/JS/Icons) wird von einem Service Worker gecacht und funktioniert dadurch auch offline oder bei instabiler Verbindung - lediglich die eigentliche Geschichten-Generierung braucht (wie zuvor) eine Verbindung zum Backend, da sie ein KI-Modell aufruft.
+
+**Android (Chrome)**: Seite öffnen → Menü (⋮) → "App installieren" bzw. der Installations-Hinweis am unteren Bildschirmrand.
+
+**iOS (Safari)**: Seite öffnen → Teilen-Symbol → "Zum Home-Bildschirm".
+
+Nach einem Deployment holt sich die App beim nächsten Start automatisch die neue Version; falls eine bereits geöffnete Instanz eine neue Version erkennt, erscheint unten ein Hinweis "Neue Version verfügbar" mit einem Button zum Neuladen. Der Service Worker cacht dafür die App-Oberfläche mit einer versionierten Cache-ID (`CACHE_VERSION` in `frontend/sw.js`) - diese muss bei jeder Änderung an den gecachten Dateien erhöht werden, sonst bekommen bereits installierte Clients das Update nicht mit.
 
 ## 🧪 Testing & CI/CD
 

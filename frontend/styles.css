@@ -912,6 +912,41 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* Hinweis "Neue Version verfügbar" (PWA-Update), eingeblendet von
+   sw-register.js sobald ein neuer Service Worker installiert ist */
+.sw-update-notice {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--primary-color);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    font-family: 'Karla', sans-serif;
+    font-weight: 600;
+}
+
+.sw-update-notice-btn {
+    background: white;
+    color: var(--primary-color-dark);
+    border: none;
+    border-radius: 12px;
+    padding: 6px 14px;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.sw-update-notice-btn:hover {
+    background: var(--accent-color);
+}
+
 /* Druckansicht: nur Titel, Text und aufgeklappte Details der Geschichte,
    kein Formular/Header/Buttons/Illustration */
 @media print {
