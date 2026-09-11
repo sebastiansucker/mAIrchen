@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/gin-contrib/cors v1.7.8
 	github.com/gin-gonic/gin v1.12.0
-	github.com/sashabaranov/go-openai v1.42.0
+	github.com/sashabaranov/go-openai v1.42.1
 )
 
 require (
