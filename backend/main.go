@@ -396,6 +396,10 @@ func handleGenerateStory(c *gin.Context) {
 		return
 	}
 
+	// The model is server-chosen: a client-picked model would bypass the
+	// per-token cost estimate the daily budget relies on.
+	req.Model = ""
+
 	// Validate
 	if errMsg := validateStoryRequest(req); errMsg != "" {
 		c.JSON(http.StatusBadRequest, gin.H{"detail": errMsg})
@@ -461,11 +465,17 @@ func handleGenerateStory(c *gin.Context) {
 		// provider or an upstream outage inflates dailyCost.cost on every
 		// failed attempt until the daily budget trips and pauses the service
 		// despite nothing having actually been spent.
-		rateLimitLock.Lock()
-		dailyCost.cost -= CostPerRequest
-		rateLimitLock.Unlock()
+		// Not on client disconnect though: tokens streamed until then are
+		// billed, and refunding would let clients bypass the budget.
+		if ctx.Err() == nil {
+			rateLimitLock.Lock()
+			dailyCost.cost -= CostPerRequest
+			rateLimitLock.Unlock()
+		}
 
-		writeEvent(streamErrorEvent{Type: "error", Detail: fmt.Sprintf("Fehler beim Generieren der Geschichte: %v", err)})
+		// Upstream errors can contain provider URLs/response bodies; keep
+		// them in the server log only.
+		writeEvent(streamErrorEvent{Type: "error", Detail: "Fehler beim Generieren der Geschichte. Bitte versuche es später erneut."})
 		return
 	}
 

@@ -843,6 +843,32 @@ func TestHandleGenerateStory_ReplacesCostReservationWithActualCost(t *testing.T)
 	}
 }
 
+func TestHandleGenerateStory_IgnoresClientChosenModel(t *testing.T) {
+	resetLimits(t)
+
+	sentModels := make(chan string, 10)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Model string `json:"model"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		sentModels <- body.Model
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	rateLimitLock.Lock()
+	appConfig = &config.Config{AIProvider: "openai", DefaultModel: "test-model", OpenAIBaseURL: server.URL}
+	storyGenerator = story.NewGenerator(appConfig)
+	rateLimitLock.Unlock()
+
+	postStory(t, `{"thema":"Mut","personen_tiere":"Hase","ort":"Wald","stimmung":"froh","laenge":5,"klassenstufe":"12","model":"expensive-model"}`)
+
+	if got := <-sentModels; got != "test-model" {
+		t.Errorf("expected the configured model to be used, got %q", got)
+	}
+}
+
 func TestHandleGenerateStory_ReportsProviderFailureAsInBandErrorEvent(t *testing.T) {
 	resetLimits(t)
 
@@ -874,6 +900,8 @@ func TestHandleGenerateStory_ReportsProviderFailureAsInBandErrorEvent(t *testing
 	}
 	if detail, _ := events[0]["detail"].(string); !strings.Contains(detail, "Fehler beim Generieren") {
 		t.Errorf("expected a generation error detail, got %q", detail)
+	} else if strings.Contains(detail, server.URL) || strings.Contains(detail, "500") {
+		t.Errorf("error detail must not leak upstream error details, got %q", detail)
 	}
 
 	// checkRateLimit reserved CostPerRequest when the request was admitted.

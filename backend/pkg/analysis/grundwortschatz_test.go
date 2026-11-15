@@ -54,6 +54,8 @@ func TestFindGrundwortschatzInText(t *testing.T) {
 		"haus":   "Haus",
 		"baum":   "Baum",
 		"sonne":  "Sonne",
+		"ei":     "Ei",
+		"ab":     "ab",
 	}
 
 	tests := []struct {
@@ -85,6 +87,21 @@ func TestFindGrundwortschatzInText(t *testing.T) {
 			name:     "Exact word matches only",
 			text:     "Der Hund und die Katze spielen zusammen.",
 			expected: []string{"Hund", "Katze"},
+		},
+		{
+			name:     "Short entries match whole words only",
+			text:     "Es war einmal ein Mann. Am Abend fand er ein Ei.",
+			expected: []string{"Ei"},
+		},
+		{
+			name:     "Short entry does not match a longer word",
+			text:     "Es war einmal ein Mann am Abend.",
+			expected: []string{},
+		},
+		{
+			name:     "Longer entries still match inflected forms",
+			text:     "Die Hunde spielen.",
+			expected: []string{"Hund"},
 		},
 		{
 			name:     "Empty text",
