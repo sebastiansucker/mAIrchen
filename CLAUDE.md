@@ -29,7 +29,8 @@ go run model_comparison.go   # compares story generation across configured model
 ```bash
 cd tests
 npm install
-npm test          # requires the app already running at http://localhost:80 (docker compose up)
+npm test          # requires the app already running at http://localhost:80, e.g. with the fake LLM (no API key):
+                  #   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up --build -d
 npm run test:ui
 npm run test:debug
 ```
@@ -69,4 +70,4 @@ python -m http.server 8080   # serve locally; expects backend reachable at :8000
 
 ## CI (`.github/workflows/default.yml`)
 
-Runs on every PR/push to `main`, in dependency order: `build` → (`test`, `lint`) → `e2e`. The `e2e` job builds the real Docker image, boots it with `AI_PROVIDER=ollama-cloud` (needs the `OLLAMA_API_KEY` repo secret), waits on `/health`, then runs the Playwright suite against the live container — so E2E failures can mean either a real bug or a missing/expired secret. `docker-build.yml` pushes the image to `ghcr.io` on push to `main`.
+Runs on every PR/push to `main`, in dependency order: `build` → (`test`, `lint`) → `e2e`. The `e2e` job builds the real Docker image, boots it together with `tests/fakellm` (via `docker-compose.e2e.yml`, a stdlib-only fake OpenAI-compatible server that streams one canned story), waits on `/health`, then runs the Playwright suite against the live container. No API key is needed, and E2E tests the app flow, not real LLM output quality — use `tools/model_comparison.go` for that. If you change the stream format the backend expects (e.g. the `TITEL:`/`ENDE` markers), update `tests/fakellm/main.go` too. `docker-build.yml` pushes the image to `ghcr.io` on push to `main`.
