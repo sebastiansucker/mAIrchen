@@ -175,7 +175,7 @@ func TestLoadConfig_DefaultsWithoutOptionalEnv(t *testing.T) {
 	}{
 		{provider: "ollama-cloud", expectURL: "https://ollama.com/v1", expectModel: "ministral-3:8b-cloud", expectKey: "dummy-key"},
 		{provider: "ollama-local", expectURL: "http://localhost:11434/v1", expectModel: "mistral:7b", expectKey: "dummy-key"},
-		{provider: "openai", expectURL: "https://api.openai.com/v1", expectModel: "gpt-4", expectKey: ""},
+		{provider: "openai", expectURL: "https://api.openai.com/v1", expectModel: "gpt-4o-mini", expectKey: ""},
 	}
 
 	for _, tt := range tests {

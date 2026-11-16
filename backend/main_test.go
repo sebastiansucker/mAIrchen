@@ -30,6 +30,7 @@ func resetLimits(t *testing.T) {
 	origPerIP, origWindow, origGlobal := RateLimitPerIP, RateLimitWindow, GlobalDailyLimit
 	origMaxCost, origCostPerRequest, origMaxLen := MaxDailyCost, CostPerRequest, MaxStoryLength
 	origHistory, origGlobalCount, origCost := requestHistory, globalRequestCount, dailyCost
+	origCostPer1K := CostPer1KTokens
 	origConfig, origGenerator := appConfig, storyGenerator
 
 	t.Cleanup(func() {
@@ -38,6 +39,7 @@ func resetLimits(t *testing.T) {
 		RateLimitPerIP, RateLimitWindow, GlobalDailyLimit = origPerIP, origWindow, origGlobal
 		MaxDailyCost, CostPerRequest, MaxStoryLength = origMaxCost, origCostPerRequest, origMaxLen
 		requestHistory, globalRequestCount, dailyCost = origHistory, origGlobalCount, origCost
+		CostPer1KTokens = origCostPer1K
 		appConfig, storyGenerator = origConfig, origGenerator
 	})
 
@@ -49,6 +51,7 @@ func resetLimits(t *testing.T) {
 	GlobalDailyLimit = 100
 	MaxDailyCost = 5.0
 	CostPerRequest = 0.0015
+	CostPer1KTokens = -1
 	MaxStoryLength = 15
 
 	requestHistory = make(map[string][]time.Time)
@@ -94,6 +97,17 @@ func TestGetClientIP(t *testing.T) {
 			name:     "falls back to peer address",
 			remote:   "192.0.2.9:5678",
 			expected: "192.0.2.9",
+		},
+		{
+			name:     "IPv6 is grouped by /64",
+			realIP:   "2001:db8:1:2:aaaa:bbbb:cccc:dddd",
+			remote:   "10.0.0.1:1234",
+			expected: "2001:db8:1:2::/64",
+		},
+		{
+			name:     "IPv6 peer address is grouped by /64",
+			remote:   "[2001:db8:1:2::9]:5678",
+			expected: "2001:db8:1:2::/64",
 		},
 	}
 
@@ -806,6 +820,7 @@ func TestHandleGenerateStory_ReplacesCostReservationWithActualCost(t *testing.T)
 	tests := []struct {
 		name       string
 		provider   string
+		override   float64
 		tokens     int
 		expectCost float64
 	}{
@@ -814,6 +829,9 @@ func TestHandleGenerateStory_ReplacesCostReservationWithActualCost(t *testing.T)
 		{name: "default provider", provider: "openai", tokens: 2000, expectCost: 0.002},
 		{name: "ollama-cloud is cheaper", provider: "ollama-cloud", tokens: 2000, expectCost: 0.001},
 		{name: "ollama-local is free", provider: "ollama-local", tokens: 2000, expectCost: 0.0},
+		{name: "env override wins", provider: "ollama-local", override: 0.03, tokens: 2000, expectCost: 0.06},
+		// No usage reported: keep the reservation instead of counting it free.
+		{name: "missing usage keeps reservation", provider: "openai", tokens: 0, expectCost: 0.0015},
 	}
 
 	for _, tt := range tests {
@@ -825,6 +843,9 @@ func TestHandleGenerateStory_ReplacesCostReservationWithActualCost(t *testing.T)
 			rateLimitLock.Lock()
 			appConfig = &config.Config{AIProvider: tt.provider, DefaultModel: "test-model", OpenAIBaseURL: server.URL}
 			storyGenerator = story.NewGenerator(appConfig)
+			if tt.override > 0 {
+				CostPer1KTokens = tt.override
+			}
 			rateLimitLock.Unlock()
 
 			w := postStory(t, `{"thema":"Mut","personen_tiere":"Katze","ort":"Wald","stimmung":"froh","laenge":5,"klassenstufe":"12"}`)

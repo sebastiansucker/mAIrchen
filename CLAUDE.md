@@ -52,7 +52,7 @@ docker-compose down
 ### Frontend (static, no build step)
 ```bash
 cd frontend
-python -m http.server 8080   # serve locally; expects backend reachable at :8000
+python -m http.server 8080   # UI only: app.js calls /api on the same origin, so story generation needs docker compose
 ```
 
 ## Architecture
@@ -68,11 +68,11 @@ python -m http.server 8080   # serve locally; expects backend reachable at :8000
 
 **`main.go` streams the story as NDJSON** (`title` → `chunk`* → `done` | `error`). HTTP 200 is committed before generation starts, so failures arrive as an in-band `error` event. The request's `model` field is ignored on purpose; the model is always the server-configured one.
 
-**Request-level protection lives in `main.go`**, not in a middleware/package: in-memory (non-persistent) rate limiting per IP, a global daily request cap, and a daily EUR cost budget derived from token usage — all guarded by one `sync.Mutex`. Cost-per-token differs by provider (`ollama-local` is free, others use a rough EUR/1000-token estimate). Because this state is in-memory, it resets on every restart/redeploy — don't treat `/api/stats` numbers as durable.
+**Request-level protection lives in `main.go`**, not in a middleware/package: in-memory (non-persistent) rate limiting per IP, a global daily request cap, and a daily EUR cost budget derived from token usage — all guarded by one `sync.Mutex`. Cost-per-token differs by provider (`ollama-local` is free, others use a rough EUR/1000-token estimate, overridable with `COST_PER_1K_TOKENS`); if the provider reports no token usage, the flat per-request reservation is kept. Because this state is in-memory, it resets on every restart/redeploy — don't treat `/api/stats` numbers as durable.
 
 **`tools/model_comparison.go`** imports the same `backend/pkg/*` packages directly (not via HTTP) so benchmark runs exercise identical prompt-building and story-generation logic as production.
 
-**Frontend is a PWA:** `frontend/sw.js` cache-first-serves the static app shell (HTML/CSS/JS/icons) and always network-only-passes `/api/*` and `/health` — story generation itself still needs the backend, only the UI works offline. Registration (`frontend/sw-register.js`, loaded by both `index.html` and `about.html`) is skipped whenever `navigator.webdriver` is set, so the Playwright suite never runs against a cached app shell. **Bump `CACHE_VERSION` in `sw.js` whenever a cached file's content changes** — otherwise already-installed clients keep serving the stale cached version. `docker/nginx-combined.conf` (and the standalone `frontend/nginx.conf`) exempt `/sw.js` from the `immutable, 1y` static-asset caching applied to other `.js` files, and set the correct MIME type for `/manifest.webmanifest`.
+**Frontend is a PWA:** `frontend/sw.js` cache-first-serves the static app shell (HTML/CSS/JS/icons) and always network-only-passes `/api/*` and `/health` — story generation itself still needs the backend, only the UI works offline. Registration (`frontend/sw-register.js`, loaded by both `index.html` and `about.html`) is skipped whenever `navigator.webdriver` is set, so the Playwright suite never runs against a cached app shell. **Bump `CACHE_VERSION` in `sw.js` whenever a cached file's content changes** — otherwise already-installed clients keep serving the stale cached version. `docker/nginx-combined.conf` (and the standalone `frontend/nginx.conf`) serve static assets with `Cache-Control: no-cache` (filenames are unversioned, so browsers must revalidate), `sw.js` precaches with `cache: 'reload'` to bypass the HTTP cache, and the configs set the correct MIME type for `/manifest.webmanifest`.
 
 ## CI (`.github/workflows/default.yml`)
 

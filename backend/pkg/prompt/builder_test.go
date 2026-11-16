@@ -131,20 +131,6 @@ func TestBuildPrompt_WithoutStil(t *testing.T) {
 	}
 }
 
-func TestGetGWSContent(t *testing.T) {
-	// Execute
-	content := GetGWSContent()
-
-	// Assert
-	if len(content) == 0 {
-		t.Error("Expected GWS content to be non-empty")
-	}
-
-	if !strings.Contains(content, "Grundwortschatz") {
-		t.Error("Expected GWS content to contain 'Grundwortschatz'")
-	}
-}
-
 func TestKlasse12Grundwortschatz(t *testing.T) {
 	// Execute
 	content := klasse12Grundwortschatz()

@@ -8,7 +8,7 @@
  * Caches werden beim `activate`-Event automatisch gelöscht, damit iOS/Chrome
  * nicht auf einer alten Version hängen bleiben.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `mairchen-${CACHE_VERSION}`;
 
 // Alle Pfade sind relativ, damit der Service Worker unabhängig vom
@@ -31,9 +31,11 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             // Einzeln cachen statt addAll(), damit ein einzelner fehlschlagender
-            // Request nicht die komplette Installation blockiert.
+            // Request nicht die komplette Installation blockiert. cache:
+            // 'reload' umgeht den HTTP-Cache, sonst landet beim Versions-
+            // wechsel womöglich wieder die alte Datei im neuen Cache.
             return Promise.all(
-                APP_SHELL.map((url) => cache.add(url).catch((err) => {
+                APP_SHELL.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch((err) => {
                     console.warn('[SW] Konnte nicht gecacht werden:', url, err);
                 }))
             );

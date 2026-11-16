@@ -99,8 +99,3 @@ func klasse12Grundwortschatz() string {
 	})
 	return klasse12Content
 }
-
-// GetGWSContent returns the embedded Grundwortschatz content
-func GetGWSContent() string {
-	return data.GrundwortschatzContent
-}

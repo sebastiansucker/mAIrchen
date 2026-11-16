@@ -333,6 +333,11 @@ test.describe('mAIrchen PWA', () => {
     const swResponse = await request.get('http://localhost:80/sw.js');
     expect(swResponse.ok()).toBe(true);
     expect(swResponse.headers()['cache-control']).toContain('no-cache');
+
+    // Unversioned filenames: app.js must be revalidated too, never "immutable".
+    const appResponse = await request.get('http://localhost:80/app.js');
+    expect(appResponse.headers()['cache-control']).toContain('no-cache');
+    expect(appResponse.headers()['cache-control']).not.toContain('immutable');
   });
 
   test('index.html and about.html link the manifest and theme color', async ({ page }) => {
