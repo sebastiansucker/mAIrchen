@@ -16,64 +16,12 @@ import (
 	"github.com/sebastiansucker/mAIrchen/backend/pkg/prompt"
 )
 
-// Test parseStory function
-func TestParseStory(t *testing.T) {
-	tests := []struct {
-		name        string
-		input       string
-		expectTitle string
-		expectStory string
-	}{
-		{
-			name: "Valid story format",
-			input: `TITEL: Der kleine Hase
-Es war einmal ein kleiner Hase.`,
-			expectTitle: "Der kleine Hase",
-			expectStory: "Es war einmal ein kleiner Hase.",
-		},
-		{
-			name: "Story with markdown",
-			input: `TITEL: **Der Fuchs**
-Der Fuchs war *sehr* schlau.`,
-			expectTitle: "**Der Fuchs**",
-			expectStory: "Der Fuchs war *sehr* schlau.",
-		},
-		{
-			name:        "Missing TITEL",
-			input:       `Eine Geschichte ohne Titel.`,
-			expectTitle: "Ohne Titel",
-			expectStory: "Eine Geschichte ohne Titel.",
-		},
-		{
-			name:        "Empty input",
-			input:       "",
-			expectTitle: "Ohne Titel",
-			expectStory: "",
-		},
-		{
-			name: "Story with multiple lines",
-			input: `TITEL: Die Reise
-Es war einmal.
-Der Weg war lang.
-Das Ende war schön.`,
-			expectTitle: "Die Reise",
-			expectStory: "Es war einmal.\nDer Weg war lang.\nDas Ende war schön.",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Execute
-			title, story := parseStory(tt.input)
-
-			// Assert
-			if title != tt.expectTitle {
-				t.Errorf("Expected title '%s', got '%s'", tt.expectTitle, title)
-			}
-			if story != tt.expectStory {
-				t.Errorf("Expected story '%s', got '%s'", tt.expectStory, story)
-			}
-		})
+func TestFindTitelMarker_StripsMarkdownFromTitle(t *testing.T) {
+	for _, in := range []string{"**TITEL:** Der Hase\n", "TITEL: **Der Hase**\n", "TITEL:  Der Hase \r\n"} {
+		title, _, found := findTitelMarker(in)
+		if !found || title != "Der Hase" {
+			t.Errorf("findTitelMarker(%q) = %q, %v; want \"Der Hase\", true", in, title, found)
+		}
 	}
 }
 

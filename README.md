@@ -346,6 +346,7 @@ OPENAI_MODEL=meta-llama/llama-3.2-3b-instruct
 - `GLOBAL_DAILY_LIMIT`: Max Anfragen pro Tag (Standard: 1000)
 - `MAX_STORY_LENGTH`: Max Story-Länge in Minuten (Standard: 15)
 - `MAX_DAILY_COST`: Max Kosten pro Tag in Euro (Standard: 5.0)
+- `COST_PER_1K_TOKENS`: Geschätzte Kosten in Euro pro 1000 Tokens (Standard: 0.001, ollama-cloud 0.0005, ollama-local 0)
 
 **Wichtig**: Die `.env` Datei ist in `.gitignore` und wird nicht ins Repository committed!
 

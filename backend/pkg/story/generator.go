@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/sashabaranov/go-openai"
 	"github.com/sebastiansucker/mAIrchen/backend/pkg/analysis"
@@ -313,36 +314,23 @@ func findTitelMarker(s string) (title string, rest string, found bool) {
 		return "", "", false
 	}
 
-	title = strings.TrimSpace(afterMarker[:newlineIdx])
+	// Trim stars too: "**TITEL:** Der Hase" would otherwise yield "** Der Hase".
+	title = strings.TrimFunc(afterMarker[:newlineIdx], func(r rune) bool { return r == '*' || unicode.IsSpace(r) })
 	rest = strings.TrimLeft(afterMarker[newlineIdx+1:], " \t")
 	return title, rest, true
 }
 
-// parseStory splits a complete (non-streamed) response into title and body.
-// Kept for tests and as a reference implementation; the streaming path in
-// streamParser reuses findTitelMarker for the same logic incrementally.
-func parseStory(content string) (string, string) {
-	if title, rest, found := findTitelMarker(content); found {
-		return title, strings.TrimSpace(rest)
-	}
-	return "Ohne Titel", content
-}
+var (
+	boldRegexp         = regexp.MustCompile(`\*\*(.*?)\*\*`)
+	italicRegexp       = regexp.MustCompile(`\*(.*?)\*`)
+	trailingBoldRegexp = regexp.MustCompile(`\*\*\s*$`)
+)
 
 func removeMarkdownFormatting(text string) string {
-	// Remove bold markers
-	re := regexp.MustCompile(`\*\*(.*?)\*\*`)
-	text = re.ReplaceAllString(text, "$1")
-
-	// Remove italic markers
-	re = regexp.MustCompile(`\*(.*?)\*`)
-	text = re.ReplaceAllString(text, "$1")
+	text = boldRegexp.ReplaceAllString(text, "$1")
+	text = italicRegexp.ReplaceAllString(text, "$1")
 
 	// Remove trailing markdown markers (e.g., "**Ende.**" -> "Ende.")
 	text = strings.TrimRight(text, "*")
-
-	// Remove common markdown patterns at the end
-	re = regexp.MustCompile(`\*\*\s*$`)
-	text = re.ReplaceAllString(text, "")
-
-	return text
+	return trailingBoldRegexp.ReplaceAllString(text, "")
 }

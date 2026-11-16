@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -29,10 +30,13 @@ var (
 	MaxStoryLength   int
 	MaxDailyCost     float64
 	CostPerRequest   = 0.0015
-	AllowedOrigins   []string
-	MaxFieldLength   = 200
-	appConfig        *config.Config
-	storyGenerator   *story.Generator
+	// CostPer1KTokens overrides the per-provider EUR/1000-token estimate;
+	// negative means unset.
+	CostPer1KTokens = -1.0
+	AllowedOrigins  []string
+	MaxFieldLength  = 200
+	appConfig       *config.Config
+	storyGenerator  *story.Generator
 )
 
 // Rate limiting storage
@@ -134,6 +138,7 @@ func init() {
 	GlobalDailyLimit = getEnvInt("GLOBAL_DAILY_LIMIT", 1000)
 	MaxStoryLength = getEnvInt("MAX_STORY_LENGTH", 15)
 	MaxDailyCost = getEnvFloat("MAX_DAILY_COST", 5.0)
+	CostPer1KTokens = getEnvFloat("COST_PER_1K_TOKENS", -1)
 
 	originsStr := getEnv("ALLOWED_ORIGINS", "http://localhost,http://localhost:80,http://localhost:8080")
 	AllowedOrigins = make([]string, 0)
@@ -176,10 +181,16 @@ func getClientIP(c *gin.Context) string {
 	// Nginx always overwrites X-Real-IP with the actual connecting address
 	// ($remote_addr), so unlike X-Forwarded-For it cannot be spoofed by a
 	// client to bypass per-IP rate limiting.
+	ip := c.ClientIP()
 	if realIP := c.GetHeader("X-Real-IP"); realIP != "" {
-		return strings.TrimSpace(realIP)
+		ip = strings.TrimSpace(realIP)
 	}
-	return c.ClientIP()
+	// One IPv6 connection usually owns a whole /64, so rate-limit the /64
+	// instead of single addresses that a client can rotate freely.
+	if parsed := net.ParseIP(ip); parsed != nil && parsed.To4() == nil {
+		return parsed.Mask(net.CIDRMask(64, 128)).String() + "/64"
+	}
+	return ip
 }
 
 func checkRateLimit(ip string) (bool, string) {
@@ -283,7 +294,8 @@ func main() {
 
 	port := getEnv("PORT", "8000")
 	log.Printf("Server starting on port %s", port)
-	if err := r.Run(":" + port); err != nil {
+	// Loopback only: Nginx is the sole entry point and sets X-Real-IP.
+	if err := r.Run("127.0.0.1:" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
@@ -482,24 +494,18 @@ func handleGenerateStory(c *gin.Context) {
 	log.Println("API-Aufruf erfolgreich")
 	log.Printf("Response Länge: %d Zeichen", len(generatedStory.Content))
 
-	// Update cost tracking
-	var actualCost float64
-	switch appConfig.AIProvider {
-	case "ollama-cloud":
-		actualCost = float64(generatedStory.TokensUsed) / 1000 * 0.0005
-	case "ollama-local":
-		actualCost = 0.0
-	default:
-		actualCost = float64(generatedStory.TokensUsed) / 1000 * 0.001
-	}
-
 	// checkRateLimit already reserved a flat CostPerRequest estimate when the
 	// request was admitted (to guard the budget against bursts of concurrent
 	// in-flight requests). Replace that reservation with the real cost now
-	// that it's known, instead of adding on top of it.
-	rateLimitLock.Lock()
-	dailyCost.cost += actualCost - CostPerRequest
-	rateLimitLock.Unlock()
+	// that it's known, instead of adding on top of it. Without a reported
+	// token count (provider ignores stream_options) the reservation stays,
+	// otherwise every story would count as free and the budget never trips.
+	if generatedStory.TokensUsed > 0 {
+		actualCost := float64(generatedStory.TokensUsed) / 1000 * costPer1KTokens(appConfig.AIProvider)
+		rateLimitLock.Lock()
+		dailyCost.cost += actualCost - CostPerRequest
+		rateLimitLock.Unlock()
+	}
 
 	writeEvent(streamDoneEvent{
 		Type:            "done",
@@ -515,6 +521,22 @@ func handleGenerateStory(c *gin.Context) {
 			"klassenstufe":   req.Klassenstufe,
 		},
 	})
+}
+
+// costPer1KTokens is a rough EUR estimate per 1000 tokens, overridable via
+// COST_PER_1K_TOKENS for models priced differently from Mistral-small.
+func costPer1KTokens(provider string) float64 {
+	if CostPer1KTokens >= 0 {
+		return CostPer1KTokens
+	}
+	switch provider {
+	case "ollama-cloud":
+		return 0.0005
+	case "ollama-local":
+		return 0
+	default:
+		return 0.001
+	}
 }
 
 func randomInt(max int) int {

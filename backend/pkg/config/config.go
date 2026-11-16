@@ -33,7 +33,7 @@ func LoadConfig() *Config {
 	case "openai":
 		cfg.OpenAIAPIKey = getEnv("OPENAI_API_KEY", "")
 		cfg.OpenAIBaseURL = getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-		cfg.DefaultModel = getEnv("OPENAI_MODEL", "gpt-4")
+		cfg.DefaultModel = getEnv("OPENAI_MODEL", "gpt-4o-mini")
 	default:
 		cfg.OpenAIAPIKey = getEnv("OPENAI_API_KEY", "")
 		cfg.OpenAIBaseURL = getEnv("OPENAI_BASE_URL", "https://api.mistral.ai/v1")
