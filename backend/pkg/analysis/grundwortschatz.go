@@ -27,6 +27,10 @@ func ExtractGrundwortschatzWords() map[string]string {
 	return gwsDict
 }
 
+// minPrefixMatchLen is the longest Grundwortschatz entry (in runes) that
+// only counts on an exact token match, never as a prefix.
+const minPrefixMatchLen = 3
+
 // FindGrundwortschatzInText finds Grundwortschatz words in the given text.
 // A text word counts as a match if it starts with a Grundwortschatz word
 // (e.g. "Hunde" matches the dictionary entry "hund"). For each token, this
@@ -47,6 +51,11 @@ func FindGrundwortschatzInText(text string, gwsDict map[string]string) []string 
 
 		runes := []rune(lowerToken)
 		for i := 1; i <= len(runes); i++ {
+			// Short entries ("Ei", "ab", "wer") must match the whole token,
+			// otherwise "ein", "Abend", "werden" count as practiced.
+			if i <= minPrefixMatchLen && i < len(runes) {
+				continue
+			}
 			if correctWord, ok := gwsDict[string(runes[:i])]; ok {
 				foundWords[correctWord] = true
 			}
