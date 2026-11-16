@@ -8,6 +8,12 @@ mAIrchen generates personalized German children's stories ("Märchen") for grade
 
 ## Commands
 
+### Dev environment setup
+```bash
+scripts/dev-setup.sh   # no root needed: installs Go (version from backend/go.mod) + golangci-lint into ~/.local, downloads deps; idempotent
+```
+Runs automatically as a `SessionStart` hook (`.claude/settings.json`).
+
 ### Backend (Go)
 ```bash
 cd backend
