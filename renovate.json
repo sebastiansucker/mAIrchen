@@ -10,5 +10,11 @@
     "postUpdateOptions": [
       "gomodTidy1.17"
     ]
-  }
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true
+    }
+  ]
 }
