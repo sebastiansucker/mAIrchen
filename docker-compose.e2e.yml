@@ -1,0 +1,17 @@
+# E2E override: replaces the real LLM with tests/fakellm, so no API key is needed.
+#   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up --build -d
+services:
+  fakellm:
+    image: golang:1.27-alpine
+    working_dir: /src
+    volumes:
+      - ./tests/fakellm:/src:ro
+    command: go run main.go
+
+  app:
+    depends_on:
+      - fakellm
+    environment:
+      - AI_PROVIDER=ollama-local
+      - OLLAMA_BASE_URL=http://fakellm:8080/v1
+      - OLLAMA_MODEL=fakellm
